@@ -1,23 +1,32 @@
-/* globals page */
+/*
+ * Copyright (C) 2021 PixieBrix, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import {describe, beforeAll, it} from '@jest/globals';
-import expect from 'expect-puppeteer';
+import {expect, describe, it} from '@jest/globals';
+import {driver, webdriver} from './utils/utils';
 
-describe('tab', () => {
-  beforeAll(async () => {
-    await page.goto('https://iframe-test-page.vercel.app/');
-  });
+describe('startup', () => {
+  it('should open welcome tab', async () => {
+    driver.get('https://iframe-test-page.vercel.app');
+    const element = await driver.wait(
+      webdriver.until.elementLocated(
+        webdriver.By.xpath("//*[contains(text(), 'page')]"),
+      ),
+    );
 
-  it('should load page', async () => {
-    await expect(page).toMatch('Parent page');
+    await expect(await element.getText()).toMatch(/Parent/);
   });
 });
-
-// // Uncomment to hold the browser open a little longer
-// import {jest} from '@jest/globals';
-// jest.setTimeout(10000000);
-// describe('hold', () => {
-// 	it('should wait forever', async () => {
-// 		await new Promise(resolve => setTimeout(resolve, 1000000))
-// 	})
-// });

@@ -14,7 +14,7 @@ type Method = (...parameters: BasePayload) => Promise<unknown>;
 export type Contract<
   T extends BaseActionType = BaseActionType,
   M extends Method = Method,
-  P extends ParametersExceptFirst<M> = ParametersExceptFirst<M>
+  P extends ParametersExceptFirst<M> = ParametersExceptFirst<M>,
 > = {
   type: T;
   method: M;
@@ -25,7 +25,7 @@ const handlers = new Map<BaseActionType, Method>();
 
 export type Message<
   T extends BaseActionType = BaseActionType,
-  P extends BasePayload = BasePayload
+  P extends BasePayload = BasePayload,
 > = {
   type: T;
   parameters: P;
@@ -42,7 +42,7 @@ export function isMessage(value: unknown): value is Message {
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender
+  sender: browser.runtime.MessageSender,
 ): Promise<unknown> | void {
   if (!isMessage(message)) {
     return;
@@ -56,7 +56,7 @@ function onMessageListener(
 
 export function addHandler<T extends Contract>(
   type: T['type'],
-  handler: T['method']
+  handler: T['method'],
 ): void {
   if (handlers.has(type)) {
     throw new Error(`Handler already set for ${type}`);
@@ -67,12 +67,12 @@ export function addHandler<T extends Contract>(
 }
 
 export function createMessenger<T extends Contract>({
-  type
+  type,
 }: Partial<T>): T['publicMethod'] {
   const messenger: T['publicMethod'] = async (...parameters) =>
     browser.runtime.sendMessage({
       type,
-      parameters
+      parameters,
     });
 
   return messenger;

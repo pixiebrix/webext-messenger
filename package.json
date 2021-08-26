@@ -18,7 +18,7 @@
     "prepack": "tsc --sourceMap false",
     "test": "xo && tsc --noEmit && npm run jest",
     "prejest": "npm run demo:build",
-    "jest": "NODE_OPTIONS=--experimental-vm-modules JEST_PUPPETEER_CONFIG=jest-puppeteer.config.cjs jest",
+    "jest": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "npm run jest -- --watch",
     "watch": "tsc --watch"
   },
@@ -32,12 +32,14 @@
     ],
     "rules": {
       "import/extensions": "off",
-      "node/file-extension-in-import": "off"
+      "node/file-extension-in-import": "off",
+      "import/no-unassigned-import": "off",
+      "unicorn/prefer-module": "off"
     }
   },
   "jest": {
     "injectGlobals": false,
-    "preset": "jest-puppeteer",
+    "testEnvironment": "./test/utils/environment.js",
     "testMatch": [
       "**/test/*.js"
     ]
@@ -48,16 +50,20 @@
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.0.0-rc.0",
-    "@sindresorhus/tsconfig": "^1.0.2",
-    "@types/chrome": "0.0.145",
+    "@sindresorhus/tsconfig": "^2.0.0",
+    "@types/chrome": "^0.0.154",
     "@types/firefox-webext-browser": "^82.0.1",
+    "chromedriver": "^92.0.1",
     "jest": "^27.0.6",
-    "jest-puppeteer": "^5.0.4",
+    "jest-environment-node": "^27.0.6",
     "npm-run-all": "^4.1.5",
+    "onetime": "^6.0.0",
+    "p-wait-for": "^4.1.0",
     "parcel": "^2.0.0-rc.0",
-    "puppeteer": "^10.1.0",
+    "selenium-webdriver": "^4.0.0-beta.4",
     "typescript": "^4.3.5",
-    "xo": "^0.40.3"
+    "xo": "^0.44.0",
+    "zip-dir": "^2.0.0"
   },
   "targets": {
     "main": false
