@@ -12,10 +12,16 @@ jobs:
       - run: npm ci
       - run: npx xo
 
-  Build:
+  Types:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: npm ci
-      - run: npm run build
+      - run: npx tsc
+
+  Demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
       - run: npm run demo:build

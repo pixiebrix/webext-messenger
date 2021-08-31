@@ -49,9 +49,11 @@ function onMessageListener(
   }
 
   const handler = handlers.get(message.type);
-  if (handler) {
-    return handler(sender, ...message.parameters);
+  if (!handler) {
+    throw new Error('No handler registered for ' + message.type);
   }
+
+  return handler(sender, ...message.parameters);
 }
 
 export function addHandler<T extends Contract>(

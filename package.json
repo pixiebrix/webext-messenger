@@ -15,23 +15,26 @@
     "build": "tsc",
     "demo:watch": "parcel watch test/demo-extension/manifest.json --dist-dir test/dist --no-cache --no-hmr --detailed-report 0",
     "demo:build": "parcel build test/demo-extension/manifest.json --dist-dir test/dist --no-cache --detailed-report 0 --no-optimize",
-    "prepare": "tsc --sourceMap false",
+    "prepack": "tsc --sourceMap false",
     "test": "xo && tsc --noEmit",
-    "watch": "tsc --watch"
+    "fix": "xo --fix",
+    "watch": "tsc --watch --noEmit"
   },
   "xo": {
-    "prettier": true,
     "envs": [
       "browser"
     ],
     "globals": [
       "chrome"
     ],
+    "prettier": true,
     "rules": {
       "import/extensions": "off",
       "node/file-extension-in-import": "off",
       "import/no-unassigned-import": "off",
-      "unicorn/prefer-module": "off"
+      "unicorn/prefer-module": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off"
     }
   },
   "dependencies": {
@@ -43,15 +46,21 @@
     "@sindresorhus/tsconfig": "^2.0.0",
     "@types/chrome": "^0.0.154",
     "@types/firefox-webext-browser": "^82.0.1",
+    "fresh-tape": "^5.3.1",
     "npm-run-all": "^4.1.5",
     "parcel": "^2.0.0-rc.0",
-    "typescript": "^4.3.5",
+    "typescript": "^4.4.2",
     "xo": "^0.44.0"
   },
   "targets": {
     "main": false
   },
   "webExt": {
-    "sourceDir": "test/dist"
+    "sourceDir": "test/dist",
+    "run": {
+      "startUrl": [
+        "https://legiblenews.com/"
+      ]
+    }
   }
 }

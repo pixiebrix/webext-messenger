@@ -8,8 +8,7 @@ Thumbs.db
 *.log
 logs
 *.map
-index.js
-index.d.ts
-test/demo-extension/webext-messenger.js
+*.js
+*.d.ts
 .parcel-cache
 dist
