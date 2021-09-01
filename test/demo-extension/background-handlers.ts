@@ -5,35 +5,20 @@ import {Contract} from '../../index';
 export const getExtensionIdContract: Contract<typeof getExtensionId> = {
   type: 'getExtensionId',
 };
-
-export const sumContract: Contract<typeof sum> = {
-  type: 'sum',
-};
-
-export const sumifMetaContract: Contract<typeof sumIfMeta> = {
-  type: 'sumIfMeta',
-};
-
-export const notRegisteredContract: Contract<() => Promise<never>> = {
-  type: 'notRegistered',
-};
-
-export const backgroundOnlyContract: Contract<typeof backgroundOnly> = {
-  type: 'backgroundOnly',
-};
-
-export const throwsContract: Contract<typeof throws> = {
-  type: 'throws',
-};
-
 export async function getExtensionId(): Promise<string> {
   return chrome.runtime.id;
 }
 
+export const sumContract: Contract<typeof sum> = {
+  type: 'sum',
+};
 export async function sum(...addends: number[]): Promise<number> {
   return addends.reduce((a, b) => a + b);
 }
 
+export const sumifMetaContract: Contract<typeof sumIfMeta> = {
+  type: 'sumIfMeta',
+};
 export async function sumIfMeta(
   this: browser.runtime.MessageSender,
   ...addends: number[]
@@ -45,6 +30,9 @@ export async function sumIfMeta(
   throw new Error('Wrong sender');
 }
 
+export const backgroundOnlyContract: Contract<typeof backgroundOnly> = {
+  type: 'backgroundOnly',
+};
 export async function backgroundOnly(): Promise<true> {
   if (!isBackgroundPage()) {
     throw new Error('Wrong context');
@@ -53,6 +41,14 @@ export async function backgroundOnly(): Promise<true> {
   return true;
 }
 
+export const throwsContract: Contract<typeof throws> = {
+  type: 'throws',
+};
 export async function throws(): Promise<never> {
   throw new Error('This my error');
 }
+
+// This is not correct usage. It's only here for testing
+export const notRegisteredContract: Contract<() => Promise<never>> = {
+  type: 'notRegistered',
+};
