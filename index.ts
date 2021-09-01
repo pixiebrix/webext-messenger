@@ -1,24 +1,17 @@
-type OperationType = string;
 type Arguments = any[];
 type Method = (
   this: browser.runtime.MessageSender,
   ...args: Arguments
 ) => Promise<unknown>;
 
-export type Contract<
-  TType extends OperationType = OperationType,
-  TMmethod extends Method = Method,
-> = {
-  type: TType;
-  method: TMmethod;
+export type Contract<TMmethod extends Method = Method> = {
+  type: string;
+  method?: TMmethod;
 };
 
 // TODO: It may include additional meta, like information about the original sender
-type Message<
-  TType extends OperationType = OperationType,
-  TArguments extends Arguments = Arguments,
-> = {
-  type: TType;
+type Message<TArguments extends Arguments = Arguments> = {
+  type: string;
   args: TArguments;
 };
 
@@ -36,7 +29,7 @@ function isMessage(value: unknown): value is Message {
   );
 }
 
-const handlers = new Map<OperationType, Method>();
+const handlers = new Map<string, Method>();
 
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
@@ -59,7 +52,7 @@ function onMessageListener(
  * Registers a handler for a specific method.
  * To be called in the receiving end.
  */
-export function registerMethod<TContract extends Contract>(
+export function registerMethod<TContract extends Required<Contract>>(
   type: TContract['type'],
   handler: TContract['method'],
 ): void {
@@ -75,14 +68,14 @@ export function registerMethod<TContract extends Contract>(
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getMethod<TContract extends Contract>({
-  type,
-}: Partial<TContract>): OmitThisParameter<TContract['method']> {
-  const messenger: TContract['method'] = async (...args) =>
+export function getMethod<
+  TContract extends Contract,
+  // The original Method might have `this` (sender) specified, but this isn't applicable here
+  LocalMethod extends OmitThisParameter<NonNullable<TContract['method']>>,
+>({type}: TContract): LocalMethod {
+  return (async (...args) =>
     browser.runtime.sendMessage({
       type,
       args,
-    });
-
-  return messenger as OmitThisParameter<TContract['method']>;
+    })) as LocalMethod;
 }

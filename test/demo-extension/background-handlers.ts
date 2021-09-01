@@ -2,33 +2,27 @@ import {isBackgroundPage} from 'webext-detect-page';
 
 import {Contract} from '../../index';
 
-export const getExtensionIdContract: Partial<
-  Contract<string, typeof getExtensionId>
-> = {
+export const getExtensionIdContract: Contract<typeof getExtensionId> = {
   type: 'getExtensionId',
 };
 
-export const sumContract: Partial<Contract<string, typeof sum>> = {
+export const sumContract: Contract<typeof sum> = {
   type: 'sum',
 };
 
-export const sumifMetaContract: Partial<Contract<string, typeof sumIfMeta>> = {
+export const sumifMetaContract: Contract<typeof sumIfMeta> = {
   type: 'sumIfMeta',
 };
 
-export const notRegisteredContract: Partial<
-  Contract<string, () => Promise<never>>
-> = {
+export const notRegisteredContract: Contract<() => Promise<never>> = {
   type: 'notRegistered',
 };
 
-export const backgroundOnlyContract: Partial<
-  Contract<string, typeof backgroundOnly>
-> = {
+export const backgroundOnlyContract: Contract<typeof backgroundOnly> = {
   type: 'backgroundOnly',
 };
 
-export const throwsContract: Partial<Contract<string, typeof throws>> = {
+export const throwsContract: Contract<typeof throws> = {
   type: 'throws',
 };
 
