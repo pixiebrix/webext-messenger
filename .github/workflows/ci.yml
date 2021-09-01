@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: npm ci
-      - run: npx xo
+      - run: npm run lint
 
   Types:
     runs-on: ubuntu-latest

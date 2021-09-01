@@ -12,5 +12,5 @@ npm install webext-messenger
 ```
 
 ```js
-import messenger from 'webext-messenger';
+import messenger from "webext-messenger";
 ```

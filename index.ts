@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
 type Method = (
   this: browser.runtime.MessageSender,
@@ -16,7 +17,7 @@ type Message<TArguments extends Arguments = Arguments> = {
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 function isMessage(value: unknown): value is Message {
@@ -24,8 +25,8 @@ function isMessage(value: unknown): value is Message {
   //  https://github.com/pixiebrix/extension-messaging/pull/8#discussion_r700095639
   return (
     isObject(value) &&
-    typeof value['type'] === 'string' &&
-    Array.isArray(value['args'])
+    typeof value["type"] === "string" &&
+    Array.isArray(value["args"])
   );
 }
 
@@ -34,7 +35,7 @@ const handlers = new Map<string, Method>();
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender,
+  sender: browser.runtime.MessageSender
 ): Promise<unknown> | void {
   if (!isMessage(message)) {
     return;
@@ -45,7 +46,7 @@ function onMessageListener(
     return handler.call(sender, ...message.args);
   }
 
-  throw new Error('No handler registered for ' + message.type);
+  throw new Error("No handler registered for " + message.type);
 }
 
 /**
@@ -53,8 +54,8 @@ function onMessageListener(
  * To be called in the receiving end.
  */
 export function registerMethod<TContract extends Required<Contract>>(
-  type: TContract['type'],
-  handler: TContract['method'],
+  type: TContract["type"],
+  handler: TContract["method"]
 ): void {
   if (handlers.has(type)) {
     throw new Error(`Handler already set for ${type}`);
@@ -71,8 +72,8 @@ export function registerMethod<TContract extends Required<Contract>>(
 export function getMethod<
   TContract extends Contract,
   // The original Method might have `this` (sender) specified, but this isn't applicable here
-  LocalMethod extends OmitThisParameter<NonNullable<TContract['method']>>,
->({type}: TContract): LocalMethod {
+  LocalMethod extends OmitThisParameter<NonNullable<TContract["method"]>>
+>({ type }: TContract): LocalMethod {
   return (async (...args) =>
     browser.runtime.sendMessage({
       type,
