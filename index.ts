@@ -2,35 +2,37 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-type BaseActionType = string;
-type BasePayload = [...any[]];
+type OperationType = string;
+type Arguments = any[];
 type Method = (
   this: browser.runtime.MessageSender,
-  ...parameters: BasePayload
+  ...args: Arguments
 ) => Promise<unknown>;
 export type Contract<
-  T extends BaseActionType = BaseActionType,
-  M extends Method = Method,
+  TType extends OperationType = OperationType,
+  TMmethod extends Method = Method,
 > = {
-  type: T;
-  method: M;
+  type: TType;
+  method: TMmethod;
 };
 
-const handlers = new Map<BaseActionType, Method>();
+const handlers = new Map<OperationType, Method>();
 
 export type Message<
-  T extends BaseActionType = BaseActionType,
-  P extends BasePayload = BasePayload,
+  TType extends OperationType = OperationType,
+  TArguments extends Arguments = Arguments,
 > = {
-  type: T;
-  parameters: P;
+  type: TType;
+  args: TArguments;
 };
 
 export function isMessage(value: unknown): value is Message {
+  // TODO: Add library-specific key to safely catch non-handled messages
+  //  https://github.com/pixiebrix/extension-messaging/pull/8#discussion_r700095639
   return (
     isObject(value) &&
     typeof value['type'] === 'string' &&
-    Array.isArray(value['parameters'])
+    Array.isArray(value['args'])
   );
 }
 
@@ -44,16 +46,16 @@ function onMessageListener(
   }
 
   const handler = handlers.get(message.type);
-  if (!handler) {
-    throw new Error('No handler registered for ' + message.type);
+  if (handler) {
+    return handler.call(sender, ...message.args);
   }
 
-  return handler.call(sender, ...message.parameters);
+  throw new Error('No handler registered for ' + message.type);
 }
 
-export function addHandler<T extends Contract>(
-  type: T['type'],
-  handler: T['method'],
+export function addHandler<TContract extends Contract>(
+  type: TContract['type'],
+  handler: TContract['method'],
 ): void {
   if (handlers.has(type)) {
     throw new Error(`Handler already set for ${type}`);
@@ -63,13 +65,13 @@ export function addHandler<T extends Contract>(
   browser.runtime.onMessage.addListener(onMessageListener);
 }
 
-export function createMessenger<T extends Contract>({
+export function createMessenger<TContract extends Contract>({
   type,
-}: Partial<T>): T['method'] {
-  const messenger: T['method'] = async (...parameters) =>
+}: Partial<TContract>): TContract['method'] {
+  const messenger: TContract['method'] = async (...args) =>
     browser.runtime.sendMessage({
       type,
-      parameters,
+      args,
     });
 
   return messenger;
