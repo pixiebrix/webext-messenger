@@ -1,6 +1,6 @@
 import {isBackgroundPage} from 'webext-detect-page';
 
-import {Contract} from '../..';
+import {Contract} from '../../index';
 
 export const getExtensionIdContract: Partial<
   Contract<string, typeof getExtensionId>

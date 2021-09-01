@@ -1,12 +1,14 @@
-import {addHandler} from '../../index';
+import {registerMethod} from '../../index';
 import {
   backgroundOnly,
   getExtensionId,
   sum,
+  sumIfMeta,
   throws,
 } from './background-handlers';
 
-addHandler('getExtensionId', getExtensionId);
-addHandler('sum', sum);
-addHandler('backgroundOnly', backgroundOnly);
-addHandler('throws', throws);
+registerMethod('getExtensionId', getExtensionId);
+registerMethod('sum', sum);
+registerMethod('sumIfMeta', sumIfMeta);
+registerMethod('backgroundOnly', backgroundOnly);
+registerMethod('throws', throws);
