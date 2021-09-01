@@ -1,13 +1,11 @@
 import * as test from 'fresh-tape';
 import {getMethod} from '../../index';
-import {
-  backgroundOnlyContract,
-  getExtensionIdContract,
-  sumContract,
-  throwsContract,
-  notRegisteredContract,
-  sumifMetaContract,
-} from './background-handlers';
+import {backgroundOnlyContract} from './background/backgroundOnly';
+import {getExtensionIdContract} from './background/getExtensionId';
+import {notRegisteredContract} from './background/noRegistered';
+import {sumContract} from './background/sum';
+import {sumifMetaContract} from './background/sumIfMeta';
+import {throwsContract} from './background/throws';
 
 test('send message and get response', async (t) => {
   const getExtensionId = getMethod(getExtensionIdContract);

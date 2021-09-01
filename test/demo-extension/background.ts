@@ -1,11 +1,9 @@
 import {registerMethod} from '../../index';
-import {
-  backgroundOnly,
-  getExtensionId,
-  sum,
-  sumIfMeta,
-  throws,
-} from './background-handlers';
+import { backgroundOnly } from './background/backgroundOnly';
+import { getExtensionId } from './background/getExtensionId';
+import { sum } from './background/sum';
+import { sumIfMeta } from './background/sumIfMeta';
+import { throws } from './background/throws';
 
 registerMethod('getExtensionId', getExtensionId);
 registerMethod('sum', sum);

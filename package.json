@@ -34,6 +34,12 @@
       "node/file-extension-in-import": "off",
       "import/no-unassigned-import": "off",
       "unicorn/prefer-module": "off",
+      "unicorn/filename-case": [
+        "error",
+        {
+          "case": "kebabCase"
+        }
+      ],
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-unsafe-member-access": "off"
     }
