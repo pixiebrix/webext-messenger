@@ -9,7 +9,7 @@ type ParametersExceptFirst<F> = F extends (
   ? (...rest: R) => ReturnValue
   : never;
 type BaseActionType = string;
-type BasePayload = [browser.runtime.MessageSender, ...unknown[]];
+type BasePayload = [browser.runtime.MessageSender, ...any[]];
 type Method = (...parameters: BasePayload) => Promise<unknown>;
 export type Contract<
   T extends BaseActionType = BaseActionType,
