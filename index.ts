@@ -2,23 +2,18 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-type ParametersExceptFirst<F> = F extends (
-  arg0: any,
-  ...rest: infer R
-) => infer ReturnValue
-  ? (...rest: R) => ReturnValue
-  : never;
 type BaseActionType = string;
-type BasePayload = [browser.runtime.MessageSender, ...any[]];
-type Method = (...parameters: BasePayload) => Promise<unknown>;
+type BasePayload = [...any[]];
+type Method = (
+  this: browser.runtime.MessageSender,
+  ...parameters: BasePayload
+) => Promise<unknown>;
 export type Contract<
   T extends BaseActionType = BaseActionType,
   M extends Method = Method,
-  P extends ParametersExceptFirst<M> = ParametersExceptFirst<M>,
 > = {
   type: T;
   method: M;
-  publicMethod: P;
 };
 
 const handlers = new Map<BaseActionType, Method>();
@@ -53,7 +48,7 @@ function onMessageListener(
     throw new Error('No handler registered for ' + message.type);
   }
 
-  return handler(sender, ...message.parameters);
+  return handler.call(sender, ...message.parameters);
 }
 
 export function addHandler<T extends Contract>(
@@ -70,8 +65,8 @@ export function addHandler<T extends Contract>(
 
 export function createMessenger<T extends Contract>({
   type,
-}: Partial<T>): T['publicMethod'] {
-  const messenger: T['publicMethod'] = async (...parameters) =>
+}: Partial<T>): T['method'] {
+  const messenger: T['method'] = async (...parameters) =>
     browser.runtime.sendMessage({
       type,
       parameters,

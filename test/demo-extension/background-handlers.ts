@@ -12,6 +12,10 @@ export const sumContract: Partial<Contract<string, typeof sum>> = {
   type: 'sum',
 };
 
+export const sumifMetaContract: Partial<Contract<string, typeof sumIfMeta>> = {
+  type: 'sumIfMeta',
+};
+
 export const notRegisteredContract: Partial<
   Contract<string, () => Promise<never>>
 > = {
@@ -32,11 +36,19 @@ export async function getExtensionId(): Promise<string> {
   return chrome.runtime.id;
 }
 
-export async function sum(
-  _: browser.runtime.MessageSender,
+export async function sum(...addends: number[]): Promise<number> {
+  return addends.reduce((a, b) => a + b);
+}
+
+export async function sumIfMeta(
+  this: browser.runtime.MessageSender,
   ...addends: number[]
 ): Promise<number> {
-  return addends.reduce((a, b) => a + b);
+  if (this.tab?.url) {
+    return addends.reduce((a, b) => a + b);
+  }
+
+  throw new Error('Wrong sender');
 }
 
 export async function backgroundOnly(): Promise<true> {
