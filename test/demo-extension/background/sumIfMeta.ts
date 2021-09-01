@@ -1,7 +1,7 @@
-import {Contract} from '../../../index';
+import { Contract } from "../../../index";
 
 export const sumifMetaContract: Contract<typeof sumIfMeta> = {
-  type: 'sumIfMeta',
+  type: "sumIfMeta",
 };
 export async function sumIfMeta(
   this: browser.runtime.MessageSender,
@@ -11,5 +11,5 @@ export async function sumIfMeta(
     return addends.reduce((a, b) => a + b);
   }
 
-  throw new Error('Wrong sender');
+  throw new Error("Wrong sender");
 }
