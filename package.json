@@ -7,9 +7,10 @@
   "license": "MIT",
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
+  "main": "distribution/index.js",
   "files": [
-    "index.js",
-    "index.d.ts"
+    "distribution/index.js",
+    "distribution/index.d.ts"
   ],
   "scripts": {
     "build": "tsc",
