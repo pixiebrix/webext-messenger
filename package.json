@@ -1,0 +1,104 @@
+{
+  "name": "webext-messenger",
+  "version": "0.0.0",
+  "description": "Browser Extension component messaging framework",
+  "keywords": [],
+  "repository": "pixiebrix/extension-messaging",
+  "license": "MIT",
+  "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
+  "type": "module",
+  "main": "distribution/index.js",
+  "files": [
+    "distribution/index.js",
+    "distribution/index.d.ts"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "demo:watch": "parcel watch test/demo-extension/manifest.json --dist-dir test/dist --no-cache --no-hmr --detailed-report 0",
+    "demo:build": "parcel build test/demo-extension/manifest.json --dist-dir test/dist --no-cache --detailed-report 0 --no-optimize",
+    "prepack": "tsc --sourceMap false",
+    "test": "eslint . && tsc --noEmit",
+    "lint": "eslint .",
+    "fix": "eslint . --fix",
+    "watch": "tsc --watch --noEmit"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true
+    },
+    "parserOptions": {
+      "project": "tsconfig.json"
+    },
+    "plugins": [
+      "import"
+    ],
+    "extends": [
+      "plugin:@typescript-eslint/recommended",
+      "xo",
+      "xo-typescript",
+      "prettier",
+      "plugin:import/recommended",
+      "plugin:import/typescript",
+      "plugin:unicorn/recommended"
+    ],
+    "rules": {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "import/extensions": "off",
+      "import/no-unassigned-import": "off",
+      "node/file-extension-in-import": "off",
+      "unicorn/filename-case": [
+        "error",
+        {
+          "case": "camelCase"
+        }
+      ],
+      "unicorn/prefer-module": "off",
+      "unicorn/prevent-abbreviations": [
+        "error",
+        {
+          "allowList": {
+            "args": true
+          }
+        }
+      ]
+    },
+    "globals": {
+      "chrome": true
+    }
+  },
+  "dependencies": {
+    "webext-detect-page": "^3.0.2",
+    "webextension-polyfill": "^0.8.0"
+  },
+  "devDependencies": {
+    "@parcel/config-webextension": "^2.0.0-rc.0",
+    "@sindresorhus/tsconfig": "^2.0.0",
+    "@types/chrome": "^0.0.154",
+    "@types/firefox-webext-browser": "^82.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.30.0",
+    "@typescript-eslint/parser": "^4.30.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-xo": "^0.38.0",
+    "eslint-config-xo-typescript": "^0.44.0",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-unicorn": "^35.0.0",
+    "fresh-tape": "^5.3.1",
+    "npm-run-all": "^4.1.5",
+    "parcel": "^2.0.0-rc.0",
+    "typescript": "^4.4.2",
+    "xo": "^0.44.0"
+  },
+  "targets": {
+    "main": false
+  },
+  "webExt": {
+    "sourceDir": "test/dist",
+    "run": {
+      "startUrl": [
+        "https://legiblenews.com/"
+      ]
+    }
+  }
+}

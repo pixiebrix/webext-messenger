@@ -1,0 +1,16 @@
+{
+  "name": "webext-messenger",
+  "version": "0.0.0",
+  "manifest_version": 2,
+  "permissions": [],
+  "background": {
+    "scripts": ["~node_modules/webextension-polyfill", "background.ts"]
+  },
+  "content_scripts": [
+    {
+      "all_frames": true,
+      "matches": ["*://*/*"],
+      "js": ["~node_modules/webextension-polyfill", "contentscript.ts"]
+    }
+  ]
+}
