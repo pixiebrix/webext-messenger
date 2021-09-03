@@ -1,10 +1,13 @@
 import * as test from "fresh-tape";
-import { backgroundOnly } from "./background/backgroundOnly";
-import { getExtensionId } from "./background/getExtensionId";
-import { notRegistered } from "./background/noRegistered";
-import { sum } from "./background/sum";
-import { sumIfMeta } from "./background/sumIfMeta";
-import { throws } from "./background/throws";
+import {
+  backgroundOnly,
+  getExtensionId,
+  notRegistered,
+  sum,
+  sumIfMeta,
+  throws,
+  getSelf,
+} from "./background/api";
 
 test("send message and get response", async (t) => {
   t.equal(await getExtensionId(), chrome.runtime.id);
@@ -40,4 +43,11 @@ test("should receive error from the background if it’s not registered", async 
     t.true(error instanceof Error);
     t.equal((error as any).message, "No handler registered for notRegistered");
   }
+});
+
+test("should receive echo", async (t) => {
+  const self = await getSelf();
+  t.equals(self.id, chrome.runtime.id);
+  t.equals(self.url, location.href);
+  t.true(self instanceof Object);
 });

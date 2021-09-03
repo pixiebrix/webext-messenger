@@ -1,9 +1,19 @@
+declare global {
+  interface MessengerMethods {
+    _: Method;
+  }
+}
+
+/* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
+type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
+  ? (...args: A) => R
+  : T;
+
+export type MessengerMeta = browser.runtime.MessageSender;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
-type Method = (
-  this: browser.runtime.MessageSender,
-  ...args: Arguments
-) => Promise<unknown>;
+type Method = (this: MessengerMeta, ...args: Arguments) => Promise<unknown>;
 
 // TODO: It may include additional meta, like information about the original sender
 type Message<TArguments extends Arguments = Arguments> = {
@@ -30,7 +40,7 @@ const handlers = new Map<string, Method>();
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender
+  sender: MessengerMeta
 ): Promise<unknown> | void {
   if (!isMessage(message)) {
     return;
@@ -45,31 +55,29 @@ function onMessageListener(
 }
 
 /**
- * Returns a function that registers a handler for a specific method.
- * To be called in the receiving end.
+ * Replicates the original method, including its types.
+ * To be called in the sender’s end.
  */
-export function getRegistration(type: string, method: Method) {
-  return (): void => {
+export function getMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType]
+  // The original Method might have `this` (Meta) specified, but this isn't applicable here
+>(type: TType): ActuallyOmitThisParameter<TMethod> {
+  return (async (...args: Parameters<TMethod>) =>
+    browser.runtime.sendMessage({
+      type,
+      args,
+    })) as ActuallyOmitThisParameter<TMethod>;
+}
+
+export function registerMethods(methods: Partial<MessengerMethods>): void {
+  for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
       throw new Error(`Handler already set for ${type}`);
     }
 
     handlers.set(type, method);
-    browser.runtime.onMessage.addListener(onMessageListener);
-  };
-}
+  }
 
-/**
- * Replicates the original method, including its types.
- * To be called in the sender’s end.
- */
-export function getMethod<
-  TMethod extends Method
-  // The original Method might have `this` (sender) specified, but this isn't applicable here
->(type: string): OmitThisParameter<TMethod> {
-  return (async (...args) =>
-    browser.runtime.sendMessage({
-      type,
-      args,
-    })) as OmitThisParameter<TMethod>;
+  browser.runtime.onMessage.addListener(onMessageListener);
 }

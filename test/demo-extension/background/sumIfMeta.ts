@@ -1,7 +1,7 @@
-import { getMethod, getRegistration } from "../../../index";
+import { MessengerMeta } from "../../../index";
 
-async function _sumIfMeta(
-  this: browser.runtime.MessageSender,
+export async function sumIfMeta(
+  this: MessengerMeta,
   ...addends: number[]
 ): Promise<number> {
   if (this.tab?.url) {
@@ -10,7 +10,3 @@ async function _sumIfMeta(
 
   throw new Error("Wrong sender");
 }
-
-const name = "sumIfMeta";
-export const sumIfMeta = getMethod<typeof _sumIfMeta>(name);
-export const registerSumIfMeta = getRegistration(name, _sumIfMeta);
