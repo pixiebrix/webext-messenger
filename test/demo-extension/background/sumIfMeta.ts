@@ -1,9 +1,6 @@
-import { Contract } from "../../../index";
+import { getMethod, getRegistration } from "../../../index";
 
-export const sumifMetaContract: Contract<typeof sumIfMeta> = {
-  type: "sumIfMeta",
-};
-export async function sumIfMeta(
+async function _sumIfMeta(
   this: browser.runtime.MessageSender,
   ...addends: number[]
 ): Promise<number> {
@@ -13,3 +10,7 @@ export async function sumIfMeta(
 
   throw new Error("Wrong sender");
 }
+
+const name = "sumIfMeta";
+export const sumIfMeta = getMethod<typeof _sumIfMeta>(name);
+export const registerSumIfMeta = getRegistration(name, _sumIfMeta);

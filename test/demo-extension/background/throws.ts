@@ -1,8 +1,9 @@
-import { Contract } from "../../../index";
+import { getMethod, getRegistration } from "../../../index";
 
-export const throwsContract: Contract<typeof throws> = {
-  type: "throws",
-};
-export async function throws(): Promise<never> {
+async function _throws(): Promise<never> {
   throw new Error("This my error");
 }
+
+const name = "throws";
+export const throws = getMethod<typeof _throws>(name);
+export const registerThrows = getRegistration(name, _throws);

@@ -1,13 +1,14 @@
 import { isBackgroundPage } from "webext-detect-page";
-import { Contract } from "../../../index";
+import { getMethod, getRegistration } from "../../../index";
 
-export const backgroundOnlyContract: Contract<typeof backgroundOnly> = {
-  type: "backgroundOnly",
-};
-export async function backgroundOnly(): Promise<true> {
+async function _backgroundOnly(): Promise<true> {
   if (!isBackgroundPage()) {
     throw new Error("Wrong context");
   }
 
   return true;
 }
+
+const name = "backgroundOnly";
+export const backgroundOnly = getMethod<typeof _backgroundOnly>(name);
+export const registerBackgroundOnly = getRegistration(name, _backgroundOnly);

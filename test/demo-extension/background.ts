@@ -1,12 +1,11 @@
-import { registerMethod } from "../../index";
-import { backgroundOnly } from "./background/backgroundOnly";
-import { getExtensionId } from "./background/getExtensionId";
-import { sum } from "./background/sum";
-import { sumIfMeta } from "./background/sumIfMeta";
-import { throws } from "./background/throws";
+import { registerBackgroundOnly } from "./background/backgroundOnly";
+import { registerGetExtensionId } from "./background/getExtensionId";
+import { registerSum } from "./background/sum";
+import { registerSumIfMeta } from "./background/sumIfMeta";
+import { registerThrows } from "./background/throws";
 
-registerMethod("getExtensionId", getExtensionId);
-registerMethod("sum", sum);
-registerMethod("sumIfMeta", sumIfMeta);
-registerMethod("backgroundOnly", backgroundOnly);
-registerMethod("throws", throws);
+registerBackgroundOnly();
+registerGetExtensionId();
+registerSum();
+registerSumIfMeta();
+registerThrows();
