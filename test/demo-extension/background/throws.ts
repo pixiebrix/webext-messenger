@@ -1,3 +1,3 @@
-export async function _throws(): Promise<never> {
+export async function throws(): Promise<never> {
   throw new Error("This my error");
 }

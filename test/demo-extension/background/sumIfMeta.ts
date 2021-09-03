@@ -1,4 +1,4 @@
-export async function _sumIfMeta(
+export async function sumIfMeta(
   this: browser.runtime.MessageSender,
   ...addends: number[]
 ): Promise<number> {

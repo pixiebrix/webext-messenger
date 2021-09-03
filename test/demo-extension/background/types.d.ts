@@ -1,15 +1,20 @@
-import { _sum } from "./sum";
-import { _throws } from "./throws";
-import { _sumIfMeta } from "./sumIfMeta";
-import { _notRegistered } from "./notRegistered";
-import { _getExtensionId } from "./getExtensionId";
-import { _backgroundOnly } from "./backgroundOnly";
+/* If you're using `skipLibCheck: true`, use a .ts file instead of a .d.ts file, or else it won't be type-checked */
 
+import { sum } from "./sum";
+import { throws } from "./throws";
+import { sumIfMeta } from "./sumIfMeta";
+import { notRegistered } from "./notRegistered";
+import { getExtensionId } from "./getExtensionId";
+import { backgroundOnly } from "./backgroundOnly";
+
+// TODO: This interface can't actually guarantee that every type has a Method
+// Adding an index signature will break MessengerMethods’s usage, because any key
+// will just return Method even if not set.
 export interface MessengerMethods {
-  sum: typeof _sum;
-  throws: typeof _throws;
-  sumIfMeta: typeof _sumIfMeta;
-  notRegistered: typeof _notRegistered;
-  getExtensionId: typeof _getExtensionId;
-  backgroundOnly: typeof _backgroundOnly;
+  sum: typeof sum;
+  throws: typeof throws;
+  sumIfMeta: typeof sumIfMeta;
+  notRegistered: typeof notRegistered;
+  getExtensionId: typeof getExtensionId;
+  backgroundOnly: typeof backgroundOnly;
 }

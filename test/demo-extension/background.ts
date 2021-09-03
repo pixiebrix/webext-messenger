@@ -1,11 +1,11 @@
 import { isBackgroundPage } from "webext-detect-page";
-import { registerMethod } from "../../index";
+import { registerMethods } from "../../index";
 
-import { _sum } from "./background/sum";
-import { _throws } from "./background/throws";
-import { _sumIfMeta } from "./background/sumIfMeta";
-import { _getExtensionId } from "./background/getExtensionId";
-import { _backgroundOnly } from "./background/backgroundOnly";
+import { sum } from "./background/sum";
+import { throws } from "./background/throws";
+import { sumIfMeta } from "./background/sumIfMeta";
+import { getExtensionId } from "./background/getExtensionId";
+import { backgroundOnly } from "./background/backgroundOnly";
 
 if (!isBackgroundPage()) {
   throw new Error(
@@ -13,8 +13,10 @@ if (!isBackgroundPage()) {
   );
 }
 
-registerMethod("backgroundOnly", _backgroundOnly);
-registerMethod("getExtensionId", _getExtensionId);
-registerMethod("sum", _sum);
-registerMethod("sumIfMeta", _sumIfMeta);
-registerMethod("throws", _throws);
+registerMethods({
+  backgroundOnly,
+  getExtensionId,
+  sum,
+  sumIfMeta,
+  throws,
+});

@@ -3,6 +3,7 @@
   "include": ["test/demo-extension/**/*"],
   "files": ["index.ts"],
   "compilerOptions": {
-    "outDir": "distribution"
+    "outDir": "distribution",
+    "skipLibCheck": false
   }
 }

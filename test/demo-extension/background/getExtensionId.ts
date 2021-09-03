@@ -1,3 +1,3 @@
-export async function _getExtensionId(): Promise<string> {
+export async function getExtensionId(): Promise<string> {
   return chrome.runtime.id;
 }
