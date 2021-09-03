@@ -1,3 +1,5 @@
+import { MessengerMethods } from "./test/demo-extension/background/types";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
 type Method = (
@@ -45,31 +47,26 @@ function onMessageListener(
 }
 
 /**
- * Returns a function that registers a handler for a specific method.
- * To be called in the receiving end.
- */
-export function getRegistration(type: string, method: Method) {
-  return (): void => {
-    if (handlers.has(type)) {
-      throw new Error(`Handler already set for ${type}`);
-    }
-
-    handlers.set(type, method);
-    browser.runtime.onMessage.addListener(onMessageListener);
-  };
-}
-
-/**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
 export function getMethod<
-  TMethod extends Method
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType]
   // The original Method might have `this` (sender) specified, but this isn't applicable here
->(type: string): OmitThisParameter<TMethod> {
-  return (async (...args) =>
+>(type: TType): OmitThisParameter<TMethod> {
+  return (async (...args: Parameters<TMethod>) =>
     browser.runtime.sendMessage({
       type,
       args,
     })) as OmitThisParameter<TMethod>;
+}
+
+export function registerMethod(type: string, method: Method): void {
+  if (handlers.has(type)) {
+    throw new Error(`Handler already set for ${type}`);
+  }
+
+  handlers.set(type, method);
+  browser.runtime.onMessage.addListener(onMessageListener);
 }

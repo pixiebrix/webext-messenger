@@ -1,10 +1,12 @@
 import * as test from "fresh-tape";
-import { backgroundOnly } from "./background/backgroundOnly";
-import { getExtensionId } from "./background/getExtensionId";
-import { notRegistered } from "./background/noRegistered";
-import { sum } from "./background/sum";
-import { sumIfMeta } from "./background/sumIfMeta";
-import { throws } from "./background/throws";
+import {
+  backgroundOnly,
+  getExtensionId,
+  notRegistered,
+  sum,
+  sumIfMeta,
+  throws,
+} from "./background/api";
 
 test("send message and get response", async (t) => {
   t.equal(await getExtensionId(), chrome.runtime.id);
