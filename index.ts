@@ -1,11 +1,13 @@
-import { MessengerMethods } from "./test/demo-extension/background/types";
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
 type Method = (
   this: browser.runtime.MessageSender,
   ...args: Arguments
 ) => Promise<unknown>;
+
+type PublicMethod<TMethod = Method> = OmitThisParameter<TMethod> & {
+  type: string;
+};
 
 // TODO: It may include additional meta, like information about the original sender
 type Message<TArguments extends Arguments = Arguments> = {
@@ -46,27 +48,30 @@ function onMessageListener(
   throw new Error("No handler registered for " + message.type);
 }
 
+// The original Method might have `this` (sender) specified, but this isn't applicable here
 /**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType]
-  // The original Method might have `this` (sender) specified, but this isn't applicable here
->(type: TType): OmitThisParameter<TMethod> {
-  return (async (...args: Parameters<TMethod>) =>
+export function getMethod<TMethod extends Method>(
+  type: string
+): PublicMethod<TMethod> {
+  const method: Method = async (...args) =>
     browser.runtime.sendMessage({
       type,
       args,
-    })) as OmitThisParameter<TMethod>;
+    });
+  return Object.assign(method, { type }) as PublicMethod<TMethod>;
 }
 
-export function registerMethod(type: string, method: Method): void {
-  if (handlers.has(type)) {
-    throw new Error(`Handler already set for ${type}`);
+export function registerMethods(...methods: PublicMethod[]): void {
+  for (const method of methods) {
+    if (handlers.has(method.type)) {
+      throw new Error(`Handler already set for ${method.type}`);
+    }
+
+    handlers.set(method.type, method);
   }
 
-  handlers.set(type, method);
   browser.runtime.onMessage.addListener(onMessageListener);
 }
