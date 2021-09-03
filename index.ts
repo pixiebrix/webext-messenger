@@ -5,11 +5,6 @@ type Method = (
   ...args: Arguments
 ) => Promise<unknown>;
 
-export type Contract<TMethod extends Method = Method> = {
-  type: string;
-  method?: TMethod;
-};
-
 // TODO: It may include additional meta, like information about the original sender
 type Message<TArguments extends Arguments = Arguments> = {
   type: string;
@@ -53,10 +48,7 @@ function onMessageListener(
  * Returns a function that registers a handler for a specific method.
  * To be called in the receiving end.
  */
-export function getRegistration(
-  type: Contract["type"],
-  method: NonNullable<Contract["method"]>
-) {
+export function getRegistration(type: string, method: Method) {
   return (): void => {
     if (handlers.has(type)) {
       throw new Error(`Handler already set for ${type}`);
@@ -72,12 +64,12 @@ export function getRegistration(
  * To be called in the sender’s end.
  */
 export function getMethod<
+  TMethod extends Method
   // The original Method might have `this` (sender) specified, but this isn't applicable here
-  LocalMethod extends NonNullable<Contract["method"]>
->(type: Contract["type"]): OmitThisParameter<LocalMethod> {
+>(type: string): OmitThisParameter<TMethod> {
   return (async (...args) =>
     browser.runtime.sendMessage({
       type,
       args,
-    })) as OmitThisParameter<LocalMethod>;
+    })) as OmitThisParameter<TMethod>;
 }
