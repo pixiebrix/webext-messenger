@@ -1,12 +1,15 @@
-import { MessengerMethods } from "./test/demo-extension/background/types";
+declare global {
+  interface MessengerMethods {
+    _: Method;
+  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
-export type Method = (
+type Method = (
   this: browser.runtime.MessageSender,
   ...args: Arguments
 ) => Promise<unknown>;
-type PublicMethod<TMethod = Method> = OmitThisParameter<TMethod>;
 
 // TODO: It may include additional meta, like information about the original sender
 type Message<TArguments extends Arguments = Arguments> = {
@@ -51,15 +54,16 @@ function onMessageListener(
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getMethod<TMethod extends Method>(
-  type: string
-): PublicMethod<TMethod> {
-  const method: Method = async (...args) =>
+export function getMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType]
+  // The original Method might have `this` (sender) specified, but this isn't applicable here
+>(type: TType): OmitThisParameter<TMethod> {
+  return (async (...args: Parameters<TMethod>) =>
     browser.runtime.sendMessage({
       type,
       args,
-    });
-  return method as PublicMethod<TMethod>;
+    })) as OmitThisParameter<TMethod>;
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
