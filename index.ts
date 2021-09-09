@@ -4,12 +4,11 @@ declare global {
   }
 }
 
+export type MessengerMeta = browser.runtime.MessageSender;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
-type Method = (
-  this: browser.runtime.MessageSender,
-  ...args: Arguments
-) => Promise<unknown>;
+type Method = (this: MessengerMeta, ...args: Arguments) => Promise<unknown>;
 
 // TODO: It may include additional meta, like information about the original sender
 type Message<TArguments extends Arguments = Arguments> = {
@@ -36,7 +35,7 @@ const handlers = new Map<string, Method>();
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender
+  sender: MessengerMeta
 ): Promise<unknown> | void {
   if (!isMessage(message)) {
     return;
