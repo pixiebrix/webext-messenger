@@ -25,12 +25,11 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isMessage(value: unknown): value is Message {
-  // TODO: Add library-specific key to safely catch non-handled messages
-  //  https://github.com/pixiebrix/extension-messaging/pull/8#discussion_r700095639
+function isMessengerMessage(value: unknown): value is Message {
   return (
     isObject(value) &&
     typeof value["type"] === "string" &&
+    typeof value["__webext_messenger__"] === "boolean" &&
     Array.isArray(value["args"])
   );
 }
@@ -42,7 +41,7 @@ function onMessageListener(
   message: unknown,
   sender: MessengerMeta
 ): Promise<unknown> | void {
-  if (!isMessage(message)) {
+  if (!isMessengerMessage(message)) {
     return;
   }
 
@@ -65,6 +64,8 @@ export function getMethod<
 >(type: TType): ActuallyOmitThisParameter<TMethod> {
   return (async (...args: Parameters<TMethod>) =>
     browser.runtime.sendMessage({
+      // Guarantees that a message is meant to be handled by this library
+      __webext_messenger__: true,
       type,
       args,
     })) as ActuallyOmitThisParameter<TMethod>;
