@@ -1,4 +1,3 @@
-import isPromise from "is-promise";
 import { deserializeError, serializeError } from "serialize-error";
 
 // The global interface is used to declare the types of the methods.
@@ -78,19 +77,15 @@ export function getMethod<
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
 >(type: TType): PublicMethod {
   const publicMethod = async (...args: Parameters<TMethod>) => {
-    const returnValue: unknown = browser.runtime.sendMessage({
+    // TODO: This will throw if the receiving end doesn't exist,
+    //  i.e. if registerMethods hasn't been called
+    const response: unknown = await browser.runtime.sendMessage({
       // Guarantees that a message is meant to be handled by this library
       __webext_messenger__: true,
       type,
       args,
     });
 
-    // TODO: Add test for this. The target must exist but registerMethod must have never been called
-    if (!isPromise(returnValue)) {
-      throw new Error("No methods were registered in the receiving end");
-    }
-
-    const response = await returnValue;
     if (isObject(response) && errorKey in response) {
       throw deserializeError(response[errorKey]);
     }
