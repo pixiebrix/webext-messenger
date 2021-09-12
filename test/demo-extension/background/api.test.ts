@@ -17,7 +17,7 @@ test("support parameters", async (t) => {
   t.equal(await sum(1, 2, 3, 4), 10);
 });
 
-test("support parameters", async (t) => {
+test("should receive information from the caller", async (t) => {
   t.equal(await sumIfMeta(1, 2, 3, 4), 10);
 });
 
