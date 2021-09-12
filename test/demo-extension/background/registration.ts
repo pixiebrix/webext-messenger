@@ -1,13 +1,13 @@
 import { isBackgroundPage } from "webext-detect-page";
-import { registerMethods } from "../../index";
+import { registerMethods } from "../../../index";
 
-import { sum } from "./background/sum";
-import { throws } from "./background/throws";
-import { sumIfMeta } from "./background/sumIfMeta";
-import { getExtensionId } from "./background/getExtensionId";
-import { backgroundOnly } from "./background/backgroundOnly";
-import { notRegistered } from "./background/notRegistered";
-import { getSelf } from "./background/getSelf";
+import { sum } from "./sum";
+import { throws } from "./throws";
+import { sumIfMeta } from "./sumIfMeta";
+import { getExtensionId } from "./getExtensionId";
+import { backgroundOnly } from "./backgroundOnly";
+import { notRegistered } from "./notRegistered";
+import { getSelf } from "./getSelf";
 
 declare global {
   interface MessengerMethods {

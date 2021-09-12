@@ -7,7 +7,7 @@ import {
   sumIfMeta,
   throws,
   getSelf,
-} from "./background/api";
+} from "./api";
 
 test("send message and get response", async (t) => {
   t.equal(await getExtensionId(), chrome.runtime.id);
@@ -35,13 +35,20 @@ test("should receive error from a background handler", async (t) => {
       return;
     }
 
+    if (!error.stack) {
+      t.fail("The error has no stack");
+      return;
+    }
+
     t.equal(error.message, "This my error");
     t.true(
-      error.stack!.includes("/background.js"),
+      error.stack.includes("/background/registration.js"),
       "The stacktrace must come from the background page"
     );
     t.true(
-      error.stack!.includes("throws "),
+      // Chrome format || Firefox format
+      error.stack.includes("at Object.throws") ||
+        error.stack.includes("throws@moz-"),
       "The stacktrace must include the original name of the method"
     );
   }
