@@ -1,3 +1,11 @@
+import isPromise from "is-promise";
+import { deserializeError, serializeError } from "serialize-error";
+
+// The global interface is used to declare the types of the methods.
+// This "empty" declaration helps the local code understand what
+// `MessengerMethods[string]` may look like. Do not use `Record<string, Method>`
+// because an index signature would allow any string to return Method and
+// it would make `getMethod` too loose.
 declare global {
   interface MessengerMethods {
     _: Method;
@@ -20,6 +28,8 @@ type Message<TArguments extends Arguments = Arguments> = {
   type: string;
   args: TArguments;
 };
+
+const errorKey = "__webext_messenger_error_response__";
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -47,7 +57,11 @@ function onMessageListener(
 
   const handler = handlers.get(message.type);
   if (handler) {
-    return handler.call(sender, ...message.args);
+    return handler.call(sender, ...message.args).catch((error: unknown) => ({
+      // Errors must be serialized because the stacktraces are currently lost on Chrome and
+      // https://github.com/mozilla/webextension-polyfill/issues/210
+      [errorKey]: serializeError(error),
+    }));
   }
 
   throw new Error("No handler registered for " + message.type);
@@ -59,16 +73,32 @@ function onMessageListener(
  */
 export function getMethod<
   TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType]
+  TMethod extends MessengerMethods[TType],
+  PublicMethod extends ActuallyOmitThisParameter<TMethod>
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
->(type: TType): ActuallyOmitThisParameter<TMethod> {
-  return (async (...args: Parameters<TMethod>) =>
-    browser.runtime.sendMessage({
+>(type: TType): PublicMethod {
+  const publicMethod = async (...args: Parameters<TMethod>) => {
+    const returnValue: unknown = browser.runtime.sendMessage({
       // Guarantees that a message is meant to be handled by this library
       __webext_messenger__: true,
       type,
       args,
-    })) as ActuallyOmitThisParameter<TMethod>;
+    });
+
+    // TODO: Add test for this. The target must exist but registerMethod must have never been called
+    if (!isPromise(returnValue)) {
+      throw new Error("No methods were registered in the receiving end");
+    }
+
+    const response = await returnValue;
+    if (isObject(response) && errorKey in response) {
+      throw deserializeError(response[errorKey]);
+    }
+
+    return response;
+  };
+
+  return publicMethod as PublicMethod;
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {

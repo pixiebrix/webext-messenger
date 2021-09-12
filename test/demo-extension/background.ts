@@ -10,9 +10,6 @@ import { notRegistered } from "./background/notRegistered";
 import { getSelf } from "./background/getSelf";
 
 declare global {
-  // TODO: This interface can't actually guarantee that every type has a Method
-  // Adding an index signature will break MessengerMethods’s usage, because any key
-  // will just return Method even if not set.
   interface MessengerMethods {
     sum: typeof sum;
     throws: typeof throws;
