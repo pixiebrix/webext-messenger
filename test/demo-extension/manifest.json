@@ -2,11 +2,15 @@
   "name": "webext-messenger",
   "version": "0.0.0",
   "manifest_version": 2,
-  "permissions": ["https://legiblenews.com/*"],
+  "permissions": [
+    "https://legiblenews.com/*",
+    "https://iframe-test-page.vercel.app/*"
+  ],
   "background": {
     "scripts": [
       "~node_modules/webextension-polyfill",
-      "background/registration.ts"
+      "background/registration.ts",
+      "contentscript/api.test.ts"
     ]
   },
   "options_ui": {
@@ -16,8 +20,16 @@
   "content_scripts": [
     {
       "all_frames": true,
-      "matches": ["*://*/*"],
+      "matches": ["https://legiblenews.com/*"],
       "js": ["~node_modules/webextension-polyfill", "background/api.test.ts"]
+    },
+    {
+      "all_frames": true,
+      "matches": ["https://iframe-test-page.vercel.app/*"],
+      "js": [
+        "~node_modules/webextension-polyfill",
+        "contentscript/registration.ts"
+      ]
     }
   ]
 }

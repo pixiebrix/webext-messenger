@@ -66,6 +66,54 @@ function onMessageListener(
   throw new Error("No handler registered for " + message.type);
 }
 
+export interface Target {
+  tab: number;
+  frame?: number;
+}
+
+type WithTarget<TMethod> = TMethod extends (
+  ...args: infer PreviousArguments
+) => infer TReturnValue
+  ? (target: Target, ...args: PreviousArguments) => TReturnValue
+  : never;
+
+/**
+ * Replicates the original method, including its types.
+ * To be called in the sender’s end.
+ */
+export function getContentScriptMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  PublicMethod extends WithTarget<ActuallyOmitThisParameter<TMethod>>
+  // The original Method might have `this` (Meta) specified, but this isn't applicable here
+>(type: TType): PublicMethod {
+  const publicMethod = async (target: Target, ...args: Parameters<TMethod>) => {
+    // TODO: This will throw if the receiving end doesn't exist,
+    //  i.e. if registerMethods hasn't been called
+    const response: unknown = await browser.tabs.sendMessage(
+      target.tab,
+      {
+        // Guarantees that a message is meant to be handled by this library
+        __webext_messenger__: true,
+        type,
+        args,
+      },
+      {
+        // Must be specified. If missing, the message would be sent to every frame
+        frameId: target.frame ?? 0,
+      }
+    );
+
+    if (isObject(response) && errorKey in response) {
+      throw deserializeError(response[errorKey]);
+    }
+
+    return response;
+  };
+
+  return publicMethod as PublicMethod;
+}
+
 /**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
