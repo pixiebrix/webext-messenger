@@ -113,11 +113,11 @@ async function init() {
   });
 
   // All `test` calls must be done synchronously, or else the runner assumes they're done
-  runOnTarget({ tab: id!, frame: parentFrame!.frameId }, "Parent");
-  runOnTarget({ tab: id!, frame: iframe!.frameId }, "Child");
+  runOnTarget({ tabId: id!, frameId: parentFrame!.frameId }, "Parent");
+  runOnTarget({ tabId: id!, frameId: iframe!.frameId }, "Child");
 
   test("should be able to close the tab from the content script", async (t) => {
-    await closeSelf({ tab: id!, frame: parentFrame!.frameId });
+    await closeSelf({ tabId: id!, frameId: parentFrame!.frameId });
     try {
       // Since the tab was closed, this is expected to throw
       t.notOk(await browser.tabs.get(id!), "The tab should not be open");

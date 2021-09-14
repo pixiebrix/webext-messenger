@@ -67,8 +67,8 @@ function onMessageListener(
 }
 
 export interface Target {
-  tab: number;
-  frame?: number;
+  tabId: number;
+  frameId?: number;
 }
 
 type WithTarget<TMethod> = TMethod extends (
@@ -91,7 +91,7 @@ export function getContentScriptMethod<
     // TODO: This will throw if the receiving end doesn't exist,
     //  i.e. if registerMethods hasn't been called
     const response: unknown = await browser.tabs.sendMessage(
-      target.tab,
+      target.tabId,
       {
         // Guarantees that a message is meant to be handled by this library
         __webext_messenger__: true,
@@ -100,7 +100,7 @@ export function getContentScriptMethod<
       },
       {
         // Must be specified. If missing, the message would be sent to every frame
-        frameId: target.frame ?? 0,
+        frameId: target.frameId ?? 0,
       }
     );
 
