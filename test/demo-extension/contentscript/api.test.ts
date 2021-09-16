@@ -97,6 +97,10 @@ function runOnTarget(target: Target, expectedTitle: string) {
 }
 
 async function init() {
+  const unregisteredTab = await browser.tabs.create({
+    url: "https://text.npr.org/",
+  });
+
   const { id } = await browser.tabs.create({
     url: "https://iframe-test-page.vercel.app/",
   });
@@ -115,6 +119,21 @@ async function init() {
   // All `test` calls must be done synchronously, or else the runner assumes they're done
   runOnTarget({ tabId: id!, frameId: parentFrame!.frameId }, "Parent");
   runOnTarget({ tabId: id!, frameId: iframe!.frameId }, "Child");
+
+  test("should throw the right error when `registerMethod` was never called", async (t) => {
+    try {
+      await getPageTitle({ tabId: unregisteredTab.id! });
+      t.fail("getPageTitle() should have thrown but did not");
+    } catch (error: unknown) {
+      if (!(error instanceof Error)) {
+        t.fail("The error is not an instance of Error");
+        return;
+      }
+
+      t.equal(error.message, "No handlers registered in receiving end");
+      await browser.tabs.remove(unregisteredTab.id!);
+    }
+  });
 
   test("should be able to close the tab from the content script", async (t) => {
     await closeSelf({ tabId: id!, frameId: parentFrame!.frameId });
