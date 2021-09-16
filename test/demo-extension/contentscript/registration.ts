@@ -25,7 +25,7 @@ declare global {
 
 if (!isContentScript()) {
   throw new Error(
-    "This file must only be run in the content script, which is the receiving eng"
+    "This file must only be run in the content script, which is the receiving end"
   );
 }
 

@@ -23,7 +23,7 @@ declare global {
 
 if (!isBackgroundPage()) {
   throw new Error(
-    "This file must only be run in the background page, which is the receiving eng"
+    "This file must only be run in the background page, which is the receiving end"
   );
 }
 
