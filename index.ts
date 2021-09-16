@@ -180,6 +180,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
       throw new Error(`Handler already set for ${type}`);
     }
 
+    console.debug(`Messenger: Registered`, type);
     handlers.set(type, method);
   }
 
