@@ -17,17 +17,18 @@ type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
   : T;
 
 export type MessengerMeta = browser.runtime.MessageSender;
-export interface MessengerResponse {
-  __webext_messenger__: InternalMessengerResponse;
-}
-
-type InternalMessengerResponse =
+type RawMessengerResponse =
   | {
       value: unknown;
     }
   | {
       error: ErrorObject;
     };
+
+type MessengerResponse = RawMessengerResponse & {
+  /** Guarantees that the message was handled by this library */
+  __webext_messenger__: true;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
@@ -39,21 +40,22 @@ type Message<TArguments extends Arguments = Arguments> = {
   args: TArguments;
 };
 
+const __webext_messenger__ = true;
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isMessengerMessage(value: unknown): value is Message {
+function isMessengerMessage(message: unknown): message is Message {
   return (
-    isObject(value) &&
-    typeof value["type"] === "string" &&
-    typeof value["__webext_messenger__"] === "boolean" &&
-    Array.isArray(value["args"])
+    isObject(message) &&
+    typeof message["type"] === "string" &&
+    message["__webext_messenger__"] === true &&
+    Array.isArray(message["args"])
   );
 }
 
-function isMessengerResponse(value: unknown): value is MessengerResponse {
-  return isObject(value) && typeof value["__webext_messenger__"] === "object";
+function isMessengerResponse(response: unknown): response is MessengerResponse {
+  return isObject(response) && response["__webext_messenger__"] === true;
 }
 
 const handlers = new Map<string, Method>();
@@ -61,19 +63,22 @@ const handlers = new Map<string, Method>();
 async function handleMessage(
   message: Message,
   sender: MessengerMeta
-): Promise<InternalMessengerResponse> {
+): Promise<MessengerResponse> {
   const handler = handlers.get(message.type);
   if (!handler) {
     throw new Error("No handler registered for " + message.type);
   }
 
-  try {
-    return { value: await handler.call(sender, ...message.args) };
-  } catch (error: unknown) {
-    // Errors must be serialized because the stacktraces are currently lost on Chrome and
-    // https://github.com/mozilla/webextension-polyfill/issues/210
-    return { error: serializeError(error) };
-  }
+  const response = await handler.call(sender, ...message.args).then(
+    (value) => ({ value }),
+    (error: unknown) => ({
+      // Errors must be serialized because the stacktraces are currently lost on Chrome and
+      // https://github.com/mozilla/webextension-polyfill/issues/210
+      error: serializeError(error),
+    })
+  );
+
+  return { ...response, __webext_messenger__ };
 }
 
 async function handleResponse(response: unknown): Promise<unknown> {
@@ -82,11 +87,11 @@ async function handleResponse(response: unknown): Promise<unknown> {
     throw new Error("No handlers registered in receiving end");
   }
 
-  if ("error" in response.__webext_messenger__) {
-    throw deserializeError(response.__webext_messenger__.error);
+  if ("error" in response) {
+    throw deserializeError(response.error);
   }
 
-  return response.__webext_messenger__.value;
+  return response.value;
 }
 
 // MUST NOT be `async` or Promise-returning-only
@@ -94,15 +99,11 @@ function onMessageListener(
   message: unknown,
   sender: MessengerMeta
 ): Promise<unknown> | void {
-  if (!isMessengerMessage(message)) {
-    return;
+  if (isMessengerMessage(message)) {
+    return handleMessage(message, sender);
   }
 
-  return handleMessage(message, sender).then((response) => {
-    return {
-      __webext_messenger__: response,
-    };
-  });
+  // TODO: Add test for this eventuality: ignore unrelated messages
 }
 
 export interface Target {
@@ -127,13 +128,11 @@ export function getContentScriptMethod<
   PublicMethod extends WithTarget<ActuallyOmitThisParameter<TMethod>>
 >(type: TType): PublicMethod {
   const publicMethod = async (target: Target, ...args: Parameters<TMethod>) => {
-    // TODO: This will throw if the receiving end doesn't exist,
-    //  i.e. if registerMethods hasn't been called
     const response: unknown = await browser.tabs.sendMessage(
       target.tabId,
       {
         // Guarantees that a message is meant to be handled by this library
-        __webext_messenger__: true,
+        __webext_messenger__,
         type,
         args,
       },
@@ -160,11 +159,9 @@ export function getMethod<
   PublicMethod extends ActuallyOmitThisParameter<TMethod>
 >(type: TType): PublicMethod {
   const publicMethod = async (...args: Parameters<TMethod>) => {
-    // TODO: This will throw if the receiving end doesn't exist,
-    //  i.e. if registerMethods hasn't been called
     const response: unknown = await browser.runtime.sendMessage({
       // Guarantees that a message is meant to be handled by this library
-      __webext_messenger__: true,
+      __webext_messenger__,
       type,
       args,
     });
