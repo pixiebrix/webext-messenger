@@ -69,6 +69,7 @@ async function handleMessage(
     throw new Error("No handler registered for " + message.type);
   }
 
+  console.debug(`Messenger:`, message.type, message.args, "from", { sender });
   const response = await handler.call(sender, ...message.args).then(
     (value) => ({ value }),
     (error: unknown) => ({
@@ -78,6 +79,7 @@ async function handleMessage(
     })
   );
 
+  console.debug(`Messenger:`, message.type, "responds", response);
   return { ...response, __webext_messenger__ };
 }
 
