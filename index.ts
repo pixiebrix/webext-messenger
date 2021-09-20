@@ -1,4 +1,5 @@
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
+import { Asyncify } from "type-fest";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -70,7 +71,10 @@ async function handleMessage(
   }
 
   console.debug(`Messenger:`, message.type, message.args, "from", { sender });
-  const response = await handler.call(sender, ...message.args).then(
+  // The handler could actually be a synchronous function
+  const response = await Promise.resolve(
+    handler.call(sender, ...message.args)
+  ).then(
     (value) => ({ value }),
     (error: unknown) => ({
       // Errors must be serialized because the stacktraces are currently lost on Chrome and
@@ -127,7 +131,7 @@ export function getContentScriptMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
-  PublicMethod extends WithTarget<ActuallyOmitThisParameter<TMethod>>
+  PublicMethod extends WithTarget<Asyncify<ActuallyOmitThisParameter<TMethod>>>
 >(type: TType): PublicMethod {
   const publicMethod = async (target: Target, ...args: Parameters<TMethod>) => {
     const response: unknown = await browser.tabs.sendMessage(
@@ -158,7 +162,7 @@ export function getMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
-  PublicMethod extends ActuallyOmitThisParameter<TMethod>
+  PublicMethod extends Asyncify<ActuallyOmitThisParameter<TMethod>>
 >(type: TType): PublicMethod {
   const publicMethod = async (...args: Parameters<TMethod>) => {
     const response: unknown = await browser.runtime.sendMessage({
@@ -181,7 +185,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
     }
 
     console.debug(`Messenger: Registered`, type);
-    handlers.set(type, method);
+    handlers.set(type, method as Method);
   }
 
   browser.runtime.onMessage.addListener(onMessageListener);
