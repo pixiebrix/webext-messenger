@@ -1,3 +1,3 @@
-export async function getPageTitle(): Promise<string> {
+export function getPageTitle(): string {
   return document.title;
 }
