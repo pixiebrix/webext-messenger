@@ -34,7 +34,7 @@
     },
     {
       "all_frames": true,
-      "matches": ["https://text.npr.org//*"],
+      "matches": ["https://text.npr.org/*"],
       "js": [
         "~node_modules/webextension-polyfill",
         "contentscript/fixtures/unrelatedMessageListener.ts"

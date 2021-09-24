@@ -11,6 +11,12 @@ import {
   getSelf,
 } from "./api";
 
+async function delay(timeout: number): Promise<void> {
+  await new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+}
+
 function runOnTarget(target: Target, expectedTitle: string) {
   test(expectedTitle + ": send message and get response", async (t) => {
     const title = await getPageTitle(target);
@@ -97,21 +103,11 @@ function runOnTarget(target: Target, expectedTitle: string) {
 }
 
 async function init() {
-  const unregisteredTab = await browser.tabs.create({
-    url: "https://text.npr.org/",
-  });
-
   const { id } = await browser.tabs.create({
     url: "https://iframe-test-page.vercel.app/",
   });
 
-  // Give the tabs time to load
-  // TODO: This should be handled by webext-messenger itself
-  //  https://github.com/pixiebrix/webext-messenger/issues/11
-  await new Promise((resolve) => {
-    setTimeout(resolve, 700);
-  });
-
+  await delay(1000); // Let frames load so we can query them for the tests
   const [parentFrame, iframe] = await browser.webNavigation.getAllFrames({
     tabId: id!,
   });
@@ -121,8 +117,11 @@ async function init() {
   runOnTarget({ tabId: id!, frameId: iframe!.frameId }, "Child");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
+    const tab = await browser.tabs.create({
+      url: "https://text.npr.org/",
+    });
     try {
-      await getPageTitle({ tabId: unregisteredTab.id! });
+      await getPageTitle({ tabId: tab.id! });
       t.fail("getPageTitle() should have thrown but did not");
     } catch (error: unknown) {
       if (!(error instanceof Error)) {
@@ -131,7 +130,8 @@ async function init() {
       }
 
       t.equal(error.message, "No handlers registered in receiving end");
-      await browser.tabs.remove(unregisteredTab.id!);
+
+      await browser.tabs.remove(tab.id!);
     }
   });
 
