@@ -1,3 +1,4 @@
+import chromeP from "webext-polyfill-kinda";
 import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify } from "type-fest";
@@ -18,7 +19,7 @@ type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
   ? (...args: A) => R
   : T;
 
-export type MessengerMeta = browser.runtime.MessageSender;
+export type MessengerMeta = browser.Runtime.MessageSender;
 type RawMessengerResponse =
   | {
       value: unknown;
@@ -65,6 +66,13 @@ function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webext_messenger__"] === true;
 }
 
+async function sendMessageToTab(target: Target, message: MessengerMessage) {
+  return chromeP.tabs.sendMessage(target.tabId, message, {
+    // `frameId` must be specified. If missing, the message would be sent to every frame
+    frameId: target.frameId ?? 0,
+  });
+}
+
 const handlers = new Map<string, Method>();
 
 async function handleMessage(
@@ -83,8 +91,7 @@ async function handleMessage(
   ).then(
     (value) => ({ value }),
     (error: unknown) => ({
-      // Errors must be serialized because the stacktraces are currently lost on Chrome and
-      // https://github.com/mozilla/webextension-polyfill/issues/210
+      // Errors must be serialized to preserve stacktraces
       error: serializeError(error),
     })
   );
@@ -167,12 +174,7 @@ export function getContentScriptMethod<
 >(type: TType): PublicMethod {
   const publicMethod = async (target: Target, ...args: Parameters<TMethod>) =>
     handleCall(type, async () =>
-      browser.tabs.sendMessage(
-        target.tabId,
-        makeMessage(type, args),
-        // `frameId` must be specified. If missing, the message would be sent to every frame
-        { frameId: target.frameId ?? 0 }
-      )
+      sendMessageToTab(target, makeMessage(type, args))
     );
 
   return publicMethod as PublicMethod;
@@ -206,5 +208,5 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
     handlers.set(type, method as Method);
   }
 
-  browser.runtime.onMessage.addListener(onMessageListener);
+  chrome.runtime.onMessage.addListener(onMessageListener);
 }

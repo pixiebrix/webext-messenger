@@ -1,3 +1,4 @@
+import browser from "webextension-polyfill";
 import * as test from "fresh-tape";
 import { Target } from "../../../index";
 import {
@@ -153,11 +154,6 @@ async function init() {
 
     const request = getPageTitle({ tabId });
     await delay(1000); // Simulate a slow-loading tab
-    await browser.tabs.executeScript(tabId, {
-      // https://github.com/parcel-bundler/parcel/issues/5758
-      file:
-        "/up_/up_/node_modules/webextension-polyfill/dist/browser-polyfill.js",
-    });
     await browser.tabs.executeScript(tabId, {
       file: "contentscript/registration.js",
     });
