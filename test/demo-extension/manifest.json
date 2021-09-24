@@ -5,7 +5,8 @@
   "permissions": [
     "webNavigation",
     "https://legiblenews.com/*",
-    "https://iframe-test-page.vercel.app/*"
+    "https://iframe-test-page.vercel.app/*",
+    "http://lite.cnn.com/*"
   ],
   "background": {
     "scripts": [

@@ -1,3 +1,4 @@
+import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify } from "type-fest";
 
@@ -39,6 +40,11 @@ type Method = (this: MessengerMeta, ...args: Arguments) => Promise<unknown>;
 type Message<TArguments extends Arguments = Arguments> = {
   type: string;
   args: TArguments;
+};
+
+type MessengerMessage = Message & {
+  /** Guarantees that a message is meant to be handled by this library */
+  __webext_messenger__: true;
 };
 
 const __webext_messenger__ = true;
@@ -87,7 +93,25 @@ async function handleMessage(
   return { ...response, __webext_messenger__ };
 }
 
-async function handleResponse(response: unknown): Promise<unknown> {
+async function handleCall(
+  type: string,
+  sendMessage: () => Promise<MessengerResponse | unknown>
+): Promise<unknown> {
+  const response = await pRetry(sendMessage, {
+    minTimeout: 100,
+    factor: 1.3,
+    maxRetryTime: 4000,
+    onFailedAttempt(error) {
+      if (
+        error?.message !==
+        "Could not establish connection. Receiving end does not exist."
+      ) {
+        throw error;
+      }
+
+      console.debug("Messenger:", type, "will retry");
+    },
+  });
   if (!isMessengerResponse(response)) {
     // If the response is `undefined`, `registerMethod` was never called
     throw new Error("No handlers registered in receiving end");
@@ -117,6 +141,14 @@ export interface Target {
   frameId?: number;
 }
 
+function makeMessage(type: string, args: unknown[]): MessengerMessage {
+  return {
+    __webext_messenger__,
+    type,
+    args,
+  };
+}
+
 type WithTarget<TMethod> = TMethod extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
@@ -133,23 +165,15 @@ export function getContentScriptMethod<
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
   PublicMethod extends WithTarget<Asyncify<ActuallyOmitThisParameter<TMethod>>>
 >(type: TType): PublicMethod {
-  const publicMethod = async (target: Target, ...args: Parameters<TMethod>) => {
-    const response: unknown = await browser.tabs.sendMessage(
-      target.tabId,
-      {
-        // Guarantees that a message is meant to be handled by this library
-        __webext_messenger__,
-        type,
-        args,
-      },
-      {
-        // Must be specified. If missing, the message would be sent to every frame
-        frameId: target.frameId ?? 0,
-      }
+  const publicMethod = async (target: Target, ...args: Parameters<TMethod>) =>
+    handleCall(type, async () =>
+      browser.tabs.sendMessage(
+        target.tabId,
+        makeMessage(type, args),
+        // `frameId` must be specified. If missing, the message would be sent to every frame
+        { frameId: target.frameId ?? 0 }
+      )
     );
-
-    return handleResponse(response);
-  };
 
   return publicMethod as PublicMethod;
 }
@@ -164,16 +188,10 @@ export function getMethod<
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
   PublicMethod extends Asyncify<ActuallyOmitThisParameter<TMethod>>
 >(type: TType): PublicMethod {
-  const publicMethod = async (...args: Parameters<TMethod>) => {
-    const response: unknown = await browser.runtime.sendMessage({
-      // Guarantees that a message is meant to be handled by this library
-      __webext_messenger__,
-      type,
-      args,
-    });
-
-    return handleResponse(response);
-  };
+  const publicMethod = async (...args: Parameters<TMethod>) =>
+    handleCall(type, async () =>
+      browser.runtime.sendMessage(makeMessage(type, args))
+    );
 
   return publicMethod as PublicMethod;
 }

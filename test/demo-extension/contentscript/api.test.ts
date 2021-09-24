@@ -144,6 +144,56 @@ async function init() {
       t.pass("The tab was closed");
     }
   });
+
+  test("retries until target is ready", async (t) => {
+    const tab = await browser.tabs.create({
+      url: "http://lite.cnn.com/",
+    });
+    const tabId = tab.id!;
+
+    const request = getPageTitle({ tabId });
+    await delay(1000); // Simulate a slow-loading tab
+    await browser.tabs.executeScript(tabId, {
+      // https://github.com/parcel-bundler/parcel/issues/5758
+      file:
+        "/up_/up_/node_modules/webextension-polyfill/dist/browser-polyfill.js",
+    });
+    await browser.tabs.executeScript(tabId, {
+      file: "contentscript/registration.js",
+    });
+
+    t.equal(await request, "CNN - Breaking News, Latest News and Videos");
+    await browser.tabs.remove(tabId);
+  });
+
+  test("retries until it times out", async (t) => {
+    const tab = await browser.tabs.create({
+      url: "http://lite.cnn.com/",
+    });
+
+    const startTime = Date.now();
+    try {
+      await getPageTitle({ tabId: tab.id! });
+      t.fail("getPageTitle() should have thrown but did not");
+    } catch (error: unknown) {
+      if (!(error instanceof Error)) {
+        t.fail("The error is not an instance of Error");
+        return;
+      }
+
+      t.equal(
+        error.message,
+        "Could not establish connection. Receiving end does not exist."
+      );
+      const duration = Date.now() - startTime;
+      t.ok(
+        duration > 4000 && duration < 5000,
+        `It should take between 4 and 5 seconds (took ${duration / 1000})s`
+      );
+    }
+
+    await browser.tabs.remove(tab.id!);
+  });
 }
 
 void init();
