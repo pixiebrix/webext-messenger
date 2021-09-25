@@ -1,8 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "demo:watch": "parcel watch manifest.json --dist-dir test/dist --no-cache --no-hmr --detailed-report 0",
-    "demo:build": "parcel build manifest.json --dist-dir test/dist --no-cache --detailed-report 0 --no-optimize"
+    "demo:watch": "parcel watch manifest.json --no-cache --no-hmr --detailed-report 0",
+    "demo:build": "parcel build manifest.json --no-cache --detailed-report 0 --no-optimize"
   },
   "dependencies": {
     "fresh-tape": "^5.3.1",
