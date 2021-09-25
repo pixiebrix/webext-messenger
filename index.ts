@@ -95,8 +95,16 @@ async function handleMessage(
 
 async function handleCall(
   type: string,
+  { isNotification }: Options,
   sendMessage: () => Promise<MessengerResponse | unknown>
 ): Promise<unknown> {
+  if (isNotification) {
+    void sendMessage().catch((error: unknown) => {
+      console.debug("Messenger:", type, "notification failed", { error });
+    });
+    return;
+  }
+
   const response = await pRetry(sendMessage, {
     minTimeout: 100,
     factor: 1.3,
@@ -141,6 +149,14 @@ export interface Target {
   frameId?: number;
 }
 
+interface Options {
+  /**
+   * "Notifications" won't await the response, return values, attempt retries, nor throw errors
+   * @default false
+   */
+  isNotification?: boolean;
+}
+
 function makeMessage(type: string, args: unknown[]): MessengerMessage {
   return {
     __webext_messenger__,
@@ -164,9 +180,9 @@ export function getContentScriptMethod<
   TMethod extends MessengerMethods[TType],
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
   PublicMethod extends WithTarget<Asyncify<ActuallyOmitThisParameter<TMethod>>>
->(type: TType): PublicMethod {
+>(type: TType, options: Options = {}): PublicMethod {
   const publicMethod = async (target: Target, ...args: Parameters<TMethod>) =>
-    handleCall(type, async () =>
+    handleCall(type, options, async () =>
       browser.tabs.sendMessage(
         target.tabId,
         makeMessage(type, args),
@@ -187,9 +203,9 @@ export function getMethod<
   TMethod extends MessengerMethods[TType],
   // The original Method might have `this` (Meta) specified, but this isn't applicable here
   PublicMethod extends Asyncify<ActuallyOmitThisParameter<TMethod>>
->(type: TType): PublicMethod {
+>(type: TType, options: Options = {}): PublicMethod {
   const publicMethod = async (...args: Parameters<TMethod>) =>
-    handleCall(type, async () =>
+    handleCall(type, options, async () =>
       browser.runtime.sendMessage(makeMessage(type, args))
     );
 
