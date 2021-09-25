@@ -104,24 +104,16 @@ function runOnTarget(target: Target, expectedTitle: string) {
   });
 
   test(expectedTitle + ": notification should return undefined", async (t) => {
-    t.equals(await getPageTitleNotification(target), undefined);
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- Testing for this specifically
+    t.equals(getPageTitleNotification(target), undefined);
   });
-
-  test(
-    expectedTitle + ": notification should return immediately",
-    async (t) => {
-      const startTime = Date.now();
-      await getPageTitleNotification(target);
-      const duration = Date.now() - startTime;
-      t.ok(duration < 50, `It should return immediately (took ${duration}ms)`);
-    }
-  );
 
   test(
     expectedTitle +
       ": notification without registered handlers should not throw",
     async (t) => {
-      t.equals(await notRegisteredNotification(target), undefined);
+      notRegisteredNotification(target);
+      t.pass();
     }
   );
 }
@@ -221,28 +213,20 @@ async function init() {
 
   test("notifications on non-existing targets", async (t) => {
     try {
-      t.is(
-        await getPageTitleNotification({ tabId: 9001 }),
-        undefined,
-        "Should return undefined"
-      );
+      getPageTitleNotification({ tabId: 9001 });
     } catch (error: unknown) {
       t.fail("Should not throw");
       throw error;
     }
+
+    t.pass();
   });
 
-  test("notifications when `registerMethod` was never called", async (t) => {
+  test("notifications when `registerMethod` was never called", async () => {
     const tab = await browser.tabs.create({
       url: "http://lite.cnn.com/",
     });
-    try {
-      await getPageTitleNotification({ tabId: tab.id! });
-    } catch (error: unknown) {
-      t.fail("Should not throw");
-      throw error;
-    }
-
+    getPageTitleNotification({ tabId: tab.id! });
     await browser.tabs.remove(tab.id!);
   });
 }
