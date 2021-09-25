@@ -1,6 +1,6 @@
 import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
-import { Asyncify } from "type-fest";
+import { Asyncify, SetReturnType, ValueOf } from "type-fest";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -13,10 +13,25 @@ declare global {
   }
 }
 
+type WithTarget<TMethod> = TMethod extends (
+  ...args: infer PreviousArguments
+) => infer TReturnValue
+  ? (target: Target, ...args: PreviousArguments) => TReturnValue
+  : never;
+
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
 type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
   ? (...args: A) => R
   : T;
+
+/** Removes the `this` type and ensure it's always Promised */
+type PublicMethod<TMethod extends ValueOf<MessengerMethods>> = Asyncify<
+  ActuallyOmitThisParameter<TMethod>
+>;
+
+type PublicMethodWithTarget<
+  TMethod extends ValueOf<MessengerMethods>
+> = WithTarget<PublicMethod<TMethod>>;
 
 export type MessengerMeta = browser.runtime.MessageSender;
 type RawMessengerResponse =
@@ -93,7 +108,22 @@ async function handleMessage(
   return { ...response, __webext_messenger__ };
 }
 
-async function handleCall(
+// Do not turn this into an `async` function; Notifications must turn `void`
+function manageConnection(
+  type: string,
+  options: Options,
+  sendMessage: () => Promise<unknown>
+): Promise<unknown> | void {
+  if (!options.isNotification) {
+    return manageMessage(type, sendMessage);
+  }
+
+  void sendMessage().catch((error: unknown) => {
+    console.debug("Messenger:", type, "notification failed", { error });
+  });
+}
+
+async function manageMessage(
   type: string,
   sendMessage: () => Promise<MessengerResponse | unknown>
 ): Promise<unknown> {
@@ -141,6 +171,14 @@ export interface Target {
   frameId?: number;
 }
 
+interface Options {
+  /**
+   * "Notifications" won't await the response, return values, attempt retries, nor throw errors
+   * @default false
+   */
+  isNotification?: boolean;
+}
+
 function makeMessage(type: string, args: unknown[]): MessengerMessage {
   return {
     __webext_messenger__,
@@ -149,54 +187,76 @@ function makeMessage(type: string, args: unknown[]): MessengerMessage {
   };
 }
 
-type WithTarget<TMethod> = TMethod extends (
-  ...args: infer PreviousArguments
-) => infer TReturnValue
-  ? (target: Target, ...args: PreviousArguments) => TReturnValue
-  : never;
-
 /**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getContentScriptMethod<
+function getContentScriptMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
-  // The original Method might have `this` (Meta) specified, but this isn't applicable here
-  PublicMethod extends WithTarget<Asyncify<ActuallyOmitThisParameter<TMethod>>>
->(type: TType): PublicMethod {
-  const publicMethod = async (target: Target, ...args: Parameters<TMethod>) =>
-    handleCall(type, async () =>
+  TPublicMethod extends PublicMethodWithTarget<TMethod>
+>(
+  type: TType,
+  options: { isNotification: true }
+): SetReturnType<TPublicMethod, void>;
+function getContentScriptMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethodWithTarget<TMethod>
+>(type: TType, options?: Options): TPublicMethod;
+function getContentScriptMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethodWithTarget<TMethod>
+>(type: TType, options: Options = {}): TPublicMethod {
+  const publicMethod = (target: Target, ...args: Parameters<TMethod>) => {
+    const sendMessage = async () =>
       browser.tabs.sendMessage(
         target.tabId,
         makeMessage(type, args),
         // `frameId` must be specified. If missing, the message would be sent to every frame
         { frameId: target.frameId ?? 0 }
-      )
-    );
+      );
 
-  return publicMethod as PublicMethod;
+    return manageConnection(type, options, sendMessage);
+  };
+
+  return publicMethod as TPublicMethod;
 }
 
 /**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getMethod<
+function getMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
-  // The original Method might have `this` (Meta) specified, but this isn't applicable here
-  PublicMethod extends Asyncify<ActuallyOmitThisParameter<TMethod>>
->(type: TType): PublicMethod {
-  const publicMethod = async (...args: Parameters<TMethod>) =>
-    handleCall(type, async () =>
-      browser.runtime.sendMessage(makeMessage(type, args))
-    );
+  TPublicMethod extends PublicMethod<TMethod>
+>(
+  type: TType,
+  options: { isNotification: true }
+): SetReturnType<TPublicMethod, void>;
+function getMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethod<TMethod>
+>(type: TType, options?: Options): TPublicMethod;
+function getMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethod<TMethod>
+>(type: TType, options: Options = {}): TPublicMethod {
+  const publicMethod = (...args: Parameters<TMethod>) => {
+    const sendMessage = async () =>
+      browser.runtime.sendMessage(makeMessage(type, args));
 
-  return publicMethod as PublicMethod;
+    return manageConnection(type, options, sendMessage);
+  };
+
+  return publicMethod as TPublicMethod;
 }
 
-export function registerMethods(methods: Partial<MessengerMethods>): void {
+function registerMethods(methods: Partial<MessengerMethods>): void {
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
       throw new Error(`Handler already set for ${type}`);
@@ -208,3 +268,5 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
 
   browser.runtime.onMessage.addListener(onMessageListener);
 }
+
+export { getMethod, getContentScriptMethod, registerMethods };

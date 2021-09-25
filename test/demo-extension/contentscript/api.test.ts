@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as test from "fresh-tape";
 import { Target } from "../../../index";
 import {
@@ -9,6 +10,8 @@ import {
   throws,
   notRegistered,
   getSelf,
+  notRegisteredNotification,
+  getPageTitleNotification,
 } from "./api";
 
 async function delay(timeout: number): Promise<void> {
@@ -100,6 +103,20 @@ function runOnTarget(target: Target, expectedTitle: string) {
     // Chrome (the types are just for Firefox) || Firefox
     t.true((self as any).origin === "null" || self.url === location.href);
   });
+
+  test(expectedTitle + ": notification should return undefined", async (t) => {
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- Testing for this specifically
+    t.equals(getPageTitleNotification(target), undefined);
+  });
+
+  test(
+    expectedTitle +
+      ": notification without registered handlers should not throw",
+    async (t) => {
+      notRegisteredNotification(target);
+      t.pass();
+    }
+  );
 }
 
 async function init() {
@@ -188,10 +205,29 @@ async function init() {
       const duration = Date.now() - startTime;
       t.ok(
         duration > 4000 && duration < 5000,
-        `It should take between 4 and 5 seconds (took ${duration / 1000})s`
+        `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
       );
     }
 
+    await browser.tabs.remove(tab.id!);
+  });
+
+  test("notifications on non-existing targets", async (t) => {
+    try {
+      getPageTitleNotification({ tabId: 9001 });
+    } catch (error: unknown) {
+      t.fail("Should not throw");
+      throw error;
+    }
+
+    t.pass();
+  });
+
+  test("notifications when `registerMethod` was never called", async () => {
+    const tab = await browser.tabs.create({
+      url: "http://lite.cnn.com/",
+    });
+    getPageTitleNotification({ tabId: tab.id! });
     await browser.tabs.remove(tab.id!);
   });
 }

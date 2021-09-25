@@ -46,6 +46,7 @@
       "@typescript-eslint/no-unsafe-member-access": "off",
       "import/extensions": "off",
       "import/no-unassigned-import": "off",
+      "unicorn/no-useless-undefined": "off",
       "node/file-extension-in-import": "off",
       "unicorn/filename-case": [
         "error",
