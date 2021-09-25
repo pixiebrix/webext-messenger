@@ -108,18 +108,25 @@ async function handleMessage(
   return { ...response, __webext_messenger__ };
 }
 
-async function handleCall(
+// Do not turn this into an `async` function; Notifications must turn `void`
+function handleAny(
   type: string,
-  { isNotification }: Options,
-  sendMessage: () => Promise<MessengerResponse | unknown>
-): Promise<unknown> {
-  if (isNotification) {
-    void sendMessage().catch((error: unknown) => {
-      console.debug("Messenger:", type, "notification failed", { error });
-    });
-    return;
+  options: Options,
+  sendMessage: () => Promise<unknown>
+): Promise<unknown> | void {
+  if (!options.isNotification) {
+    return handleCall(type, sendMessage);
   }
 
+  void sendMessage().catch((error: unknown) => {
+    console.debug("Messenger:", type, "notification failed", { error });
+  });
+}
+
+async function handleCall(
+  type: string,
+  sendMessage: () => Promise<MessengerResponse | unknown>
+): Promise<unknown> {
   const response = await pRetry(sendMessage, {
     minTimeout: 100,
     factor: 1.3,
@@ -189,15 +196,17 @@ export function getContentScriptMethod<
   TMethod extends MessengerMethods[TType],
   TPublicMethod extends PublicMethodWithTarget<TMethod>
 >(type: TType, options: Options = {}): TPublicMethod {
-  const publicMethod = async (target: Target, ...args: Parameters<TMethod>) =>
-    handleCall(type, options, async () =>
+  const publicMethod = (target: Target, ...args: Parameters<TMethod>) => {
+    const sendMessage = async () =>
       browser.tabs.sendMessage(
         target.tabId,
         makeMessage(type, args),
         // `frameId` must be specified. If missing, the message would be sent to every frame
         { frameId: target.frameId ?? 0 }
-      )
-    );
+      );
+
+    return handleAny(type, options, sendMessage);
+  };
 
   return publicMethod as TPublicMethod;
 }
@@ -211,10 +220,12 @@ export function getMethod<
   TMethod extends MessengerMethods[TType],
   TPublicMethod extends PublicMethod<TMethod>
 >(type: TType, options: Options = {}): TPublicMethod {
-  const publicMethod = async (...args: Parameters<TMethod>) =>
-    handleCall(type, options, async () =>
-      browser.runtime.sendMessage(makeMessage(type, args))
-    );
+  const publicMethod = (...args: Parameters<TMethod>) => {
+    const sendMessage = async () =>
+      browser.runtime.sendMessage(makeMessage(type, args));
+
+    return handleAny(type, options, sendMessage);
+  };
 
   return publicMethod as TPublicMethod;
 }
