@@ -109,13 +109,13 @@ async function handleMessage(
 }
 
 // Do not turn this into an `async` function; Notifications must turn `void`
-function handleAny(
+function manageConnection(
   type: string,
   options: Options,
   sendMessage: () => Promise<unknown>
 ): Promise<unknown> | void {
   if (!options.isNotification) {
-    return handleCall(type, sendMessage);
+    return manageMessage(type, sendMessage);
   }
 
   void sendMessage().catch((error: unknown) => {
@@ -123,7 +123,7 @@ function handleAny(
   });
 }
 
-async function handleCall(
+async function manageMessage(
   type: string,
   sendMessage: () => Promise<MessengerResponse | unknown>
 ): Promise<unknown> {
@@ -218,7 +218,7 @@ function getContentScriptMethod<
         { frameId: target.frameId ?? 0 }
       );
 
-    return handleAny(type, options, sendMessage);
+    return manageConnection(type, options, sendMessage);
   };
 
   return publicMethod as TPublicMethod;
@@ -250,7 +250,7 @@ function getMethod<
     const sendMessage = async () =>
       browser.runtime.sendMessage(makeMessage(type, args));
 
-    return handleAny(type, options, sendMessage);
+    return manageConnection(type, options, sendMessage);
   };
 
   return publicMethod as TPublicMethod;
