@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as test from "fresh-tape";
 import { Target } from "../../../index";
 import {

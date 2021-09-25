@@ -1,6 +1,6 @@
 import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
-import { Asyncify, ValueOf } from "type-fest";
+import { Asyncify, SetReturnType, ValueOf } from "type-fest";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -191,7 +191,20 @@ function makeMessage(type: string, args: unknown[]): MessengerMessage {
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getContentScriptMethod<
+function getContentScriptMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethodWithTarget<TMethod>
+>(
+  type: TType,
+  options: { isNotification: true }
+): SetReturnType<TPublicMethod, void>;
+function getContentScriptMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethodWithTarget<TMethod>
+>(type: TType, options?: Options): TPublicMethod;
+function getContentScriptMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
   TPublicMethod extends PublicMethodWithTarget<TMethod>
@@ -215,7 +228,20 @@ export function getContentScriptMethod<
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
  */
-export function getMethod<
+function getMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethod<TMethod>
+>(
+  type: TType,
+  options: { isNotification: true }
+): SetReturnType<TPublicMethod, void>;
+function getMethod<
+  TType extends keyof MessengerMethods,
+  TMethod extends MessengerMethods[TType],
+  TPublicMethod extends PublicMethod<TMethod>
+>(type: TType, options?: Options): TPublicMethod;
+function getMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
   TPublicMethod extends PublicMethod<TMethod>
@@ -230,7 +256,7 @@ export function getMethod<
   return publicMethod as TPublicMethod;
 }
 
-export function registerMethods(methods: Partial<MessengerMethods>): void {
+function registerMethods(methods: Partial<MessengerMethods>): void {
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
       throw new Error(`Handler already set for ${type}`);
@@ -242,3 +268,5 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
 
   browser.runtime.onMessage.addListener(onMessageListener);
 }
+
+export { getMethod, getContentScriptMethod, registerMethods };
