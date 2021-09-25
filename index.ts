@@ -1,6 +1,6 @@
 import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
-import { Asyncify } from "type-fest";
+import { Asyncify, ValueOf } from "type-fest";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -13,10 +13,25 @@ declare global {
   }
 }
 
+type WithTarget<TMethod> = TMethod extends (
+  ...args: infer PreviousArguments
+) => infer TReturnValue
+  ? (target: Target, ...args: PreviousArguments) => TReturnValue
+  : never;
+
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
 type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
   ? (...args: A) => R
   : T;
+
+/** Removes the `this` type and ensure it's always Promised */
+type PublicMethod<TMethod extends ValueOf<MessengerMethods>> = Asyncify<
+  ActuallyOmitThisParameter<TMethod>
+>;
+
+type PublicMethodWithTarget<
+  TMethod extends ValueOf<MessengerMethods>
+> = WithTarget<PublicMethod<TMethod>>;
 
 export type MessengerMeta = browser.runtime.MessageSender;
 type RawMessengerResponse =
@@ -165,12 +180,6 @@ function makeMessage(type: string, args: unknown[]): MessengerMessage {
   };
 }
 
-type WithTarget<TMethod> = TMethod extends (
-  ...args: infer PreviousArguments
-) => infer TReturnValue
-  ? (target: Target, ...args: PreviousArguments) => TReturnValue
-  : never;
-
 /**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
@@ -178,9 +187,8 @@ type WithTarget<TMethod> = TMethod extends (
 export function getContentScriptMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
-  // The original Method might have `this` (Meta) specified, but this isn't applicable here
-  PublicMethod extends WithTarget<Asyncify<ActuallyOmitThisParameter<TMethod>>>
->(type: TType, options: Options = {}): PublicMethod {
+  TPublicMethod extends PublicMethodWithTarget<TMethod>
+>(type: TType, options: Options = {}): TPublicMethod {
   const publicMethod = async (target: Target, ...args: Parameters<TMethod>) =>
     handleCall(type, options, async () =>
       browser.tabs.sendMessage(
@@ -191,7 +199,7 @@ export function getContentScriptMethod<
       )
     );
 
-  return publicMethod as PublicMethod;
+  return publicMethod as TPublicMethod;
 }
 
 /**
@@ -201,15 +209,14 @@ export function getContentScriptMethod<
 export function getMethod<
   TType extends keyof MessengerMethods,
   TMethod extends MessengerMethods[TType],
-  // The original Method might have `this` (Meta) specified, but this isn't applicable here
-  PublicMethod extends Asyncify<ActuallyOmitThisParameter<TMethod>>
->(type: TType, options: Options = {}): PublicMethod {
+  TPublicMethod extends PublicMethod<TMethod>
+>(type: TType, options: Options = {}): TPublicMethod {
   const publicMethod = async (...args: Parameters<TMethod>) =>
     handleCall(type, options, async () =>
       browser.runtime.sendMessage(makeMessage(type, args))
     );
 
-  return publicMethod as PublicMethod;
+  return publicMethod as TPublicMethod;
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
