@@ -1,0 +1,20 @@
+{
+  "type": "module",
+  "scripts": {
+    "demo:watch": "parcel watch manifest.json --dist-dir test/dist --no-cache --no-hmr --detailed-report 0",
+    "demo:build": "parcel build manifest.json --dist-dir test/dist --no-cache --detailed-report 0 --no-optimize"
+  },
+  "dependencies": {
+    "fresh-tape": "^5.3.1",
+    "webextension-polyfill": "^0.8.0"
+  },
+  "devDependencies": {
+    "@parcel/config-webextension": "^2.0.0-rc.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
+    "@typescript-eslint/parser": "^4.31.2",
+    "parcel": "^2.0.0-rc.0"
+  },
+  "targets": {
+    "main": false
+  }
+}
