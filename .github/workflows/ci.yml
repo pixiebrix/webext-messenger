@@ -23,6 +23,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: cd test/demo-extension
-      - run: npm ci
-      - run: npm run demo:build
+      - run: cd test/demo-extension && npm ci
+      - run: cd test/demo-extension && npm run demo:build
