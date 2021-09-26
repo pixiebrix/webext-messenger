@@ -111,7 +111,8 @@
     "sourceDir": "test/dist",
     "run": {
       "startUrl": [
-        "https://legiblenews.com/"
+        "https://legiblenews.com/",
+        "https://rawtext.club/"
       ]
     }
   }

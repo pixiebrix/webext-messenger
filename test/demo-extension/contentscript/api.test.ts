@@ -1,5 +1,8 @@
 import * as test from "fresh-tape";
+import { isBackgroundPage } from "webext-detect-page";
 import { Target } from "../../../index";
+import * as backgroundContext from "../background/api";
+import * as localContext from "../background/testingApi";
 import {
   getPageTitle,
   setPageTitle,
@@ -12,6 +15,10 @@ import {
   notRegisteredNotification,
   getPageTitleNotification,
 } from "./api";
+
+const { openTab, getAllFrames, ensureScripts, closeTab } = isBackgroundPage()
+  ? localContext
+  : backgroundContext;
 
 async function delay(timeout: number): Promise<void> {
   await new Promise((resolve) => {
@@ -119,25 +126,19 @@ function runOnTarget(target: Target, expectedTitle: string) {
 }
 
 async function init() {
-  const { id } = await browser.tabs.create({
-    url: "https://iframe-test-page.vercel.app/",
-  });
+  const tabId = await openTab("https://iframe-test-page.vercel.app/");
 
   await delay(1000); // Let frames load so we can query them for the tests
-  const [parentFrame, iframe] = await browser.webNavigation.getAllFrames({
-    tabId: id!,
-  });
+  const [parentFrame, iframe] = await getAllFrames(tabId);
 
   // All `test` calls must be done synchronously, or else the runner assumes they're done
-  runOnTarget({ tabId: id!, frameId: parentFrame!.frameId }, "Parent");
-  runOnTarget({ tabId: id!, frameId: iframe!.frameId }, "Child");
+  runOnTarget({ tabId, frameId: parentFrame }, "Parent");
+  runOnTarget({ tabId, frameId: iframe }, "Child");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
-    const tab = await browser.tabs.create({
-      url: "https://text.npr.org/",
-    });
+    const tabId = await openTab("https://text.npr.org/");
     try {
-      await getPageTitle({ tabId: tab.id! });
+      await getPageTitle({ tabId });
       t.fail("getPageTitle() should have thrown but did not");
     } catch (error: unknown) {
       if (!(error instanceof Error)) {
@@ -147,49 +148,37 @@ async function init() {
 
       t.equal(error.message, "No handlers registered in receiving end");
 
-      await browser.tabs.remove(tab.id!);
+      await closeTab(tabId);
     }
   });
 
   test("should be able to close the tab from the content script", async (t) => {
-    await closeSelf({ tabId: id!, frameId: parentFrame!.frameId });
+    await closeSelf({ tabId, frameId: parentFrame });
     try {
       // Since the tab was closed, this is expected to throw
-      t.notOk(await browser.tabs.get(id!), "The tab should not be open");
+      t.notOk(await browser.tabs.get(tabId), "The tab should not be open");
     } catch {
       t.pass("The tab was closed");
     }
   });
 
   test("retries until target is ready", async (t) => {
-    const tab = await browser.tabs.create({
-      url: "http://lite.cnn.com/",
-    });
-    const tabId = tab.id!;
+    const tabId = await openTab("http://lite.cnn.com/");
 
     const request = getPageTitle({ tabId });
     await delay(1000); // Simulate a slow-loading tab
-    await browser.tabs.executeScript(tabId, {
-      // https://github.com/parcel-bundler/parcel/issues/5758
-      file:
-        "/up_/up_/node_modules/webextension-polyfill/dist/browser-polyfill.js",
-    });
-    await browser.tabs.executeScript(tabId, {
-      file: "contentscript/registration.js",
-    });
+    await ensureScripts(tabId);
 
     t.equal(await request, "CNN - Breaking News, Latest News and Videos");
-    await browser.tabs.remove(tabId);
+    await closeTab(tabId);
   });
 
   test("retries until it times out", async (t) => {
-    const tab = await browser.tabs.create({
-      url: "http://lite.cnn.com/",
-    });
+    const tabId = await openTab("http://lite.cnn.com/");
 
     const startTime = Date.now();
     try {
-      await getPageTitle({ tabId: tab.id! });
+      await getPageTitle({ tabId });
       t.fail("getPageTitle() should have thrown but did not");
     } catch (error: unknown) {
       if (!(error instanceof Error)) {
@@ -208,7 +197,7 @@ async function init() {
       );
     }
 
-    await browser.tabs.remove(tab.id!);
+    await closeTab(tabId);
   });
 
   test("notifications on non-existing targets", async (t) => {
@@ -223,11 +212,9 @@ async function init() {
   });
 
   test("notifications when `registerMethod` was never called", async () => {
-    const tab = await browser.tabs.create({
-      url: "http://lite.cnn.com/",
-    });
-    getPageTitleNotification({ tabId: tab.id! });
-    await browser.tabs.remove(tab.id!);
+    const tabId = await openTab("http://lite.cnn.com/");
+    getPageTitleNotification({ tabId });
+    await closeTab(tabId);
   });
 }
 
