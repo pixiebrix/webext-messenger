@@ -53,8 +53,14 @@ type Method = (this: MessengerMeta, ...args: Arguments) => Promise<unknown>;
 
 // TODO: It may include additional meta, like information about the original sender
 type Message<TArguments extends Arguments = Arguments> = {
-  type: string;
+  type: keyof MessengerMethods;
   args: TArguments;
+
+  /** If the message is being sent to an intermediary receiver, also set the target */
+  target?: Target;
+
+  /** If the message is being sent to an intermediary receiver, also set the options */
+  options?: Target;
 };
 
 type MessengerMessage = Message & {
@@ -82,20 +88,14 @@ function isMessengerResponse(response: unknown): response is MessengerResponse {
 
 const handlers = new Map<string, Method>();
 
-async function handleMessage(
+async function handleCall(
   message: Message,
-  sender: MessengerMeta
+  sender: MessengerMeta,
+  call: Promise<unknown> | unknown
 ): Promise<MessengerResponse> {
-  const handler = handlers.get(message.type);
-  if (!handler) {
-    throw new Error("No handler registered for " + message.type);
-  }
-
   console.debug(`Messenger:`, message.type, message.args, "from", { sender });
   // The handler could actually be a synchronous function
-  const response = await Promise.resolve(
-    handler.call(sender, ...message.args)
-  ).then(
+  const response = await Promise.resolve(call).then(
     (value) => ({ value }),
     (error: unknown) => ({
       // Errors must be serialized because the stacktraces are currently lost on Chrome and
@@ -106,6 +106,27 @@ async function handleMessage(
 
   console.debug(`Messenger:`, message.type, "responds", response);
   return { ...response, __webext_messenger__ };
+}
+
+async function handleMessage(
+  message: Message,
+  sender: MessengerMeta
+): Promise<MessengerResponse> {
+  if (message.target) {
+    const publicMethod = getContentScriptMethod(message.type);
+    return handleCall(
+      message,
+      sender,
+      publicMethod(message.target, ...message.args)
+    );
+  }
+
+  const handler = handlers.get(message.type);
+  if (handler) {
+    return handleCall(message, sender, handler.apply(sender, message.args));
+  }
+
+  throw new Error("No handler registered for " + message.type);
 }
 
 // Do not turn this into an `async` function; Notifications must turn `void`
@@ -179,11 +200,16 @@ interface Options {
   isNotification?: boolean;
 }
 
-function makeMessage(type: string, args: unknown[]): MessengerMessage {
+function makeMessage(
+  type: keyof MessengerMethods,
+  args: unknown[],
+  target?: Target
+): MessengerMessage {
   return {
     __webext_messenger__,
     type,
     args,
+    target,
   };
 }
 
@@ -210,13 +236,16 @@ function getContentScriptMethod<
   TPublicMethod extends PublicMethodWithTarget<TMethod>
 >(type: TType, options: Options = {}): TPublicMethod {
   const publicMethod = (target: Target, ...args: Parameters<TMethod>) => {
-    const sendMessage = async () =>
-      browser.tabs.sendMessage(
-        target.tabId,
-        makeMessage(type, args),
-        // `frameId` must be specified. If missing, the message would be sent to every frame
-        { frameId: target.frameId ?? 0 }
-      );
+    // eslint-disable-next-line no-negated-condition -- Looks better
+    const sendMessage = !browser.tabs
+      ? async () => browser.runtime.sendMessage(makeMessage(type, args, target))
+      : async () =>
+          browser.tabs.sendMessage(
+            target.tabId,
+            makeMessage(type, args),
+            // `frameId` must be specified. If missing, the message is sent to every frame
+            { frameId: target.frameId ?? 0 }
+          );
 
     return manageConnection(type, options, sendMessage);
   };
