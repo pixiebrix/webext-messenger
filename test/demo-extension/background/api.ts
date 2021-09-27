@@ -1,5 +1,11 @@
 import { getMethod } from "../../../index";
 
+// Dog-fooding, needed to run the tests
+export const openTab = getMethod("openTab");
+export const closeTab = getMethod("closeTab");
+export const getAllFrames = getMethod("getAllFrames");
+export const ensureScripts = getMethod("ensureScripts");
+
 export const sum = getMethod("sum");
 export const throws = getMethod("throws");
 export const sumIfMeta = getMethod("sumIfMeta");
