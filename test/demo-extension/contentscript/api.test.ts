@@ -105,13 +105,13 @@ function runOnTarget(target: Target, expectedTitle: string) {
   test(expectedTitle + ": should receive echo", async (t) => {
     const self = await getSelf(target);
     t.true(self instanceof Object);
-    t.equals(self.id, chrome.runtime.id);
+    t.equals(self!.id, chrome.runtime.id);
 
     // TODO: `as any` because `self` is typed for Firefox only
     // TODO: self.url always points to the background page, but it should include the current tab when forwarded https://github.com/pixiebrix/webext-messenger/issues/32
     t.true(
       (self as any).origin === "null" || // Chrome
-        self.url?.endsWith("/_generated_background_page.html") // Firefox
+        self!.url?.endsWith("/_generated_background_page.html") // Firefox
     );
   });
 

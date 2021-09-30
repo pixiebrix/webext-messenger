@@ -33,7 +33,10 @@ type PublicMethodWithTarget<
   TMethod extends ValueOf<MessengerMethods>
 > = WithTarget<PublicMethod<TMethod>>;
 
-export type MessengerMeta = browser.runtime.MessageSender;
+export interface MessengerMeta {
+  trace: browser.runtime.MessageSender[];
+}
+
 type RawMessengerResponse =
   | {
       value: unknown;
@@ -178,10 +181,10 @@ async function manageMessage(
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: MessengerMeta
+  sender: browser.runtime.MessageSender
 ): Promise<unknown> | void {
   if (isMessengerMessage(message)) {
-    return handleMessage(message, sender);
+    return handleMessage(message, { trace: [sender] });
   }
 
   // TODO: Add test for this eventuality: ignore unrelated messages
@@ -276,6 +279,12 @@ function getMethod<
   TPublicMethod extends PublicMethod<TMethod>
 >(type: TType, options: Options = {}): TPublicMethod {
   const publicMethod = (...args: Parameters<TMethod>) => {
+    const handler = handlers.get(type);
+    if (handler) {
+      console.log("Messenger:", type, "is being handled locally");
+      return handler.apply({ trace: [] }, args);
+    }
+
     const sendMessage = async () =>
       browser.runtime.sendMessage(makeMessage(type, args));
 

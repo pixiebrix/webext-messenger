@@ -71,6 +71,6 @@ test("should receive error from the background if it’s not registered", async 
 test("should receive echo", async (t) => {
   const self = await getSelf();
   t.true(self instanceof Object);
-  t.equals(self.id, chrome.runtime.id);
-  t.equals(self.url, location.href);
+  t.equals(self.trace[0]!.id, chrome.runtime.id);
+  t.equals(self.trace[0]!.url, location.href);
 });
