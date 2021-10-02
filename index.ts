@@ -1,6 +1,7 @@
 import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify, SetReturnType, ValueOf } from "type-fest";
+import { isBackgroundPage } from "webext-detect-page";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -279,10 +280,14 @@ function getMethod<
   TPublicMethod extends PublicMethod<TMethod>
 >(type: TType, options: Options = {}): TPublicMethod {
   const publicMethod = (...args: Parameters<TMethod>) => {
-    const handler = handlers.get(type);
-    if (handler) {
-      console.log("Messenger:", type, "is being handled locally");
-      return handler.apply({ trace: [] }, args);
+    if (isBackgroundPage()) {
+      const handler = handlers.get(type);
+      if (handler) {
+        console.warn("Messenger:", type, "is being handled locally");
+        return handler.apply({ trace: [] }, args);
+      }
+
+      throw new Error("No handler registered for " + type);
     }
 
     const sendMessage = async () =>

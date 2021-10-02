@@ -12,7 +12,8 @@
     "scripts": [
       "~node_modules/webextension-polyfill",
       "background/registration.ts",
-      "contentscript/api.test.ts"
+      "contentscript/api.test.ts",
+      "background/api.test.ts"
     ]
   },
   "options_ui": {
