@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-type WithTarget<TMethod> = TMethod extends (
+type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
   ? (target: Target, ...args: PreviousArguments) => TReturnValue
@@ -26,13 +26,13 @@ type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
   : T;
 
 /** Removes the `this` type and ensure it's always Promised */
-type PublicMethod<TMethod extends ValueOf<MessengerMethods>> = Asyncify<
-  ActuallyOmitThisParameter<TMethod>
+type PublicMethod<Method extends ValueOf<MessengerMethods>> = Asyncify<
+  ActuallyOmitThisParameter<Method>
 >;
 
 type PublicMethodWithTarget<
-  TMethod extends ValueOf<MessengerMethods>
-> = WithTarget<PublicMethod<TMethod>>;
+  Method extends ValueOf<MessengerMethods>
+> = WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
   trace: browser.runtime.MessageSender[];
@@ -55,10 +55,9 @@ type MessengerResponse = RawMessengerResponse & {
 type Arguments = any[];
 type Method = (this: MessengerMeta, ...args: Arguments) => Promise<unknown>;
 
-// TODO: It may include additional meta, like information about the original sender
-type Message<TArguments extends Arguments = Arguments> = {
+type Message<LocalArguments extends Arguments = Arguments> = {
   type: keyof MessengerMethods;
-  args: TArguments;
+  args: LocalArguments;
 
   /** If the message is being sent to an intermediary receiver, also set the target */
   target?: Target;
@@ -72,6 +71,7 @@ type MessengerMessage = Message & {
   __webext_messenger__: true;
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
 const __webext_messenger__ = true;
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -109,6 +109,7 @@ async function handleCall(
   );
 
   console.debug(`Messenger:`, message.type, "responds", response);
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
   return { ...response, __webext_messenger__ };
 }
 
@@ -210,6 +211,7 @@ function makeMessage(
   target?: Target
 ): MessengerMessage {
   return {
+    // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
     __webext_messenger__,
     type,
     args,
@@ -222,24 +224,24 @@ function makeMessage(
  * To be called in the sender’s end.
  */
 function getContentScriptMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType],
-  TPublicMethod extends PublicMethodWithTarget<TMethod>
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethod extends PublicMethodWithTarget<Method>
 >(
-  type: TType,
+  type: Type,
   options: { isNotification: true }
-): SetReturnType<TPublicMethod, void>;
+): SetReturnType<PublicMethod, void>;
 function getContentScriptMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType],
-  TPublicMethod extends PublicMethodWithTarget<TMethod>
->(type: TType, options?: Options): TPublicMethod;
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethod extends PublicMethodWithTarget<Method>
+>(type: Type, options?: Options): PublicMethod;
 function getContentScriptMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType],
-  TPublicMethod extends PublicMethodWithTarget<TMethod>
->(type: TType, options: Options = {}): TPublicMethod {
-  const publicMethod = (target: Target, ...args: Parameters<TMethod>) => {
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethod extends PublicMethodWithTarget<Method>
+>(type: Type, options: Options = {}): PublicMethod {
+  const publicMethod = (target: Target, ...args: Parameters<Method>) => {
     // eslint-disable-next-line no-negated-condition -- Looks better
     const sendMessage = !browser.tabs
       ? async () => browser.runtime.sendMessage(makeMessage(type, args, target))
@@ -254,7 +256,7 @@ function getContentScriptMethod<
     return manageConnection(type, options, sendMessage);
   };
 
-  return publicMethod as TPublicMethod;
+  return publicMethod as PublicMethod;
 }
 
 /**
@@ -262,24 +264,24 @@ function getContentScriptMethod<
  * To be called in the sender’s end.
  */
 function getMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType],
-  TPublicMethod extends PublicMethod<TMethod>
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends PublicMethod<Method>
 >(
-  type: TType,
+  type: Type,
   options: { isNotification: true }
-): SetReturnType<TPublicMethod, void>;
+): SetReturnType<PublicMethodType, void>;
 function getMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType],
-  TPublicMethod extends PublicMethod<TMethod>
->(type: TType, options?: Options): TPublicMethod;
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends PublicMethod<Method>
+>(type: Type, options?: Options): PublicMethodType;
 function getMethod<
-  TType extends keyof MessengerMethods,
-  TMethod extends MessengerMethods[TType],
-  TPublicMethod extends PublicMethod<TMethod>
->(type: TType, options: Options = {}): TPublicMethod {
-  const publicMethod = (...args: Parameters<TMethod>) => {
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends PublicMethod<Method>
+>(type: Type, options: Options = {}): PublicMethodType {
+  const publicMethod = (...args: Parameters<Method>) => {
     if (isBackgroundPage()) {
       const handler = handlers.get(type);
       if (handler) {
@@ -296,7 +298,7 @@ function getMethod<
     return manageConnection(type, options, sendMessage);
   };
 
-  return publicMethod as TPublicMethod;
+  return publicMethod as PublicMethodType;
 }
 
 function registerMethods(methods: Partial<MessengerMethods>): void {
