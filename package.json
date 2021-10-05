@@ -3,7 +3,7 @@
   "version": "0.10.0",
   "description": "Browser Extension component messaging framework",
   "keywords": [],
-  "repository": "pixiebrix/extension-messaging",
+  "repository": "pixiebrix/webext-messenger",
   "license": "MIT",
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
