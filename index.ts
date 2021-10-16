@@ -95,7 +95,7 @@ const handlers = new Map<string, Method>();
 async function handleCall(
   message: Message,
   sender: MessengerMeta,
-  call: Promise<unknown> | unknown
+  call: Promise<unknown>
 ): Promise<MessengerResponse> {
   console.debug(`Messenger:`, message.type, message.args, "from", { sender });
   // The handler could actually be a synchronous function
@@ -192,6 +192,22 @@ function onMessageListener(
   // TODO: Add test for this eventuality: ignore unrelated messages
 }
 
+async function onPostMessageListener(event: MessageEvent): Promise<void> {
+  if (isMessengerMessage(event.data)) {
+    // Acknowledge message immediately
+    event.source!.postMessage({ type: event.data.type, ack: true });
+
+    const sender = {
+      url: event.origin,
+    };
+    event.source!.postMessage(
+      await handleMessage(event.data, { trace: [sender] })
+    );
+  }
+
+  // TODO: Add test for this eventuality: ignore unrelated messages
+}
+
 export interface Target {
   tabId: number;
   frameId?: number;
@@ -219,6 +235,47 @@ function makeMessage(
   };
 }
 
+function getPostMessenger(
+  target: Window,
+  type: keyof MessengerMethods,
+  args: unknown[]
+): () => Promise<unknown> {
+  return async () =>
+    new Promise((resolve, reject) => {
+      const abortController = new AbortController();
+      const { signal } = abortController;
+      let wasAckd = false;
+      window.addEventListener(
+        "message",
+        (event) => {
+          if (event.data?.type !== type) {
+            return;
+          }
+
+          if (event.data.ack === true) {
+            wasAckd = true;
+          } else {
+            resolve(event.data);
+            abortController.abort();
+          }
+        },
+        { signal }
+      );
+
+      target.postMessage(makeMessage(type, args), "*");
+      setTimeout(() => {
+        if (!wasAckd) {
+          abortController.abort();
+          reject(
+            new Error(
+              "Could not establish connection. Receiving end does not exist."
+            )
+          );
+        }
+      }, 15); // It’s actually expected to respond in 1ms
+    });
+}
+
 /**
  * Replicates the original method, including its types.
  * To be called in the sender’s end.
@@ -241,19 +298,35 @@ function getContentScriptMethod<
   Method extends MessengerMethods[Type],
   PublicMethod extends PublicMethodWithTarget<Method>
 >(type: Type, options: Options = {}): PublicMethod {
-  const publicMethod = (target: Target, ...args: Parameters<Method>) => {
-    // eslint-disable-next-line no-negated-condition -- Looks better
-    const sendMessage = !browser.tabs
-      ? async () => browser.runtime.sendMessage(makeMessage(type, args, target))
-      : async () =>
-          browser.tabs.sendMessage(
-            target.tabId,
-            makeMessage(type, args),
-            // `frameId` must be specified. If missing, the message is sent to every frame
-            { frameId: target.frameId ?? 0 }
-          );
+  const publicMethod = (
+    target: Target | Window,
+    ...args: Parameters<Method>
+  ) => {
+    // Intra-frame communication
+    if ("postMessage" in target) {
+      return manageConnection(
+        type,
+        options,
+        getPostMessenger(target, type, args)
+      );
+    }
 
-    return manageConnection(type, options, sendMessage);
+    // Target can be messaged directly
+    if (browser.tabs) {
+      return manageConnection(type, options, async () =>
+        browser.tabs.sendMessage(
+          target.tabId,
+          makeMessage(type, args),
+          // `frameId` must be specified. If missing, the message is sent to every frame
+          { frameId: target.frameId ?? 0 }
+        )
+      );
+    }
+
+    // Target must be messaged through background page
+    return manageConnection(type, options, async () =>
+      browser.runtime.sendMessage(makeMessage(type, args, target))
+    );
   };
 
   return publicMethod as PublicMethod;
@@ -312,6 +385,11 @@ function registerMethods(methods: Partial<MessengerMethods>): void {
   }
 
   browser.runtime.onMessage.addListener(onMessageListener);
+
+  // Register frame-based handler for direct cross-frame messaging
+  if (!browser.tabs) {
+    window.addEventListener("message", onPostMessageListener);
+  }
 }
 
 export { getMethod, getContentScriptMethod, registerMethods };
