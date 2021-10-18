@@ -11,13 +11,14 @@ import { isBackgroundPage } from "webext-detect-page";
 declare global {
   interface MessengerMethods {
     _: Method;
+    __WEBEXT_MESSENGER_CONTEXT_REGISTRATION: typeof _registerTarget;
   }
 }
 
 type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
-  ? (target: Target, ...args: PreviousArguments) => TReturnValue
+  ? (target: Target | NamedTarget, ...args: PreviousArguments) => TReturnValue
   : never;
 
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
@@ -60,7 +61,7 @@ type Message<LocalArguments extends Arguments = Arguments> = {
   args: LocalArguments;
 
   /** If the message is being sent to an intermediary receiver, also set the target */
-  target?: Target;
+  target?: Target | NamedTarget;
 
   /** If the message is being sent to an intermediary receiver, also set the options */
   options?: Target;
@@ -118,11 +119,12 @@ async function handleMessage(
   sender: MessengerMeta
 ): Promise<MessengerResponse> {
   if (message.target) {
+    const resolvedTarget = resolveNamedTarget(message.target, sender.trace[0]);
     const publicMethod = getContentScriptMethod(message.type);
     return handleCall(
       message,
       sender,
-      publicMethod(message.target, ...message.args)
+      publicMethod(resolvedTarget, ...message.args)
     );
   }
 
@@ -197,6 +199,11 @@ export interface Target {
   frameId?: number;
 }
 
+export interface NamedTarget {
+  tabId?: number;
+  name: string;
+}
+
 interface Options {
   /**
    * "Notifications" won't await the response, return values, attempt retries, nor throw errors
@@ -208,7 +215,7 @@ interface Options {
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
-  target?: Target
+  target?: Target | NamedTarget
 ): MessengerMessage {
   return {
     // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
@@ -241,19 +248,29 @@ function getContentScriptMethod<
   Method extends MessengerMethods[Type],
   PublicMethod extends PublicMethodWithTarget<Method>
 >(type: Type, options: Options = {}): PublicMethod {
-  const publicMethod = (target: Target, ...args: Parameters<Method>) => {
-    // eslint-disable-next-line no-negated-condition -- Looks better
-    const sendMessage = !browser.tabs
-      ? async () => browser.runtime.sendMessage(makeMessage(type, args, target))
-      : async () =>
-          browser.tabs.sendMessage(
-            target.tabId,
-            makeMessage(type, args),
-            // `frameId` must be specified. If missing, the message is sent to every frame
-            { frameId: target.frameId ?? 0 }
-          );
+  const publicMethod = (
+    target: Target | NamedTarget,
+    ...args: Parameters<Method>
+  ) => {
+    if (!browser.tabs || "name" in target) {
+      return manageConnection(type, options, async () => {
+        const resolvedTarget = isBackgroundPage()
+          ? resolveNamedTarget(target)
+          : target;
+        return browser.runtime.sendMessage(
+          makeMessage(type, args, resolvedTarget)
+        );
+      });
+    }
 
-    return manageConnection(type, options, sendMessage);
+    return manageConnection(type, options, async () =>
+      browser.tabs.sendMessage(
+        target.tabId,
+        makeMessage(type, args),
+        // `frameId` must be specified. If missing, the message is sent to every frame
+        { frameId: target.frameId ?? 0 }
+      )
+    );
   };
 
   return publicMethod as PublicMethod;
@@ -314,4 +331,52 @@ function registerMethods(methods: Partial<MessengerMethods>): void {
   browser.runtime.onMessage.addListener(onMessageListener);
 }
 
-export { getMethod, getContentScriptMethod, registerMethods };
+// TODO: Remove targets after tab closes to avoid "memory leaks"
+const targets = new Map<string, Target>();
+
+/** Register the current context so that it can be targeted with a name */
+const registerTarget = getMethod("__WEBEXT_MESSENGER_CONTEXT_REGISTRATION");
+
+function _registerTarget(this: MessengerMeta, name: string): void {
+  const sender = this.trace[0]!;
+  const tabId = sender.tab!.id!;
+  const { frameId } = sender;
+  targets.set(`${tabId}%${name}`, {
+    tabId,
+    frameId,
+  });
+}
+
+function resolveNamedTarget(
+  target: Target | NamedTarget,
+  sender?: browser.runtime.MessageSender
+): Target {
+  if ("name" in target) {
+    const {
+      name,
+      tabId = sender?.tab?.id, // If not specified, try to use the sender’s
+    } = target;
+    if (typeof tabId === "undefined") {
+      throw new TypeError(
+        `The tab ID was not specified nor it was automatically determinable`
+      );
+    }
+
+    const resolvedTarget = targets.get(`${tabId}%${name}`);
+    if (!resolvedTarget) {
+      throw new Error(`Target named ${name} not registered for tab ${tabId}`);
+    }
+
+    return resolvedTarget;
+  }
+
+  return target;
+}
+
+if (!isBackgroundPage) {
+  registerMethods({
+    __WEBEXT_MESSENGER_CONTEXT_REGISTRATION: _registerTarget,
+  });
+}
+
+export { getMethod, getContentScriptMethod, registerMethods, registerTarget };

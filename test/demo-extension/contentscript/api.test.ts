@@ -1,6 +1,6 @@
 import * as test from "fresh-tape";
 import { isBackgroundPage } from "webext-detect-page";
-import { Target } from "../../../index";
+import { NamedTarget, Target } from "../../../index";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
 import {
@@ -26,7 +26,7 @@ async function delay(timeout: number): Promise<void> {
   });
 }
 
-function runOnTarget(target: Target, expectedTitle: string) {
+function runOnTarget(target: Target | NamedTarget, expectedTitle: string) {
   test(expectedTitle + ": send message and get response", async (t) => {
     const title = await getPageTitle(target);
     t.equal(title, expectedTitle);
@@ -139,6 +139,7 @@ async function init() {
   // All `test` calls must be done synchronously, or else the runner assumes they're done
   runOnTarget({ tabId, frameId: parentFrame }, "Parent");
   runOnTarget({ tabId, frameId: iframe }, "Child");
+  runOnTarget({ tabId, name: "sidebar" }, "Child");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
     const tabId = await openTab("https://text.npr.org/");
