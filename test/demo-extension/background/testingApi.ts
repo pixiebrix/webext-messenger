@@ -1,5 +1,3 @@
-import browser from "webextension-polyfill";
-
 export async function ensureScripts(tabId: number): Promise<void> {
   await browser.tabs.executeScript(tabId, {
     // https://github.com/parcel-bundler/parcel/issues/5758

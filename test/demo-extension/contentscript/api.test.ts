@@ -1,4 +1,3 @@
-import browser from "webextension-polyfill";
 import * as test from "fresh-tape";
 import { isBackgroundPage } from "webext-detect-page";
 import { NamedTarget, Target } from "../../../index";

@@ -2,6 +2,6 @@ import { MessengerMeta } from "../../../index";
 
 export async function getSelf(
   this: MessengerMeta
-): Promise<browser.Runtime.MessageSender | undefined> {
+): Promise<browser.runtime.MessageSender | undefined> {
   return this.trace[0];
 }
