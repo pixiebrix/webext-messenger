@@ -2,6 +2,7 @@ import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify, SetReturnType, ValueOf } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";
+import browser, { Runtime } from "webextension-polyfill";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -35,7 +36,7 @@ type PublicMethodWithTarget<
 > = WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
-  trace: browser.runtime.MessageSender[];
+  trace: Runtime.MessageSender[];
 }
 
 type RawMessengerResponse =
@@ -183,7 +184,7 @@ async function manageMessage(
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender
+  sender: Runtime.MessageSender
 ): Promise<unknown> | void {
   if (isMessengerMessage(message)) {
     return handleMessage(message, { trace: [sender] });
