@@ -131,7 +131,9 @@ function runOnTarget(target: Target | NamedTarget, expectedTitle: string) {
 }
 
 async function init() {
-  const tabId = await openTab("https://iframe-test-page.vercel.app/");
+  const tabId = await openTab(
+    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child"
+  );
 
   await delay(1000); // Let frames load so we can query them for the tests
   const [parentFrame, iframe] = await getAllFrames(tabId);
@@ -142,7 +144,9 @@ async function init() {
   runOnTarget({ tabId, name: "sidebar" }, "Child");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
-    const tabId = await openTab("https://text.npr.org/");
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page"
+    );
     try {
       await getPageTitle({ tabId });
       t.fail("getPageTitle() should have thrown but did not");
@@ -169,18 +173,22 @@ async function init() {
   });
 
   test("retries until target is ready", async (t) => {
-    const tabId = await openTab("http://lite.cnn.com/");
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+    );
 
     const request = getPageTitle({ tabId });
     await delay(1000); // Simulate a slow-loading tab
     await ensureScripts(tabId);
 
-    t.equal(await request, "CNN - Breaking News, Latest News and Videos");
+    t.equal(await request, "No static content scripts");
     await closeTab(tabId);
   });
 
   test("retries until it times out", async (t) => {
-    const tabId = await openTab("http://lite.cnn.com/");
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+    );
 
     const startTime = Date.now();
     try {
@@ -218,7 +226,9 @@ async function init() {
   });
 
   test("notifications when `registerMethod` was never called", async () => {
-    const tabId = await openTab("http://lite.cnn.com/");
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+    );
     getPageTitleNotification({ tabId });
     await closeTab(tabId);
   });

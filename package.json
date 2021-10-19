@@ -111,8 +111,8 @@
     "sourceDir": "test/dist",
     "run": {
       "startUrl": [
-        "https://legiblenews.com/",
-        "https://rawtext.club/"
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods",
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
       ]
     }
   }
