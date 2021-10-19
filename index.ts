@@ -11,7 +11,7 @@ import { isBackgroundPage } from "webext-detect-page";
 declare global {
   interface MessengerMethods {
     _: Method;
-    __WEBEXT_MESSENGER_CONTEXT_REGISTRATION: typeof _registerTarget;
+    __webextMessengerTargetRegistration: typeof _registerTarget;
   }
 }
 
@@ -335,7 +335,7 @@ function registerMethods(methods: Partial<MessengerMethods>): void {
 const targets = new Map<string, Target>();
 
 /** Register the current context so that it can be targeted with a name */
-const registerTarget = getMethod("__WEBEXT_MESSENGER_CONTEXT_REGISTRATION");
+const registerTarget = getMethod("__webextMessengerTargetRegistration");
 
 function _registerTarget(this: MessengerMeta, name: string): void {
   const sender = this.trace[0]!;
@@ -375,7 +375,7 @@ function resolveNamedTarget(
 
 if (!isBackgroundPage) {
   registerMethods({
-    __WEBEXT_MESSENGER_CONTEXT_REGISTRATION: _registerTarget,
+    __webextMessengerTargetRegistration: _registerTarget,
   });
 }
 
