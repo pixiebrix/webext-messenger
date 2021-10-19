@@ -3,7 +3,7 @@ import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify, SetReturnType, ValueOf } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";
 
-const ERROR_NON_EXISTING_TARGET =
+const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
 
 // The global interface is used to declare the types of the methods.
@@ -166,7 +166,7 @@ async function manageMessage(
     factor: 1.3,
     maxRetryTime: 4000,
     onFailedAttempt(error) {
-      if (!String(error?.message).startsWith(ERROR_NON_EXISTING_TARGET)) {
+      if (!String(error?.message).startsWith(errorNonExistingTarget)) {
         throw error;
       }
 
@@ -367,14 +367,14 @@ function resolveNamedTarget(
   } = target;
   if (typeof tabId === "undefined") {
     throw new TypeError(
-      `${ERROR_NON_EXISTING_TARGET} The tab ID was not specified nor it was automatically determinable.`
+      `${errorNonExistingTarget} The tab ID was not specified nor it was automatically determinable.`
     );
   }
 
   const resolvedTarget = targets.get(`${tabId}%${name}`);
   if (!resolvedTarget) {
     throw new Error(
-      `${ERROR_NON_EXISTING_TARGET} Target named ${name} not registered for tab ${tabId}.`
+      `${errorNonExistingTarget} Target named ${name} not registered for tab ${tabId}.`
     );
   }
 
