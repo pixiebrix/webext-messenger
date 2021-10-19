@@ -122,7 +122,10 @@ async function handleMessage(
   sender: MessengerMeta
 ): Promise<MessengerResponse> {
   if (message.target) {
-    const resolvedTarget = resolveNamedTarget(message.target, sender.trace[0]);
+    const resolvedTarget =
+      "name" in message.target
+        ? resolveNamedTarget(message.target, sender.trace[0])
+        : message.target;
     const publicMethod = getContentScriptMethod(message.type);
     return handleCall(
       message,
@@ -200,6 +203,7 @@ export interface Target {
 }
 
 export interface NamedTarget {
+  /** If the id is missing, it will use the sender’s tabId instead */
   tabId?: number;
   name: string;
 }
@@ -252,28 +256,22 @@ function getContentScriptMethod<
     target: Target | NamedTarget,
     ...args: Parameters<Method>
   ) => {
-    if (!browser.tabs || "name" in target) {
-      return manageConnection(type, options, async () => {
-        if (isBackgroundPage()) {
-          const resolvedTarget = resolveNamedTarget(target);
-          return browser.tabs.sendMessage(
-            resolvedTarget.tabId,
-            makeMessage(type, args),
-            { frameId: resolvedTarget.frameId }
-          );
-        }
-
-        return browser.runtime.sendMessage(makeMessage(type, args, target));
-      });
+    // Named targets and contexts without direct Tab access must go through background, unless we're already in it
+    if (!browser.tabs || ("name" in target && !isBackgroundPage())) {
+      return manageConnection(type, options, async () =>
+        browser.runtime.sendMessage(makeMessage(type, args, target))
+      );
     }
 
+    const resolvedTarget =
+      "name" in target ? resolveNamedTarget(target) : target;
+
+    // `frameId` must be specified. If missing, the message is sent to every frame
+    const { tabId, frameId = 0 } = resolvedTarget;
+
+    // Message tab directly
     return manageConnection(type, options, async () =>
-      browser.tabs.sendMessage(
-        target.tabId,
-        makeMessage(type, args),
-        // `frameId` must be specified. If missing, the message is sent to every frame
-        { frameId: target.frameId ?? 0 }
-      )
+      browser.tabs.sendMessage(tabId, makeMessage(type, args), { frameId })
     );
   };
 
@@ -354,31 +352,33 @@ function _registerTarget(this: MessengerMeta, name: string): void {
 }
 
 function resolveNamedTarget(
-  target: Target | NamedTarget,
+  target: NamedTarget,
   sender?: browser.runtime.MessageSender
 ): Target {
-  if ("name" in target) {
-    const {
-      name,
-      tabId = sender?.tab?.id, // If not specified, try to use the sender’s
-    } = target;
-    if (typeof tabId === "undefined") {
-      throw new TypeError(
-        `${ERROR_NON_EXISTING_TARGET} The tab ID was not specified nor it was automatically determinable.`
-      );
-    }
-
-    const resolvedTarget = targets.get(`${tabId}%${name}`);
-    if (!resolvedTarget) {
-      throw new Error(
-        `${ERROR_NON_EXISTING_TARGET} Target named ${name} not registered for tab ${tabId}.`
-      );
-    }
-
-    return resolvedTarget;
+  if (!isBackgroundPage()) {
+    throw new Error(
+      "Named targets can only be resolved in the background page"
+    );
   }
 
-  return target;
+  const {
+    name,
+    tabId = sender?.tab?.id, // If not specified, try to use the sender’s
+  } = target;
+  if (typeof tabId === "undefined") {
+    throw new TypeError(
+      `${ERROR_NON_EXISTING_TARGET} The tab ID was not specified nor it was automatically determinable.`
+    );
+  }
+
+  const resolvedTarget = targets.get(`${tabId}%${name}`);
+  if (!resolvedTarget) {
+    throw new Error(
+      `${ERROR_NON_EXISTING_TARGET} Target named ${name} not registered for tab ${tabId}.`
+    );
+  }
+
+  return resolvedTarget;
 }
 
 if (isBackgroundPage()) {
