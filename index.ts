@@ -2,6 +2,7 @@ import pRetry from "p-retry";
 import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify, SetReturnType, ValueOf } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";
+import browser, { Runtime } from "webextension-polyfill";
 
 const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -39,7 +40,7 @@ type PublicMethodWithTarget<
 > = WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
-  trace: browser.runtime.MessageSender[];
+  trace: Runtime.MessageSender[];
 }
 
 type RawMessengerResponse =
@@ -188,7 +189,7 @@ async function manageMessage(
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender
+  sender: Runtime.MessageSender
 ): Promise<unknown> | void {
   if (isMessengerMessage(message)) {
     return handleMessage(message, { trace: [sender] });
@@ -353,7 +354,7 @@ function _registerTarget(this: MessengerMeta, name: string): void {
 
 function resolveNamedTarget(
   target: NamedTarget,
-  sender?: browser.runtime.MessageSender
+  sender?: Runtime.MessageSender
 ): Target {
   if (!isBackgroundPage()) {
     throw new Error(
