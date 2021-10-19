@@ -3,6 +3,9 @@ import { deserializeError, ErrorObject, serializeError } from "serialize-error";
 import { Asyncify, SetReturnType, ValueOf } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";
 
+const ERROR_NON_EXISTING_TARGET =
+  "Could not establish connection. Receiving end does not exist.";
+
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
 // `MessengerMethods[string]` may look like. Do not use `Record<string, Method>`
@@ -160,10 +163,7 @@ async function manageMessage(
     factor: 1.3,
     maxRetryTime: 4000,
     onFailedAttempt(error) {
-      if (
-        error?.message !==
-        "Could not establish connection. Receiving end does not exist."
-      ) {
+      if (!String(error?.message).startsWith(ERROR_NON_EXISTING_TARGET)) {
         throw error;
       }
 
@@ -254,12 +254,16 @@ function getContentScriptMethod<
   ) => {
     if (!browser.tabs || "name" in target) {
       return manageConnection(type, options, async () => {
-        const resolvedTarget = isBackgroundPage()
-          ? resolveNamedTarget(target)
-          : target;
-        return browser.runtime.sendMessage(
-          makeMessage(type, args, resolvedTarget)
-        );
+        if (isBackgroundPage()) {
+          const resolvedTarget = resolveNamedTarget(target);
+          return browser.tabs.sendMessage(
+            resolvedTarget.tabId,
+            makeMessage(type, args),
+            { frameId: resolvedTarget.frameId }
+          );
+        }
+
+        return browser.runtime.sendMessage(makeMessage(type, args, target));
       });
     }
 
@@ -345,6 +349,8 @@ function _registerTarget(this: MessengerMeta, name: string): void {
     tabId,
     frameId,
   });
+
+  console.debug(`Messenger: Target "${name}" registered for tab ${tabId}`);
 }
 
 function resolveNamedTarget(
@@ -358,13 +364,15 @@ function resolveNamedTarget(
     } = target;
     if (typeof tabId === "undefined") {
       throw new TypeError(
-        `The tab ID was not specified nor it was automatically determinable`
+        `${ERROR_NON_EXISTING_TARGET} The tab ID was not specified nor it was automatically determinable.`
       );
     }
 
     const resolvedTarget = targets.get(`${tabId}%${name}`);
     if (!resolvedTarget) {
-      throw new Error(`Target named ${name} not registered for tab ${tabId}`);
+      throw new Error(
+        `${ERROR_NON_EXISTING_TARGET} Target named ${name} not registered for tab ${tabId}.`
+      );
     }
 
     return resolvedTarget;
@@ -373,7 +381,7 @@ function resolveNamedTarget(
   return target;
 }
 
-if (!isBackgroundPage) {
+if (isBackgroundPage()) {
   registerMethods({
     __webextMessengerTargetRegistration: _registerTarget,
   });

@@ -132,7 +132,7 @@ function runOnTarget(target: Target | NamedTarget, expectedTitle: string) {
 
 async function init() {
   const tabId = await openTab(
-    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child"
+    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child&iframe=./Named-frame/Sidebar"
   );
 
   await delay(1000); // Let frames load so we can query them for the tests
@@ -141,7 +141,7 @@ async function init() {
   // All `test` calls must be done synchronously, or else the runner assumes they're done
   runOnTarget({ tabId, frameId: parentFrame }, "Parent");
   runOnTarget({ tabId, frameId: iframe }, "Child");
-  runOnTarget({ tabId, name: "sidebar" }, "Child");
+  runOnTarget({ tabId, name: "sidebar" }, "Sidebar");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
     const tabId = await openTab(
