@@ -330,7 +330,16 @@ function registerMethods(methods: Partial<MessengerMethods>): void {
     handlers.set(type, method as Method);
   }
 
-  browser.runtime.onMessage.addListener(onMessageListener);
+  // Use "chrome" because the polyfill might not be available when `_registerTarget` is registered
+  if ("browser" in globalThis) {
+    browser.runtime.onMessage.addListener(onMessageListener);
+  } else {
+    console.error(
+      "Messenger: webextension-polyfill was not loaded in time, this might cause a runtime error later"
+    );
+    // @ts-expect-error Temporary workaround until I drop the webextension-polyfill dependency
+    chrome.runtime.onMessage.addListener(onMessageListener);
+  }
 }
 
 // TODO: Remove targets after tab closes to avoid "memory leaks"
