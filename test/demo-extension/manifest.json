@@ -5,7 +5,7 @@
   "permissions": ["webNavigation", "https://fregante.github.io/*"],
   "background": {
     "scripts": [
-      "~node_modules/webextension-polyfill",
+      "~/node_modules/webextension-polyfill/dist/browser-polyfill.js",
       "background/registration.ts",
       "contentscript/api.test.ts"
     ]
@@ -20,7 +20,10 @@
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods"
       ],
-      "js": ["~node_modules/webextension-polyfill", "background/api.test.ts"]
+      "js": [
+        "~/node_modules/webextension-polyfill/dist/browser-polyfill.js",
+        "background/api.test.ts"
+      ]
     },
     {
       "all_frames": true,
@@ -28,7 +31,7 @@
         "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/*"
       ],
       "js": [
-        "~node_modules/webextension-polyfill",
+        "~/node_modules/webextension-polyfill/dist/browser-polyfill.js",
         "contentscript/registration.ts"
       ]
     },
@@ -36,7 +39,10 @@
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
       ],
-      "js": ["~node_modules/webextension-polyfill", "contentscript/api.test.ts"]
+      "js": [
+        "~/node_modules/webextension-polyfill/dist/browser-polyfill.js",
+        "contentscript/api.test.ts"
+      ]
     },
     {
       "all_frames": true,
@@ -44,7 +50,7 @@
         "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page"
       ],
       "js": [
-        "~node_modules/webextension-polyfill",
+        "~/node_modules/webextension-polyfill/dist/browser-polyfill.js",
         "contentscript/fixtures/unrelatedMessageListener.ts"
       ]
     }
