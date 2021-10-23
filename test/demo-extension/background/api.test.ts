@@ -77,7 +77,10 @@ test("should receive error from the background if it’s not registered", async 
       return;
     }
 
-    t.equal(error.message, "No handler registered for notRegistered");
+    t.equal(
+      error.message,
+      "No handler for notRegistered was registered in the receiving end"
+    );
   }
 });
 

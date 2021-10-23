@@ -97,7 +97,10 @@ function runOnTarget(target: Target | NamedTarget, expectedTitle: string) {
           return;
         }
 
-        t.equal(error.message, "No handler registered for notRegistered");
+        t.equal(
+          error.message,
+          "No handler for notRegistered was registered in the receiving end"
+        );
       }
     }
   );
@@ -156,7 +159,10 @@ async function init() {
         return;
       }
 
-      t.equal(error.message, "No handlers registered in receiving end");
+      t.equal(
+        error.message,
+        "No handler for getPageTitle was registered in the receiving end"
+      );
 
       await closeTab(tabId);
     }

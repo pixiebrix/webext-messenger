@@ -4,6 +4,10 @@
   "files": ["index.ts"],
   "compilerOptions": {
     "outDir": "distribution",
-    "skipLibCheck": false
+    "skipLibCheck": false,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"]
+    }
   }
 }

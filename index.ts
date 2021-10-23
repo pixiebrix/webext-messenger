@@ -34,9 +34,8 @@ type PublicMethod<Method extends ValueOf<MessengerMethods>> = Asyncify<
   ActuallyOmitThisParameter<Method>
 >;
 
-type PublicMethodWithTarget<
-  Method extends ValueOf<MessengerMethods>
-> = WithTarget<PublicMethod<Method>>;
+type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
+  WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
   trace: browser.runtime.MessageSender[];
@@ -74,6 +73,10 @@ type MessengerMessage = Message & {
   /** Guarantees that a message is meant to be handled by this library */
   __webext_messenger__: true;
 };
+
+export class MessengerError extends Error {
+  override name = "MessengerError";
+}
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
 const __webext_messenger__ = true;
@@ -120,7 +123,7 @@ async function handleCall(
 async function handleMessage(
   message: Message,
   sender: MessengerMeta
-): Promise<MessengerResponse> {
+): Promise<MessengerResponse | void> {
   if (message.target) {
     const resolvedTarget =
       "name" in message.target
@@ -139,7 +142,12 @@ async function handleMessage(
     return handleCall(message, sender, handler.apply(sender, message.args));
   }
 
-  throw new Error("No handler registered for " + message.type);
+  // More context in https://github.com/pixiebrix/webext-messenger/issues/45
+  console.warn(
+    "Messenger:",
+    message.type,
+    "received but ignored; No handlers were registered here"
+  );
 }
 
 // Do not turn this into an `async` function; Notifications must turn `void`
@@ -173,9 +181,11 @@ async function manageMessage(
       console.debug("Messenger:", type, "will retry");
     },
   });
+
   if (!isMessengerResponse(response)) {
-    // If the response is `undefined`, `registerMethod` was never called
-    throw new Error("No handlers registered in receiving end");
+    throw new MessengerError(
+      `No handler for ${type} was registered in the receiving end`
+    );
   }
 
   if ("error" in response) {
@@ -308,7 +318,7 @@ function getMethod<
         return handler.apply({ trace: [] }, args);
       }
 
-      throw new Error("No handler registered for " + type);
+      throw new MessengerError("No handler registered for " + type);
     }
 
     const sendMessage = async () =>
@@ -323,7 +333,7 @@ function getMethod<
 function registerMethods(methods: Partial<MessengerMethods>): void {
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
-      throw new Error(`Handler already set for ${type}`);
+      throw new MessengerError(`Handler already set for ${type}`);
     }
 
     console.debug(`Messenger: Registered`, type);
