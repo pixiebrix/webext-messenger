@@ -1,0 +1,3 @@
+*                     # Exclude everything
+!distribution/*       # Except distribution
+distribution/test/*   # Exclude distribution/test

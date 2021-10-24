@@ -1,10 +1,10 @@
-import { MessengerMeta } from "../../../source";
+import { MessengerMeta } from "../..";
 
 export async function sumIfMeta(
   this: MessengerMeta,
   ...addends: number[]
 ): Promise<number> {
-  if (this.trace[0]?.tab?.url) {
+  if (this.trace[0]?.id === chrome.runtime.id) {
     return addends.reduce((a, b) => a + b);
   }
 

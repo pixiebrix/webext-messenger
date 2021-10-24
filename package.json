@@ -8,14 +8,10 @@
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
   "main": "distribution/index.js",
-  "files": [
-    "distribution/index.js",
-    "distribution/index.d.ts"
-  ],
   "scripts": {
     "build": "tsc",
-    "demo:watch": "parcel watch test/demo-extension/manifest.json --dist-dir test/dist --no-cache --no-hmr --detailed-report 0",
-    "demo:build": "parcel build test/demo-extension/manifest.json --dist-dir test/dist --no-cache --detailed-report 0 --no-optimize",
+    "demo:watch": "parcel watch source/test/manifest.json --no-cache --no-hmr --detailed-report 0",
+    "demo:build": "parcel build source/test/manifest.json --no-cache --detailed-report 0",
     "prepack": "tsc --sourceMap false",
     "test": "eslint . && tsc --noEmit",
     "lint": "eslint .",
@@ -109,7 +105,7 @@
     "main": false
   },
   "webExt": {
-    "sourceDir": "test/dist",
+    "sourceDir": "dist",
     "run": {
       "startUrl": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods",

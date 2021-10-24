@@ -1,4 +1,4 @@
-import { MessengerMeta } from "../../../source";
+import { MessengerMeta } from "../..";
 
 export async function getSelf(
   this: MessengerMeta
