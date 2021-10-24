@@ -1,13 +1,14 @@
-import { Message, MessengerMeta, MessengerResponse, Method } from "./types";
+import { serializeError } from "serialize-error";
 import { isBackgroundPage } from "webext-detect-page";
+
+import { getContentScriptMethod, resolveNamedTarget } from "./sender";
+import { Message, MessengerMeta, MessengerResponse, Method } from "./types";
 import {
   handlers,
   isObject,
   MessengerError,
   __webext_messenger__,
 } from "./shared";
-import { getContentScriptMethod, resolveNamedTarget } from "./sender";
-import { serializeError } from "serialize-error";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (

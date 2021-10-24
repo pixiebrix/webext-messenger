@@ -1,6 +1,17 @@
 import { Asyncify, ValueOf } from "type-fest";
 import { ErrorObject } from "serialize-error";
 
+// The global interface is used to declare the types of the methods.
+// This "empty" declaration helps the local code understand what
+// `MessengerMethods[string]` may look like. Do not use `Record<string, Method>`
+// because an index signature would allow any string to return Method and
+// it would make `getMethod` too loose.
+declare global {
+  interface MessengerMethods {
+    _: Method;
+  }
+}
+
 type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue

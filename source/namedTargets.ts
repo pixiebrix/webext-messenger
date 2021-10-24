@@ -1,6 +1,12 @@
 import { isBackgroundPage } from "webext-detect-page";
 import { getMethod, MessengerMeta, registerMethods, Target } from ".";
 
+declare global {
+  interface MessengerMethods {
+    __webextMessengerTargetRegistration: typeof _registerTarget;
+  }
+}
+
 // TODO: Remove targets after tab closes to avoid "memory leaks"
 export const targets = new Map<string, Target>();
 

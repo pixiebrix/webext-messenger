@@ -1,4 +1,7 @@
+import pRetry from "p-retry";
 import { SetReturnType } from "type-fest";
+import { isBackgroundPage } from "webext-detect-page";
+import { deserializeError } from "serialize-error";
 
 import {
   MessengerMessage,
@@ -9,17 +12,16 @@ import {
   NamedTarget,
   Target,
 } from "./types";
-import { isBackgroundPage } from "webext-detect-page";
-import { errorNonExistingTarget } from "./index";
 import {
   isObject,
   MessengerError,
   __webext_messenger__,
   handlers,
 } from "./shared";
-import { deserializeError } from "serialize-error";
-import pRetry from "p-retry";
 import { targets } from "./namedTargets";
+
+export const errorNonExistingTarget =
+  "Could not establish connection. Receiving end does not exist.";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webext_messenger__"] === true;
