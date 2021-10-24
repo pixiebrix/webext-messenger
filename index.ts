@@ -125,6 +125,15 @@ async function handleMessage(
   sender: MessengerMeta
 ): Promise<MessengerResponse | void> {
   if (message.target) {
+    if (!isBackgroundPage()) {
+      console.warn(
+        "Messenger:",
+        message.type,
+        "received but ignored; Wrong context"
+      );
+      return;
+    }
+
     const resolvedTarget =
       "name" in message.target
         ? resolveNamedTarget(message.target, sender.trace[0])

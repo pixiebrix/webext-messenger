@@ -20,7 +20,7 @@
     "test": "eslint . && tsc --noEmit",
     "lint": "eslint .",
     "fix": "eslint . --fix",
-    "watch": "tsc --watch --noEmit"
+    "watch": "tsc --watch"
   },
   "eslintConfig": {
     "env": {
