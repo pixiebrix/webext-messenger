@@ -1,4 +1,4 @@
-import { getContentScriptMethod } from "../../../index";
+import { getContentScriptMethod } from "../../../source";
 
 export const getPageTitle = getContentScriptMethod("getPageTitle");
 export const getPageTitleNotification = getContentScriptMethod("getPageTitle", {

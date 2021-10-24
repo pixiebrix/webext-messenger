@@ -1,3 +1,3 @@
-import { registerTarget } from "../../../index";
+import { registerTarget } from "../../../source";
 
 void registerTarget("sidebar");

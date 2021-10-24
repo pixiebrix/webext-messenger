@@ -1,4 +1,4 @@
-import { MessengerMeta } from "../../../index";
+import { MessengerMeta } from "../../../source";
 
 export async function sumIfMeta(
   this: MessengerMeta,

@@ -1,7 +1,20 @@
 import pRetry from "p-retry";
-import { deserializeError, ErrorObject, serializeError } from "serialize-error";
-import { Asyncify, SetReturnType, ValueOf } from "type-fest";
+import { deserializeError, serializeError } from "serialize-error";
+import { SetReturnType } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";
+import {
+  Message,
+  MessengerMessage,
+  MessengerMeta,
+  MessengerResponse,
+  Method,
+  NamedTarget,
+  PublicMethod,
+  PublicMethodWithTarget,
+  Target,
+} from "./types";
+
+export { MessengerMeta, Target, NamedTarget };
 
 const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -17,62 +30,6 @@ declare global {
     __webextMessengerTargetRegistration: typeof _registerTarget;
   }
 }
-
-type WithTarget<Method> = Method extends (
-  ...args: infer PreviousArguments
-) => infer TReturnValue
-  ? (target: Target | NamedTarget, ...args: PreviousArguments) => TReturnValue
-  : never;
-
-/* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
-type ActuallyOmitThisParameter<T> = T extends (...args: infer A) => infer R
-  ? (...args: A) => R
-  : T;
-
-/** Removes the `this` type and ensure it's always Promised */
-type PublicMethod<Method extends ValueOf<MessengerMethods>> = Asyncify<
-  ActuallyOmitThisParameter<Method>
->;
-
-type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
-  WithTarget<PublicMethod<Method>>;
-
-export interface MessengerMeta {
-  trace: browser.runtime.MessageSender[];
-}
-
-type RawMessengerResponse =
-  | {
-      value: unknown;
-    }
-  | {
-      error: ErrorObject;
-    };
-
-type MessengerResponse = RawMessengerResponse & {
-  /** Guarantees that the message was handled by this library */
-  __webext_messenger__: true;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
-type Arguments = any[];
-type Method = (this: MessengerMeta, ...args: Arguments) => Promise<unknown>;
-
-type Message<LocalArguments extends Arguments = Arguments> = {
-  type: keyof MessengerMethods;
-  args: LocalArguments;
-
-  /** If the message is being sent to an intermediary receiver, also set the target */
-  target?: Target | NamedTarget;
-
-  /** If the message is being sent to an intermediary receiver, also set the options */
-  options?: Target;
-};
-
-type MessengerMessage = Message & {
-  /** Guarantees that a message is meant to be handled by this library */
-  __webext_messenger__: true;
-};
 
 export class MessengerError extends Error {
   override name = "MessengerError";
@@ -214,17 +171,6 @@ function onMessageListener(
   }
 
   // TODO: Add test for this eventuality: ignore unrelated messages
-}
-
-export interface Target {
-  tabId: number;
-  frameId?: number;
-}
-
-export interface NamedTarget {
-  /** If the id is missing, it will use the sender’s tabId instead */
-  tabId?: number;
-  name: string;
 }
 
 interface Options {
