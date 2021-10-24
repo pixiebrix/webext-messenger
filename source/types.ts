@@ -44,6 +44,14 @@ export type Method = (
   ...args: Arguments
 ) => Promise<unknown>;
 
+export interface Options {
+  /**
+   * "Notifications" won't await the response, return values, attempt retries, nor throw errors
+   * @default false
+   */
+  isNotification?: boolean;
+}
+
 export type Message<LocalArguments extends Arguments = Arguments> = {
   type: keyof MessengerMethods;
   args: LocalArguments;
