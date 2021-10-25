@@ -9,7 +9,7 @@ import {
   isObject,
   MessengerError,
   __webext_messenger__,
-} from "./shared";
+} from "./shared.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (

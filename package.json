@@ -9,10 +9,12 @@
   "type": "module",
   "main": "distribution/index.js",
   "alias": {
+    "./this-stuff-is-just-for-local-parcel-tests": "./package.json",
     "./source/sender.js": "./source/sender.ts",
     "./source/receiver.js": "./source/receiver.ts",
     "./source/namedTargets.js": "./source/namedTargets.ts",
-    "./source/types.js": "./source/types.ts"
+    "./source/types.js": "./source/types.ts",
+    "./source/shared.js": "./source/shared.ts"
   },
   "scripts": {
     "build": "tsc",

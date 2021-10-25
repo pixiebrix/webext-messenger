@@ -11,14 +11,14 @@ import {
   Options,
   NamedTarget,
   Target,
-} from "./types";
+} from "./types.js";
 import {
   isObject,
   MessengerError,
   __webext_messenger__,
   handlers,
-} from "./shared";
-import { resolveNamedTarget } from "./namedTargets";
+} from "./shared.js";
+import { resolveNamedTarget } from "./namedTargets.js";
 
 export const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
