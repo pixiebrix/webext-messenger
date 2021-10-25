@@ -22,10 +22,10 @@ export function isMessengerMessage(message: unknown): message is Message {
 
 async function handleCall(
   message: Message,
-  sender: MessengerMeta,
+  meta: MessengerMeta,
   call: Promise<unknown> | unknown
 ): Promise<MessengerResponse> {
-  console.debug(`Messenger:`, message.type, message.args, "from", { sender });
+  console.debug(`Messenger:`, message.type, message.args, "from", { meta });
   // The handler could actually be a synchronous function
   const response = await Promise.resolve(call).then(
     (value) => ({ value }),
@@ -41,10 +41,18 @@ async function handleCall(
   return { ...response, __webext_messenger__ };
 }
 
-async function handleMessage(
-  message: Message,
-  sender: MessengerMeta
-): Promise<MessengerResponse | void> {
+// MUST NOT be `async` or Promise-returning-only
+function onMessageListener(
+  message: unknown,
+  sender: browser.runtime.MessageSender
+): Promise<unknown> | void {
+  if (!isMessengerMessage(message)) {
+    // TODO: Add test for this eventuality: ignore unrelated messages
+    return;
+  }
+
+  const meta: MessengerMeta = { trace: [sender] };
+
   if (message.target) {
     if (!isBackgroundPage()) {
       console.warn(
@@ -57,19 +65,19 @@ async function handleMessage(
 
     const resolvedTarget =
       "name" in message.target
-        ? resolveNamedTarget(message.target, sender.trace[0])
+        ? resolveNamedTarget(message.target, sender)
         : message.target;
     const publicMethod = getContentScriptMethod(message.type);
     return handleCall(
       message,
-      sender,
+      meta,
       publicMethod(resolvedTarget, ...message.args)
     );
   }
 
   const handler = handlers.get(message.type);
   if (handler) {
-    return handleCall(message, sender, handler.apply(sender, message.args));
+    return handleCall(message, meta, handler.apply(meta, message.args));
   }
 
   // More context in https://github.com/pixiebrix/webext-messenger/issues/45
@@ -78,18 +86,6 @@ async function handleMessage(
     message.type,
     "received but ignored; No handlers were registered here"
   );
-}
-
-// MUST NOT be `async` or Promise-returning-only
-function onMessageListener(
-  message: unknown,
-  sender: browser.runtime.MessageSender
-): Promise<unknown> | void {
-  if (isMessengerMessage(message)) {
-    return handleMessage(message, { trace: [sender] });
-  }
-
-  // TODO: Add test for this eventuality: ignore unrelated messages
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
