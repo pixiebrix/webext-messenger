@@ -1,4 +1,4 @@
-import * as test from "fresh-tape";
+import test from "fresh-tape";
 import { isBackgroundPage } from "webext-detect-page";
 import { NamedTarget, Target } from "../..";
 import * as backgroundContext from "../background/api";

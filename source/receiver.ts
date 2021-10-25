@@ -1,9 +1,9 @@
 import { serializeError } from "serialize-error";
 import { isBackgroundPage } from "webext-detect-page";
 
-import { getContentScriptMethod } from "./sender";
-import { resolveNamedTarget } from "./namedTargets";
-import { Message, MessengerMeta, MessengerResponse, Method } from "./types";
+import { getContentScriptMethod } from "./sender.js";
+import { resolveNamedTarget } from "./namedTargets.js";
+import { Message, MessengerMeta, MessengerResponse, Method } from "./types.js";
 import {
   handlers,
   isObject,

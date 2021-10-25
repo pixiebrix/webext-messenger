@@ -1,7 +1,7 @@
 import { isBackgroundPage } from "webext-detect-page";
-import { NamedTarget, Target, MessengerMeta } from "./types";
-import { errorNonExistingTarget, getMethod } from "./sender";
-import { registerMethods } from "./receiver";
+import { NamedTarget, Target, MessengerMeta } from "./types.js";
+import { errorNonExistingTarget, getMethod } from "./sender.js";
+import { registerMethods } from "./receiver.js";
 
 declare global {
   interface MessengerMethods {

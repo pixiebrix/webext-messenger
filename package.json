@@ -8,6 +8,12 @@
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
   "main": "distribution/index.js",
+  "alias": {
+    "./source/sender.js": "./source/sender.ts",
+    "./source/receiver.js": "./source/receiver.ts",
+    "./source/namedTargets.js": "./source/namedTargets.ts",
+    "./source/types.js": "./source/types.ts"
+  },
   "scripts": {
     "build": "tsc",
     "demo:watch": "parcel watch --no-cache --no-hmr --detailed-report 0",

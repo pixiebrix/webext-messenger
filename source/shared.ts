@@ -1,4 +1,4 @@
-import { Method } from "./types";
+import { Method } from "./types.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
 export const __webext_messenger__ = true;

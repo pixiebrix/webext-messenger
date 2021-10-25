@@ -1,7 +1,7 @@
-export { registerMethods } from "./receiver";
-export { getContentScriptMethod, getMethod } from "./sender";
-export { MessengerMeta, NamedTarget, Target } from "./types";
-export { registerTarget } from "./namedTargets";
-import { initTargets } from "./namedTargets";
+export { registerMethods } from "./receiver.js";
+export { getContentScriptMethod, getMethod } from "./sender.js";
+export { MessengerMeta, NamedTarget, Target } from "./types.js";
+export { registerTarget } from "./namedTargets.js";
+import { initTargets } from "./namedTargets.js";
 
 initTargets();
