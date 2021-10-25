@@ -10,8 +10,8 @@
   "main": "distribution/index.js",
   "scripts": {
     "build": "tsc",
-    "demo:watch": "parcel watch source/test/manifest.json --no-cache --no-hmr --detailed-report 0",
-    "demo:build": "parcel build source/test/manifest.json --no-cache --detailed-report 0",
+    "demo:watch": "parcel watch --no-cache --no-hmr --detailed-report 0",
+    "demo:build": "parcel build --no-cache --detailed-report 0",
     "prepack": "tsc --sourceMap false",
     "test": "eslint . && tsc --noEmit",
     "lint": "eslint .",
@@ -102,7 +102,13 @@
     "xo": "^0.45.0"
   },
   "targets": {
-    "main": false
+    "main": false,
+    "default": {
+      "source": "source/test/manifest.json",
+      "sourceMap": {
+        "inline": true
+      }
+    }
   },
   "webExt": {
     "sourceDir": "dist",

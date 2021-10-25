@@ -18,7 +18,7 @@ import {
   __webext_messenger__,
   handlers,
 } from "./shared";
-import { targets } from "./namedTargets";
+import { resolveNamedTarget } from "./namedTargets";
 
 export const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -84,36 +84,6 @@ async function manageMessage(
   }
 
   return response.value;
-}
-
-export function resolveNamedTarget(
-  target: NamedTarget,
-  sender?: browser.runtime.MessageSender
-): Target {
-  if (!isBackgroundPage()) {
-    throw new Error(
-      "Named targets can only be resolved in the background page"
-    );
-  }
-
-  const {
-    name,
-    tabId = sender?.tab?.id, // If not specified, try to use the sender’s
-  } = target;
-  if (typeof tabId === "undefined") {
-    throw new TypeError(
-      `${errorNonExistingTarget} The tab ID was not specified nor it was automatically determinable.`
-    );
-  }
-
-  const resolvedTarget = targets.get(`${tabId}%${name}`);
-  if (!resolvedTarget) {
-    throw new Error(
-      `${errorNonExistingTarget} Target named ${name} not registered for tab ${tabId}.`
-    );
-  }
-
-  return resolvedTarget;
 }
 
 /**
