@@ -41,6 +41,36 @@ async function handleCall(
   return { ...response, __webext_messenger__ };
 }
 
+function getHandler(
+  message: Message,
+  sender: browser.runtime.MessageSender
+): Method | void {
+  if (message.target && !isBackgroundPage()) {
+    console.warn(
+      "Messenger:",
+      message.type,
+      "received but ignored; Wrong context"
+    );
+    return;
+  }
+
+  if (message.target) {
+    const resolvedTarget =
+      "name" in message.target
+        ? resolveNamedTarget(message.target, sender)
+        : message.target;
+    const publicMethod = getContentScriptMethod(message.type);
+
+    // @ts-expect-error You're wrong, TypeScript
+    return publicMethod.bind(undefined, resolvedTarget);
+  }
+
+  const handler = handlers.get(message.type);
+  if (handler) {
+    return handler;
+  }
+}
+
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
@@ -51,32 +81,9 @@ function onMessageListener(
     return;
   }
 
-  const meta: MessengerMeta = { trace: [sender] };
-
-  if (message.target) {
-    if (!isBackgroundPage()) {
-      console.warn(
-        "Messenger:",
-        message.type,
-        "received but ignored; Wrong context"
-      );
-      return;
-    }
-
-    const resolvedTarget =
-      "name" in message.target
-        ? resolveNamedTarget(message.target, sender)
-        : message.target;
-    const publicMethod = getContentScriptMethod(message.type);
-    return handleCall(
-      message,
-      meta,
-      publicMethod(resolvedTarget, ...message.args)
-    );
-  }
-
-  const handler = handlers.get(message.type);
+  const handler = getHandler(message, sender);
   if (handler) {
+    const meta: MessengerMeta = { trace: [sender] };
     return handleCall(message, meta, handler.apply(meta, message.args));
   }
 

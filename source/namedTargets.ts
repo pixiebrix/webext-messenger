@@ -45,7 +45,10 @@ export const targets = new Map<string, Target>();
 /** Register the current context so that it can be targeted with a name */
 export const registerTarget = getMethod("__webextMessengerTargetRegistration");
 
-function _registerTarget(this: MessengerMeta, name: string): void {
+async function _registerTarget(
+  this: MessengerMeta,
+  name: string
+): Promise<void> {
   const sender = this.trace[0]!;
   const tabId = sender.tab!.id!;
   const { frameId } = sender;
