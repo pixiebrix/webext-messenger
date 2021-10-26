@@ -79,9 +79,11 @@ async function manageMessage(
   }
 
   if ("error" in response) {
+    debug(type, "↘️ replied with error", response.error);
     throw deserializeError(response.error);
   }
 
+  debug(type, "↘️ replied successfully", response.value);
   return response.value;
 }
 
