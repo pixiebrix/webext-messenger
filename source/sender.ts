@@ -9,7 +9,6 @@ import {
   PublicMethod,
   PublicMethodWithTarget,
   Options,
-  NamedTarget,
   Target,
 } from "./types.js";
 import {
@@ -18,7 +17,6 @@ import {
   __webext_messenger__,
   handlers,
 } from "./shared.js";
-import { resolveNamedTarget } from "./namedTargets.js";
 
 export const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -30,7 +28,7 @@ function isMessengerResponse(response: unknown): response is MessengerResponse {
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
-  target?: Target | NamedTarget
+  target?: Target
 ): MessengerMessage {
   return {
     // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
@@ -108,22 +106,16 @@ function getContentScriptMethod<
   Method extends MessengerMethods[Type],
   PublicMethod extends PublicMethodWithTarget<Method>
 >(type: Type, options: Options = {}): PublicMethod {
-  const publicMethod = (
-    target: Target | NamedTarget,
-    ...args: Parameters<Method>
-  ) => {
-    // Named targets and contexts without direct Tab access must go through background, unless we're already in it
-    if (!browser.tabs || ("name" in target && !isBackgroundPage())) {
+  const publicMethod = (target: Target, ...args: Parameters<Method>) => {
+    // Contexts without direct Tab access must go through background
+    if (!browser.tabs) {
       return manageConnection(type, options, async () =>
         browser.runtime.sendMessage(makeMessage(type, args, target))
       );
     }
 
-    const resolvedTarget =
-      "name" in target ? resolveNamedTarget(target) : target;
-
     // `frameId` must be specified. If missing, the message is sent to every frame
-    const { tabId, frameId = 0 } = resolvedTarget;
+    const { tabId, frameId = 0 } = target;
 
     // Message tab directly
     return manageConnection(type, options, async () =>

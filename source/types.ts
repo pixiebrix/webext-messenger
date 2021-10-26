@@ -15,7 +15,7 @@ declare global {
 type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
-  ? (target: Target | NamedTarget, ...args: PreviousArguments) => TReturnValue
+  ? (target: Target, ...args: PreviousArguments) => TReturnValue
   : never;
 
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
@@ -68,7 +68,7 @@ export type Message<LocalArguments extends Arguments = Arguments> = {
   args: LocalArguments;
 
   /** If the message is being sent to an intermediary receiver, also set the target */
-  target?: Target | NamedTarget;
+  target?: Target;
 
   /** If the message is being sent to an intermediary receiver, also set the options */
   options?: Target;
@@ -82,10 +82,4 @@ export type MessengerMessage = Message & {
 export interface Target {
   tabId: number;
   frameId?: number;
-}
-
-export interface NamedTarget {
-  /** If the id is missing, it will use the sender’s tabId instead */
-  tabId?: number;
-  name: string;
 }

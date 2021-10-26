@@ -2,7 +2,6 @@ import { serializeError } from "serialize-error";
 import { isBackgroundPage } from "webext-detect-page";
 
 import { getContentScriptMethod } from "./sender.js";
-import { resolveNamedTarget } from "./namedTargets.js";
 import { Message, MessengerMeta, MessengerResponse, Method } from "./types.js";
 import {
   handlers,
@@ -41,10 +40,7 @@ async function handleCall(
   return { ...response, __webext_messenger__ };
 }
 
-function getHandler(
-  message: Message,
-  sender: browser.runtime.MessageSender
-): Method | void {
+function getHandler(message: Message): Method | void {
   if (message.target && !isBackgroundPage()) {
     console.warn(
       "Messenger:",
@@ -55,14 +51,10 @@ function getHandler(
   }
 
   if (message.target) {
-    const resolvedTarget =
-      "name" in message.target
-        ? resolveNamedTarget(message.target, sender)
-        : message.target;
     const publicMethod = getContentScriptMethod(message.type);
 
     // @ts-expect-error You're wrong, TypeScript
-    return publicMethod.bind(undefined, resolvedTarget);
+    return publicMethod.bind(undefined, message.target);
   }
 
   const handler = handlers.get(message.type);
@@ -81,7 +73,7 @@ function onMessageListener(
     return;
   }
 
-  const handler = getHandler(message, sender);
+  const handler = getHandler(message);
   if (handler) {
     const meta: MessengerMeta = { trace: [sender] };
     return handleCall(message, meta, handler.apply(meta, message.args));
