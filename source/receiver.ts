@@ -41,15 +41,6 @@ async function handleCall(
 }
 
 function getHandler(message: Message): Method | void {
-  if (message.target && !isBackgroundPage()) {
-    console.warn(
-      "Messenger:",
-      message.type,
-      "received but ignored; Wrong context"
-    );
-    return;
-  }
-
   if (message.target) {
     const publicMethod = getContentScriptMethod(message.type);
 
@@ -80,11 +71,11 @@ function onMessageListener(
   }
 
   // More context in https://github.com/pixiebrix/webext-messenger/issues/45
-  console.warn(
-    "Messenger:",
-    message.type,
-    "received but ignored; No handlers were registered here"
-  );
+  const reason =
+    message.target && !isBackgroundPage()
+      ? "Wrong context"
+      : "No handlers were registered here";
+  console.warn("Messenger:", message.type, "received but ignored;", reason);
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
