@@ -1,6 +1,6 @@
 {
   "name": "webext-messenger",
-  "version": "0.13.0-7",
+  "version": "0.13.0-8",
   "description": "Browser Extension component messaging framework",
   "keywords": [],
   "repository": "pixiebrix/webext-messenger",
