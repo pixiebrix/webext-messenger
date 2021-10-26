@@ -110,18 +110,22 @@ function getContentScriptMethod<
   const publicMethod = (target: Target, ...args: Parameters<Method>) => {
     // Contexts without direct Tab access must go through background
     if (!browser.tabs) {
-      return manageConnection(type, options, async () =>
-        browser.runtime.sendMessage(makeMessage(type, args, target))
-      );
+      return manageConnection(type, options, async () => {
+        debug(type, "↗️ sending message to runtime");
+        return browser.runtime.sendMessage(makeMessage(type, args, target));
+      });
     }
 
     // `frameId` must be specified. If missing, the message is sent to every frame
     const { tabId, frameId = 0 } = target;
 
     // Message tab directly
-    return manageConnection(type, options, async () =>
-      browser.tabs.sendMessage(tabId, makeMessage(type, args), { frameId })
-    );
+    return manageConnection(type, options, async () => {
+      debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
+      return browser.tabs.sendMessage(tabId, makeMessage(type, args), {
+        frameId,
+      });
+    });
   };
 
   return publicMethod as PublicMethod;
@@ -160,8 +164,10 @@ function getMethod<
       throw new MessengerError("No handler registered for " + type);
     }
 
-    const sendMessage = async () =>
-      browser.runtime.sendMessage(makeMessage(type, args));
+    const sendMessage = async () => {
+      debug(type, "↗️ sending message to runtime");
+      return browser.runtime.sendMessage(makeMessage(type, args));
+    };
 
     return manageConnection(type, options, sendMessage);
   };
