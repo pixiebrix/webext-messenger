@@ -1,6 +1,6 @@
 {
   "name": "webext-messenger",
-  "version": "0.12.0",
+  "version": "0.13.0-8",
   "description": "Browser Extension component messaging framework",
   "keywords": [],
   "repository": "pixiebrix/webext-messenger",
@@ -8,19 +8,22 @@
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
   "main": "distribution/index.js",
-  "files": [
-    "distribution/index.js",
-    "distribution/index.d.ts"
-  ],
+  "alias": {
+    "./this-stuff-is-just-for-local-parcel-tests": "./package.json",
+    "./source/sender.js": "./source/sender.ts",
+    "./source/receiver.js": "./source/receiver.ts",
+    "./source/types.js": "./source/types.ts",
+    "./source/shared.js": "./source/shared.ts"
+  },
   "scripts": {
     "build": "tsc",
-    "demo:watch": "parcel watch test/demo-extension/manifest.json --dist-dir test/dist --no-cache --no-hmr --detailed-report 0",
-    "demo:build": "parcel build test/demo-extension/manifest.json --dist-dir test/dist --no-cache --detailed-report 0 --no-optimize",
+    "demo:watch": "parcel watch --no-cache --no-hmr --detailed-report 0",
+    "demo:build": "parcel build --no-cache --detailed-report 0",
     "prepack": "tsc --sourceMap false",
     "test": "eslint . && tsc --noEmit",
     "lint": "eslint .",
     "fix": "eslint . --fix",
-    "watch": "tsc --watch --noEmit"
+    "watch": "tsc --watch"
   },
   "eslintConfig": {
     "env": {
@@ -42,7 +45,6 @@
       "plugin:unicorn/recommended"
     ],
     "rules": {
-      "@typescript-eslint/no-unsafe-member-access": "off",
       "import/no-unresolved": "off",
       "unicorn/filename-case": [
         "error",
@@ -71,7 +73,9 @@
           "*.test.ts"
         ],
         "rules": {
-          "@typescript-eslint/no-non-null-assertion": "off"
+          "@typescript-eslint/no-non-null-assertion": "off",
+          "@typescript-eslint/no-explicit-any": "off",
+          "@typescript-eslint/no-unsafe-member-access": "off"
         }
       }
     ],
@@ -106,10 +110,16 @@
     "xo": "^0.45.0"
   },
   "targets": {
-    "main": false
+    "main": false,
+    "default": {
+      "source": "source/test/manifest.json",
+      "sourceMap": {
+        "inline": true
+      }
+    }
   },
   "webExt": {
-    "sourceDir": "test/dist",
+    "sourceDir": "dist",
     "run": {
       "startUrl": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods",

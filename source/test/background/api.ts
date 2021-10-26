@@ -1,4 +1,4 @@
-import { getMethod } from "../../../index";
+import { getMethod } from "../..";
 
 // Dog-fooding, needed to run the tests
 export const openTab = getMethod("openTab");

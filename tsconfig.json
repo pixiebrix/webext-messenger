@@ -1,13 +1,8 @@
 {
   "extends": "@sindresorhus/tsconfig/tsconfig.json",
-  "include": ["test/demo-extension/**/*"],
-  "files": ["index.ts"],
+  "include": ["source/**/*"],
   "compilerOptions": {
     "outDir": "distribution",
-    "skipLibCheck": false,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./*"]
-    }
+    "skipLibCheck": false
   }
 }
