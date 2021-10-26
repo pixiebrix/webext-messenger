@@ -1,7 +1,6 @@
 import { Method } from "./types.js";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
-export const __webext_messenger__ = true;
+export const __webextMessenger = true;
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -11,3 +10,7 @@ export class MessengerError extends Error {
 }
 
 export const handlers = new Map<string, Method>();
+
+// .bind preserves the call location in the console
+export const debug = console.debug.bind(console, "Messenger:");
+export const warn = console.warn.bind(console, "Messenger:");

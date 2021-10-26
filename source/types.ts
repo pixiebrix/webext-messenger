@@ -45,7 +45,7 @@ type RawMessengerResponse =
 
 export type MessengerResponse = RawMessengerResponse & {
   /** Guarantees that the message was handled by this library */
-  __webext_messenger__: true;
+  __webextMessenger: true;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
@@ -76,7 +76,7 @@ export type Message<LocalArguments extends Arguments = Arguments> = {
 
 export type MessengerMessage = Message & {
   /** Guarantees that a message is meant to be handled by this library */
-  __webext_messenger__: true;
+  __webextMessenger: true;
 };
 
 export interface Target {

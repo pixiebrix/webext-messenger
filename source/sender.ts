@@ -14,15 +14,17 @@ import {
 import {
   isObject,
   MessengerError,
-  __webext_messenger__,
+  __webextMessenger,
   handlers,
+  debug,
+  warn,
 } from "./shared.js";
 
 export const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
-  return isObject(response) && response["__webext_messenger__"] === true;
+  return isObject(response) && response["__webextMessenger"] === true;
 }
 
 function makeMessage(
@@ -31,8 +33,7 @@ function makeMessage(
   target?: Target
 ): MessengerMessage {
   return {
-    // eslint-disable-next-line @typescript-eslint/naming-convention -- Private key
-    __webext_messenger__,
+    __webextMessenger,
     type,
     args,
     target,
@@ -50,7 +51,7 @@ function manageConnection(
   }
 
   void sendMessage().catch((error: unknown) => {
-    console.debug("Messenger:", type, "notification failed", { error });
+    debug(type, "notification failed", { error });
   });
 }
 
@@ -67,7 +68,7 @@ async function manageMessage(
         throw error;
       }
 
-      console.debug("Messenger:", type, "will retry");
+      debug(type, "will retry");
     },
   });
 
@@ -152,7 +153,7 @@ function getMethod<
     if (isBackgroundPage()) {
       const handler = handlers.get(type);
       if (handler) {
-        console.warn("Messenger:", type, "is being handled locally");
+        warn(type, "is being handled locally");
         return handler.apply({ trace: [] }, args);
       }
 
