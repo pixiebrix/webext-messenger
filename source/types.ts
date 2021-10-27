@@ -1,3 +1,4 @@
+import { Runtime } from "webextension-polyfill";
 import { Asyncify, ValueOf } from "type-fest";
 import { ErrorObject } from "serialize-error";
 
@@ -32,7 +33,7 @@ export type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
   WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
-  trace: browser.runtime.MessageSender[];
+  trace: Runtime.MessageSender[];
 }
 
 type RawMessengerResponse =

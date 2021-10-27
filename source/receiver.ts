@@ -1,3 +1,4 @@
+import browser, { Runtime } from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 
 import { getContentScriptMethod } from "./sender.js";
@@ -23,7 +24,7 @@ export function isMessengerMessage(message: unknown): message is Message {
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: browser.runtime.MessageSender
+  sender: Runtime.MessageSender
 ): Promise<unknown> | void {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
