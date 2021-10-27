@@ -1,3 +1,4 @@
+import browser from "webextension-polyfill";
 import pRetry from "p-retry";
 import { SetReturnType } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";

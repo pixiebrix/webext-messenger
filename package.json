@@ -78,10 +78,7 @@
           "@typescript-eslint/no-unsafe-member-access": "off"
         }
       }
-    ],
-    "globals": {
-      "chrome": true
-    }
+    ]
   },
   "dependencies": {
     "p-retry": "^4.6.1",
@@ -94,7 +91,7 @@
     "@parcel/config-webextension": "^2.0.0",
     "@sindresorhus/tsconfig": "^2.0.0",
     "@types/chrome": "^0.0.159",
-    "@types/firefox-webext-browser": "^94.0.0",
+    "@types/webextension-polyfill": "^0.8.0",
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
     "eslint": "^8.1.0",
