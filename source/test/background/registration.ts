@@ -1,5 +1,5 @@
 import { isBackgroundPage } from "webext-detect-page";
-import { registerMethods } from "../../../index";
+import { registerMethods } from "../..";
 
 import { sum } from "./sum";
 import { throws } from "./throws";

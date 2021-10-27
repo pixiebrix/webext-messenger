@@ -3,8 +3,7 @@ import browser from "webextension-polyfill";
 export async function ensureScripts(tabId: number): Promise<void> {
   await browser.tabs.executeScript(tabId, {
     // https://github.com/parcel-bundler/parcel/issues/5758
-    file:
-      "/up_/up_/node_modules/webextension-polyfill/dist/browser-polyfill.js",
+    file: "/up_/up_/node_modules/webextension-polyfill/dist/browser-polyfill.js",
   });
   await browser.tabs.executeScript(tabId, {
     file: "contentscript/registration.js",
