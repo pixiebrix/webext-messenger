@@ -26,6 +26,13 @@
       "js": ["contentscript/registration.ts"]
     },
     {
+      "all_frames": true,
+      "matches": [
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Named-frame/Sidebar"
+      ],
+      "js": ["contentscript/registerSidebarTarget.ts"]
+    },
+    {
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
       ],

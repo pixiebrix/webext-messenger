@@ -1,7 +1,7 @@
 import test from "fresh-tape";
 import browser from "webextension-polyfill";
 import { isBackgroundPage } from "webext-detect-page";
-import { Target } from "../..";
+import { Target, NamedTarget } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
 import {
@@ -27,7 +27,7 @@ async function delay(timeout: number): Promise<void> {
   });
 }
 
-function runOnTarget(target: Target, expectedTitle: string) {
+function runOnTarget(target: Target | NamedTarget, expectedTitle: string) {
   test(expectedTitle + ": send message and get response", async (t) => {
     const title = await getPageTitle(target);
     t.equal(title, expectedTitle);
@@ -136,7 +136,7 @@ function runOnTarget(target: Target, expectedTitle: string) {
 
 async function init() {
   const tabId = await openTab(
-    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child"
+    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child&iframe=./Named-frame/Sidebar"
   );
 
   await delay(1000); // Let frames load so we can query them for the tests
@@ -145,6 +145,7 @@ async function init() {
   // All `test` calls must be done synchronously, or else the runner assumes they're done
   runOnTarget({ tabId, frameId: parentFrame }, "Parent");
   runOnTarget({ tabId, frameId: iframe }, "Child");
+  runOnTarget({ tabId, name: "sidebar" }, "Sidebar");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
     const tabId = await openTab(
