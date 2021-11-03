@@ -49,7 +49,6 @@ export type MessengerResponse = RawMessengerResponse & {
   __webextMessenger: true;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unused, in practice
 type Arguments = any[];
 export type Method = (
   this: MessengerMeta,
@@ -83,4 +82,9 @@ export type MessengerMessage = Message & {
 export interface Target {
   tabId: number;
   frameId?: number;
+}
+
+export interface UrlTarget {
+  tabId?: number;
+  url: string;
 }
