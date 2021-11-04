@@ -1,18 +1,19 @@
-import { getMethod } from "../..";
+import { getMethod, getNotifier, backgroundTarget } from "../..";
 
 // Dog-fooding, needed to run the tests
-export const openTab = getMethod("openTab");
-export const closeTab = getMethod("closeTab");
-export const getAllFrames = getMethod("getAllFrames");
-export const ensureScripts = getMethod("ensureScripts");
+export const openTab = getMethod("openTab", backgroundTarget);
+export const closeTab = getMethod("closeTab", backgroundTarget);
+export const getAllFrames = getMethod("getAllFrames", backgroundTarget);
+export const ensureScripts = getMethod("ensureScripts", backgroundTarget);
 
-export const sum = getMethod("sum");
-export const throws = getMethod("throws");
-export const sumIfMeta = getMethod("sumIfMeta");
-export const notRegistered = getMethod("notRegistered");
-export const notRegisteredNotification = getMethod("notRegistered", {
-  isNotification: true,
-});
-export const getExtensionId = getMethod("getExtensionId");
-export const backgroundOnly = getMethod("backgroundOnly");
-export const getSelf = getMethod("getSelf");
+export const sum = getMethod("sum", backgroundTarget);
+export const throws = getMethod("throws", backgroundTarget);
+export const sumIfMeta = getMethod("sumIfMeta", backgroundTarget);
+export const notRegistered = getMethod("notRegistered", backgroundTarget);
+export const notRegisteredNotification = getNotifier(
+  "notRegistered",
+  backgroundTarget
+);
+export const getExtensionId = getMethod("getExtensionId", backgroundTarget);
+export const backgroundOnly = getMethod("backgroundOnly", backgroundTarget);
+export const getSelf = getMethod("getSelf", backgroundTarget);

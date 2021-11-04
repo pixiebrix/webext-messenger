@@ -1,7 +1,7 @@
 import browser, { Runtime } from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 
-import { getContentScriptMethod } from "./sender.js";
+import { messenger } from "./sender.js";
 import { Message, MessengerMeta, Method } from "./types.js";
 import {
   handlers,
@@ -46,8 +46,7 @@ function onMessageListener(
     }
 
     debug(type, "🔀 forwarded", { sender, target });
-    const publicMethod = getContentScriptMethod(type);
-    handleMessage = async () => publicMethod(target, ...args);
+    handleMessage = async () => messenger(type, {}, target, ...args);
   } else {
     const localHandler = handlers.get(type);
     if (!localHandler) {
@@ -82,7 +81,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
       throw new MessengerError(`Handler already set for ${type}`);
     }
 
-    console.debug(`Messenger: Registered`, type);
+    console.debug("Messenger: Registered", type);
     handlers.set(type, method as Method);
   }
 

@@ -1,6 +1,5 @@
 import browser from "webextension-polyfill";
 import pRetry from "p-retry";
-import { SetReturnType } from "type-fest";
 import { isBackgroundPage } from "webext-detect-page";
 import { deserializeError } from "serialize-error";
 
@@ -11,6 +10,7 @@ import {
   PublicMethodWithTarget,
   Options,
   Target,
+  PageTarget,
 } from "./types.js";
 import {
   isObject,
@@ -20,6 +20,7 @@ import {
   debug,
   warn,
 } from "./shared.js";
+import { SetReturnType } from "type-fest";
 
 export const errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -88,80 +89,41 @@ async function manageMessage(
   return response.value;
 }
 
-/**
- * Replicates the original method, including its types.
- * To be called in the sender’s end.
- */
-function getContentScriptMethod<
+function messenger<
   Type extends keyof MessengerMethods,
-  Method extends MessengerMethods[Type],
-  PublicMethod extends PublicMethodWithTarget<Method>
+  Method extends MessengerMethods[Type]
 >(
   type: Type,
-  options: { isNotification: true }
-): SetReturnType<PublicMethod, void>;
-function getContentScriptMethod<
+  options: { isNotification: true },
+  target: Target | PageTarget,
+  ...args: Parameters<Method>
+): void;
+function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  PublicMethod extends PublicMethodWithTarget<Method>
->(type: Type, options?: Options): PublicMethod;
-function getContentScriptMethod<
-  Type extends keyof MessengerMethods,
-  Method extends MessengerMethods[Type],
-  PublicMethod extends PublicMethodWithTarget<Method>
->(type: Type, options: Options = {}): PublicMethod {
-  const publicMethod = (target: Target, ...args: Parameters<Method>) => {
-    // Contexts without direct Tab access must go through background
-    if (!browser.tabs) {
-      return manageConnection(type, options, async () => {
-        debug(type, "↗️ sending message to runtime");
-        return browser.runtime.sendMessage(makeMessage(type, args, target));
-      });
-    }
-
-    // `frameId` must be specified. If missing, the message is sent to every frame
-    const { tabId, frameId = 0 } = target;
-
-    // Message tab directly
-    return manageConnection(type, options, async () => {
-      debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
-      return browser.tabs.sendMessage(tabId, makeMessage(type, args), {
-        frameId,
-      });
-    });
-  };
-
-  return publicMethod as PublicMethod;
-}
-
-/**
- * Replicates the original method, including its types.
- * To be called in the sender’s end.
- */
-function getMethod<
-  Type extends keyof MessengerMethods,
-  Method extends MessengerMethods[Type],
-  PublicMethodType extends PublicMethod<Method>
+  ReturnValue extends ReturnType<Method>
 >(
   type: Type,
-  options: { isNotification: true }
-): SetReturnType<PublicMethodType, void>;
-function getMethod<
+  options: Options,
+  target: Target | PageTarget,
+  ...args: Parameters<Method>
+): ReturnValue;
+function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  PublicMethodType extends PublicMethod<Method>
->(type: Type, options?: Options): PublicMethodType;
-function getMethod<
-  Type extends keyof MessengerMethods,
-  Method extends MessengerMethods[Type],
-  PublicMethodType extends PublicMethod<Method>
->(type: Type, options: Options = {}): PublicMethodType {
-  const publicMethod = (...args: Parameters<Method>) => {
-    if (isBackgroundPage()) {
+  ReturnValue extends ReturnType<Method>
+>(
+  type: Type,
+  options: Options,
+  target: Target | PageTarget,
+  ...args: Parameters<Method>
+): ReturnValue | void {
+  if ("page" in target) {
+    if (target.page === "background" && isBackgroundPage()) {
       const handler = handlers.get(type);
       if (handler) {
         warn(type, "is being handled locally");
-        return handler.apply({ trace: [] }, args);
+        return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
       throw new MessengerError("No handler registered for " + type);
@@ -172,10 +134,94 @@ function getMethod<
       return browser.runtime.sendMessage(makeMessage(type, args));
     };
 
-    return manageConnection(type, options, sendMessage);
-  };
+    return manageConnection(type, options, sendMessage) as ReturnValue;
+  }
 
-  return publicMethod as PublicMethodType;
+  // Contexts without direct Tab access must go through background
+  if (!browser.tabs) {
+    return manageConnection(type, options, async () => {
+      debug(type, "↗️ sending message to runtime");
+      return browser.runtime.sendMessage(makeMessage(type, args, target));
+    }) as ReturnValue;
+  }
+
+  // `frameId` must be specified. If missing, the message is sent to every frame
+  const { tabId, frameId = 0 } = target;
+
+  // Message tab directly
+  return manageConnection(type, options, async () => {
+    debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
+    return browser.tabs.sendMessage(tabId, makeMessage(type, args), {
+      frameId,
+    });
+  }) as ReturnValue;
 }
 
-export { getContentScriptMethod, getMethod };
+function getMethod<
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends PublicMethod<Method>
+>(type: Type, target: Target | PageTarget): PublicMethodType;
+function getMethod<
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>
+>(type: Type): PublicMethodWithDynamicTarget;
+function getMethod<
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends PublicMethod<Method>,
+  PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>
+>(
+  type: Type,
+  target?: Target | PageTarget
+): PublicMethodType | PublicMethodWithDynamicTarget {
+  if (arguments.length === 1) {
+    return messenger.bind(undefined, type, {}) as PublicMethodWithDynamicTarget;
+  }
+
+  // @ts-expect-error `bind` types are junk
+  return messenger.bind(undefined, type, {}, target) as PublicMethodType;
+}
+
+function getNotifier<
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends SetReturnType<PublicMethod<Method>, void>
+>(type: Type, target: Target | PageTarget): PublicMethodType;
+function getNotifier<
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodWithDynamicTarget extends SetReturnType<
+    PublicMethodWithTarget<Method>,
+    void
+  >
+>(type: Type): PublicMethodWithDynamicTarget;
+function getNotifier<
+  Type extends keyof MessengerMethods,
+  Method extends MessengerMethods[Type],
+  PublicMethodType extends SetReturnType<PublicMethod<Method>, void>,
+  PublicMethodWithDynamicTarget extends SetReturnType<
+    PublicMethodWithTarget<Method>,
+    void
+  >
+>(
+  type: Type,
+  target?: Target | PageTarget
+): PublicMethodType | PublicMethodWithDynamicTarget {
+  const options = { isNotification: true };
+  if (arguments.length === 1) {
+    // @ts-expect-error `bind` types are junk
+    return messenger.bind(
+      undefined,
+      type,
+      options
+    ) as PublicMethodWithDynamicTarget;
+  }
+
+  // @ts-expect-error `bind` types are junk
+  return messenger.bind(undefined, type, options, target) as PublicMethodType;
+}
+
+export { messenger, getMethod, getNotifier };
+export const backgroundTarget: PageTarget = { page: "background" };
