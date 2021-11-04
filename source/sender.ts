@@ -10,7 +10,7 @@ import {
   PublicMethodWithTarget,
   Options,
   Target,
-  UrlTarget,
+  PageTarget,
 } from "./types.js";
 import {
   isObject,
@@ -95,7 +95,7 @@ function messenger<
 >(
   type: Type,
   options: { isNotification: true },
-  target: Target | UrlTarget,
+  target: Target | PageTarget,
   ...args: Parameters<Method>
 ): void;
 function messenger<
@@ -105,7 +105,7 @@ function messenger<
 >(
   type: Type,
   options: Options,
-  target: Target | UrlTarget,
+  target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue;
 function messenger<
@@ -115,11 +115,11 @@ function messenger<
 >(
   type: Type,
   options: Options,
-  target: Target | UrlTarget,
+  target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
-  if ("url" in target) {
-    if (target.url === "background" && isBackgroundPage()) {
+  if ("page" in target) {
+    if (target.page === "background" && isBackgroundPage()) {
       const handler = handlers.get(type);
       if (handler) {
         warn(type, "is being handled locally");
@@ -161,7 +161,7 @@ function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends PublicMethod<Method>
->(type: Type, target: Target | UrlTarget): PublicMethodType;
+>(type: Type, target: Target | PageTarget): PublicMethodType;
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -174,7 +174,7 @@ function getMethod<
   PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>
 >(
   type: Type,
-  target?: Target | UrlTarget
+  target?: Target | PageTarget
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   if (arguments.length === 1) {
     return messenger.bind(undefined, type, {}) as PublicMethodWithDynamicTarget;
@@ -188,7 +188,7 @@ function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends SetReturnType<PublicMethod<Method>, void>
->(type: Type, target: Target | UrlTarget): PublicMethodType;
+>(type: Type, target: Target | PageTarget): PublicMethodType;
 function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -207,7 +207,7 @@ function getNotifier<
   >
 >(
   type: Type,
-  target?: Target | UrlTarget
+  target?: Target | PageTarget
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   const options = { isNotification: true };
   if (arguments.length === 1) {
@@ -224,4 +224,4 @@ function getNotifier<
 }
 
 export { messenger, getMethod, getNotifier };
-export const backgroundTarget = { url: "background" };
+export const backgroundTarget: PageTarget = { page: "background" };

@@ -84,7 +84,7 @@ export interface Target {
   frameId?: number;
 }
 
-export interface UrlTarget {
+export interface PageTarget {
   tabId?: number;
-  url: string;
+  page: string;
 }
