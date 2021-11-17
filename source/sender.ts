@@ -68,11 +68,11 @@ async function manageMessage(
     factor: 1.3,
     maxRetryTime: 4000,
     onFailedAttempt(error) {
-      if (!String(error?.message).startsWith(errorNonExistingTarget)) {
+      if (!String(error.message).startsWith(errorNonExistingTarget)) {
         throw error;
       }
 
-      debug(type, "will retry");
+      debug(type, "will retry. Attempt", error.attemptNumber);
     },
   });
 
@@ -120,6 +120,7 @@ function messenger<
   target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
+  // Message goes to extension page
   if ("page" in target) {
     if (target.page === "background" && isBackgroundPage()) {
       const handler = handlers.get(type);
