@@ -32,13 +32,15 @@ function isMessengerResponse(response: unknown): response is MessengerResponse {
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
-  target?: Target
+  target: Target | PageTarget,
+  options: Options
 ): MessengerMessage {
   return {
     __webextMessenger,
     type,
     args,
     target,
+    options,
   };
 }
 
@@ -101,7 +103,7 @@ function messenger<
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  ReturnValue extends ReturnType<Method>
+  ReturnValue extends Promise<ReturnType<Method>>
 >(
   type: Type,
   options: Options,
@@ -111,7 +113,7 @@ function messenger<
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  ReturnValue extends ReturnType<Method>
+  ReturnValue extends Promise<ReturnType<Method>>
 >(
   type: Type,
   options: Options,
@@ -131,7 +133,9 @@ function messenger<
 
     const sendMessage = async () => {
       debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(makeMessage(type, args));
+      return browser.runtime.sendMessage(
+        makeMessage(type, args, target, options)
+      );
     };
 
     return manageConnection(type, options, sendMessage) as ReturnValue;
@@ -141,7 +145,9 @@ function messenger<
   if (!browser.tabs) {
     return manageConnection(type, options, async () => {
       debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(makeMessage(type, args, target));
+      return browser.runtime.sendMessage(
+        makeMessage(type, args, target, options)
+      );
     }) as ReturnValue;
   }
 
@@ -151,9 +157,13 @@ function messenger<
   // Message tab directly
   return manageConnection(type, options, async () => {
     debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
-    return browser.tabs.sendMessage(tabId, makeMessage(type, args), {
-      frameId,
-    });
+    return browser.tabs.sendMessage(
+      tabId,
+      makeMessage(type, args, target, options),
+      {
+        frameId,
+      }
+    );
   }) as ReturnValue;
 }
 

@@ -1,16 +1,17 @@
-import browser, { Runtime } from "webextension-polyfill";
+import browser from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 
 import { messenger } from "./sender.js";
-import { Message, MessengerMeta, Method } from "./types.js";
+import { Message, MessengerMeta, Method, Sender } from "./types.js";
 import {
   handlers,
   isObject,
   MessengerError,
   debug,
-  warn,
   __webextMessenger,
 } from "./shared.js";
+import { getContextName } from "webext-detect-page";
+import { isThisTarget, nameThisTarget } from "./thisTarget.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (
@@ -24,40 +25,56 @@ export function isMessengerMessage(message: unknown): message is Message {
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: Runtime.MessageSender
+  sender: Sender
 ): Promise<unknown> | void {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
     return;
   }
 
-  const { type, target, args } = message;
+  // Target check must be synchronous or else we need to handle the message
+  if (isThisTarget(message.target) === undefined) {
+    console.warn("A message was received before this context was ready");
+    return; // If this *was* the target, then probably no one else answered
+  }
+
+  return handleMessage(message, sender);
+}
+
+// This function can only be called when the message *will* be handled locally.
+// Returning "undefined" or throwing an error will still handle it.
+async function handleMessage(
+  message: Message,
+  sender: Sender
+): Promise<unknown> {
+  const { type, target, args, options: { trace } = {} } = message;
 
   debug(type, "↘️ received", { sender, args });
 
   let handleMessage: () => Promise<unknown>;
-  if (target) {
-    if (!browser.tabs) {
-      throw new MessengerError(
-        `Message ${type} sent to wrong context, it can't be forwarded to ${JSON.stringify(
-          target
-        )}`
-      );
-    }
 
-    debug(type, "🔀 forwarded", { sender, target });
-    handleMessage = async () => messenger(type, {}, target, ...args);
-  } else {
+  if (isThisTarget(target)) {
     const localHandler = handlers.get(type);
     if (!localHandler) {
-      warn(type, "⚠️ ignored, can't be handled here");
-      return;
+      throw new MessengerError(
+        `No handler registered for ${type} in ${getContextName()}`
+      );
     }
 
     debug(type, "➡️ will be handled here");
 
     const meta: MessengerMeta = { trace: [sender] };
     handleMessage = async () => localHandler.apply(meta, args);
+  } else if (browser.tabs) {
+    // TODO: double-check this logic
+    debug(type, "🔀 forwarded", { sender, target });
+    handleMessage = async () => messenger(type, { trace }, target, ...args);
+  } else {
+    throw new MessengerError(
+      `Message ${type} sent to wrong context, it can't be forwarded to ${JSON.stringify(
+        target
+      )}`
+    );
   }
 
   return handleMessage()
@@ -76,6 +93,8 @@ function onMessageListener(
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
+  void nameThisTarget();
+
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
       throw new MessengerError(`Handler already set for ${type}`);
@@ -88,6 +107,6 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   if ("browser" in globalThis) {
     browser.runtime.onMessage.addListener(onMessageListener);
   } else {
-    throw new Error("`webext-messenger` requires `webextension");
+    throw new Error("`webext-messenger` requires `webextension-polyfill`");
   }
 }

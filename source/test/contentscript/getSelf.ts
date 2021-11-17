@@ -1,7 +1,7 @@
-import { MessengerMeta } from "../..";
+import { MessengerMeta, Sender } from "../..";
 
 export async function getSelf(
   this: MessengerMeta
-): Promise<browser.Runtime.MessageSender | undefined> {
+): Promise<Sender | undefined> {
   return this.trace[0];
 }
