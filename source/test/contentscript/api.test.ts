@@ -100,7 +100,7 @@ function runOnTarget(target: Target, expectedTitle: string) {
 
         t.equal(
           error.message,
-          "No handler for notRegistered was registered in the receiving end"
+          "No handler registered for notRegistered in contentScript"
         );
       }
     }
@@ -161,7 +161,7 @@ async function init() {
 
       t.equal(
         error.message,
-        "No handler for getPageTitle was registered in the receiving end"
+        "No handler registered for getPageTitle in the receiving end"
       );
 
       await closeTab(tabId);

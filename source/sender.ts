@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import pRetry from "p-retry";
-import { isBackgroundPage } from "webext-detect-page";
+import { getContextName, isBackgroundPage } from "webext-detect-page";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -78,7 +78,7 @@ async function manageMessage(
 
   if (!isMessengerResponse(response)) {
     throw new MessengerError(
-      `No handler for ${type} was registered in the receiving end`
+      `No handler registered for ${type} in the receiving end`
     );
   }
 

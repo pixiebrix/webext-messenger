@@ -54,11 +54,10 @@ export function getActionForMessage(
 }
 
 export async function nameThisTarget() {
-  if (!thisTarget) {
+  // Same as above: CS receives messages correctly
+  if (!thisTarget && !isContentScript()) {
     thisTarget = await messenger("__getTabData", {}, { page: "any" });
-    if (isExtensionContext()) {
-      thisTarget.page = location.pathname;
-    }
+    thisTarget.page = location.pathname;
   }
 }
 
