@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import pRetry from "p-retry";
-import { getContextName, isBackgroundPage } from "webext-detect-page";
+import { isBackgroundPage } from "webext-detect-page";
 import { deserializeError } from "serialize-error";
 
 import {
