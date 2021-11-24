@@ -85,9 +85,5 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
     handlers.set(type, method as Method);
   }
 
-  if ("browser" in globalThis) {
-    browser.runtime.onMessage.addListener(onMessageListener);
-  } else {
-    throw new Error("`webext-messenger` requires `webextension");
-  }
+  browser.runtime.onMessage.addListener(onMessageListener);
 }
