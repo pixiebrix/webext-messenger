@@ -3,7 +3,7 @@ import { getMethod, getNotifier, backgroundTarget } from "../..";
 // Dog-fooding, needed to run the tests
 export const openTab = getMethod("openTab", backgroundTarget);
 export const closeTab = getMethod("closeTab", backgroundTarget);
-export const getAllFrames = getMethod("getAllFrames", backgroundTarget);
+export const createTargets = getMethod("createTargets", backgroundTarget);
 export const ensureScripts = getMethod("ensureScripts", backgroundTarget);
 
 export const sum = getMethod("sum", backgroundTarget);

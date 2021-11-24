@@ -16,7 +16,7 @@ declare global {
 type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
-  ? (target: Target, ...args: PreviousArguments) => TReturnValue
+  ? (target: Target | PageTarget, ...args: PreviousArguments) => TReturnValue
   : never;
 
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */

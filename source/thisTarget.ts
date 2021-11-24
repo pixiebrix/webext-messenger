@@ -25,8 +25,8 @@ export function getActionForMessage(
     return "respond";
   }
 
-  // We're in an extension page and we're being asked to forward it to a specific tab.
-  if ("tabId" in target) {
+  // We're in an extension page, but the target is not one.
+  if (!("page" in target)) {
     return "forward";
   }
 

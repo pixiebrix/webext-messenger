@@ -38,5 +38,6 @@
       ],
       "js": ["contentscript/fixtures/unrelatedMessageListener.ts"]
     }
-  ]
+  ],
+  "web_accessible_resources": ["iframe.html"]
 }

@@ -8,7 +8,7 @@ import { getExtensionId } from "./getExtensionId";
 import { backgroundOnly } from "./backgroundOnly";
 import { notRegistered } from "./notRegistered";
 import { getSelf } from "./getSelf";
-import { openTab, getAllFrames, ensureScripts, closeTab } from "./testingApi";
+import { openTab, createTargets, ensureScripts, closeTab } from "./testingApi";
 
 declare global {
   interface MessengerMethods {
@@ -20,7 +20,7 @@ declare global {
     backgroundOnly: typeof backgroundOnly;
     getSelf: typeof getSelf;
     openTab: typeof openTab;
-    getAllFrames: typeof getAllFrames;
+    createTargets: typeof createTargets;
     ensureScripts: typeof ensureScripts;
     closeTab: typeof closeTab;
   }
@@ -40,7 +40,7 @@ registerMethods({
   throws,
   getSelf,
   openTab,
-  getAllFrames,
+  createTargets,
   ensureScripts,
   closeTab,
 });

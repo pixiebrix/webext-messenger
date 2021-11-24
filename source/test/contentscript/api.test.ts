@@ -1,7 +1,7 @@
 import test from "fresh-tape";
 import browser from "webextension-polyfill";
 import { isBackgroundPage } from "webext-detect-page";
-import { Target } from "../..";
+import { PageTarget, Target } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
 import {
@@ -17,7 +17,7 @@ import {
   getPageTitleNotification,
 } from "./api";
 
-const { openTab, getAllFrames, ensureScripts, closeTab } = isBackgroundPage()
+const { openTab, createTargets, ensureScripts, closeTab } = isBackgroundPage()
   ? localContext
   : backgroundContext;
 
@@ -27,7 +27,7 @@ async function delay(timeout: number): Promise<void> {
   });
 }
 
-function runOnTarget(target: Target, expectedTitle: string) {
+function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
   test(expectedTitle + ": send message and get response", async (t) => {
     const title = await getPageTitle(target);
     t.equal(title, expectedTitle);
@@ -46,12 +46,14 @@ function runOnTarget(target: Target, expectedTitle: string) {
     }
   );
 
-  test(
-    expectedTitle + ": handler must be executed in the content script",
-    async (t) => {
-      t.equal(await contentScriptOnly(target), true);
-    }
-  );
+  if (!("page" in target)) {
+    test(
+      expectedTitle + ": handler must be executed in the content script",
+      async (t) => {
+        t.equal(await contentScriptOnly(target), true);
+      }
+    );
+  }
 
   test(
     expectedTitle + ": should receive error from a background handler",
@@ -100,7 +102,9 @@ function runOnTarget(target: Target, expectedTitle: string) {
 
         t.equal(
           error.message,
-          "No handler registered for notRegistered in contentScript"
+          `No handler registered for notRegistered in ${
+            "page" in target ? "extension" : "contentScript"
+          }`
         );
       }
     }
@@ -135,16 +139,12 @@ function runOnTarget(target: Target, expectedTitle: string) {
 }
 
 async function init() {
-  const tabId = await openTab(
-    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child"
-  );
-
-  await delay(1000); // Let frames load so we can query them for the tests
-  const [parentFrame, iframe] = await getAllFrames(tabId);
+  const { tabId, parentFrame, iframe } = await createTargets();
 
   // All `test` calls must be done synchronously, or else the runner assumes they're done
   runOnTarget({ tabId, frameId: parentFrame }, "Parent");
   runOnTarget({ tabId, frameId: iframe }, "Child");
+  runOnTarget({ tabId, page: "/iframe.html" }, "Extension frame");
 
   test("should throw the right error when `registerMethod` was never called", async (t) => {
     const tabId = await openTab(
