@@ -11,7 +11,7 @@ import {
   __webextMessenger,
 } from "./shared.js";
 import { getContextName } from "webext-detect-page";
-import { getActionForMessage, nameThisTarget } from "./thisTarget";
+import { getActionForMessage, nameThisTarget } from "./thisTarget.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (

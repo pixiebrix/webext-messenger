@@ -13,7 +13,8 @@
     "./source/sender.js": "./source/sender.ts",
     "./source/receiver.js": "./source/receiver.ts",
     "./source/types.js": "./source/types.ts",
-    "./source/shared.js": "./source/shared.ts"
+    "./source/shared.js": "./source/shared.ts",
+    "./source/thisTarget.js": "./source/thisTarget.ts"
   },
   "scripts": {
     "build": "tsc",
