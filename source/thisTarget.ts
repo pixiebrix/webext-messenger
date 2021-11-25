@@ -1,5 +1,5 @@
 import { isBackgroundPage, isContentScript } from "webext-detect-page";
-import { messenger } from "./index";
+import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import { Target, PageTarget, MessengerMeta } from "./types.js";
 import { debug } from "./shared.js";
