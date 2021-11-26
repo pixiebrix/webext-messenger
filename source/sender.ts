@@ -63,24 +63,34 @@ async function manageMessage(
   type: string,
   sendMessage: () => Promise<MessengerResponse | unknown>
 ): Promise<unknown> {
-  const response = await pRetry(sendMessage, {
-    minTimeout: 100,
-    factor: 1.3,
-    maxRetryTime: 4000,
-    onFailedAttempt(error) {
-      if (!String(error.message).startsWith(errorNonExistingTarget)) {
-        throw error;
+  const response = await pRetry(
+    async () => {
+      const response = await sendMessage();
+
+      if (!isMessengerResponse(response)) {
+        throw new MessengerError(
+          `No handler registered for ${type} in the receiving end`
+        );
       }
 
-      debug(type, "will retry. Attempt", error.attemptNumber);
+      return response;
     },
-  });
-
-  if (!isMessengerResponse(response)) {
-    throw new MessengerError(
-      `No handler registered for ${type} in the receiving end`
-    );
-  }
+    {
+      minTimeout: 100,
+      factor: 1.3,
+      maxRetryTime: 4000,
+      onFailedAttempt(error) {
+        if (
+          error instanceof MessengerError ||
+          String(error.message).startsWith(errorNonExistingTarget)
+        ) {
+          debug(type, "will retry. Attempt", error.attemptNumber);
+        } else {
+          throw error;
+        }
+      },
+    }
+  );
 
   if ("error" in response) {
     debug(type, "↘️ replied with error", response.error);
