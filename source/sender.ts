@@ -11,6 +11,7 @@ import {
   Options,
   Target,
   PageTarget,
+  AnyTarget,
 } from "./types.js";
 import {
   isObject,
@@ -48,10 +49,11 @@ function makeMessage(
 function manageConnection(
   type: string,
   options: Options,
+  target: AnyTarget,
   sendMessage: () => Promise<unknown>
 ): Promise<unknown> | void {
   if (!options.isNotification) {
-    return manageMessage(type, sendMessage);
+    return manageMessage(type, target, sendMessage);
   }
 
   void sendMessage().catch((error: unknown) => {
@@ -61,6 +63,7 @@ function manageConnection(
 
 async function manageMessage(
   type: string,
+  target: AnyTarget,
   sendMessage: () => Promise<MessengerResponse | unknown>
 ): Promise<unknown> {
   const response = await pRetry(
@@ -81,7 +84,8 @@ async function manageMessage(
       maxRetryTime: 4000,
       onFailedAttempt(error) {
         if (
-          error instanceof MessengerError ||
+          // Don't retry sending to the background page unless it really hasn't loaded yet
+          (target.page !== "background" && error instanceof MessengerError) ||
           String(error.message).startsWith(errorNonExistingTarget)
         ) {
           debug(type, "will retry. Attempt", error.attemptNumber);
@@ -149,12 +153,12 @@ function messenger<
       );
     };
 
-    return manageConnection(type, options, sendMessage) as ReturnValue;
+    return manageConnection(type, options, target, sendMessage) as ReturnValue;
   }
 
   // Contexts without direct Tab access must go through background
   if (!browser.tabs) {
-    return manageConnection(type, options, async () => {
+    return manageConnection(type, options, target, async () => {
       debug(type, "↗️ sending message to runtime");
       return browser.runtime.sendMessage(
         makeMessage(type, args, target, options)
@@ -166,7 +170,7 @@ function messenger<
   const { tabId, frameId = 0 } = target;
 
   // Message tab directly
-  return manageConnection(type, options, async () => {
+  return manageConnection(type, options, target, async () => {
     debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
     return browser.tabs.sendMessage(
       tabId,

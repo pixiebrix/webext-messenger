@@ -5,14 +5,8 @@ import {
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { MessengerMeta, Sender } from "./types.js";
+import { AnyTarget, MessengerMeta, Sender } from "./types.js";
 import { debug } from "./shared.js";
-
-interface AnyTarget {
-  tabId?: number | "this";
-  frameId?: number;
-  page?: string;
-}
 
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."

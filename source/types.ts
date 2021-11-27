@@ -80,6 +80,12 @@ export type MessengerMessage = Message & {
   __webextMessenger: true;
 };
 
+export interface AnyTarget {
+  tabId?: number | "this";
+  frameId?: number;
+  page?: string;
+}
+
 export interface Target {
   tabId: number;
   frameId?: number;
