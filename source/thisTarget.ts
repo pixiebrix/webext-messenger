@@ -1,4 +1,8 @@
-import { isBackgroundPage, isContentScript } from "webext-detect-page";
+import {
+  isBackgroundPage,
+  isContentScript,
+  isExtensionContext,
+} from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import { MessengerMeta, Sender } from "./types.js";
@@ -79,8 +83,11 @@ declare global {
 }
 
 export function initPrivateApi(): void {
-  // Any context can handler this message
-  registerMethods({ __getTabData });
+  if (isExtensionContext()) {
+    // Any context can handler this message
+    registerMethods({ __getTabData });
+  }
+
   if (isBackgroundPage()) {
     thisTarget = { page: "background" };
   }
