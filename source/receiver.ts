@@ -10,7 +10,7 @@ import {
   debug,
   __webextMessenger,
 } from "./shared.js";
-import { getContextName } from "webext-detect-page";
+import { getContextName, isBackgroundPage } from "webext-detect-page";
 import { getActionForMessage, nameThisTarget } from "./thisTarget.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
@@ -87,7 +87,9 @@ async function handleMessage(
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
-  void nameThisTarget();
+  if (!isBackgroundPage()) {
+    void nameThisTarget();
+  }
 
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {

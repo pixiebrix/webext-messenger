@@ -83,12 +83,12 @@ declare global {
 }
 
 export function initPrivateApi(): void {
+  if (isBackgroundPage()) {
+    thisTarget = { page: "background" };
+  }
+
   if (isExtensionContext()) {
     // Any context can handler this message
     registerMethods({ __getTabData });
-  }
-
-  if (isBackgroundPage()) {
-    thisTarget = { page: "background" };
   }
 }
