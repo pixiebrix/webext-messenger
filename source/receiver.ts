@@ -33,7 +33,7 @@ function onMessageListener(
   }
 
   // Target check must be synchronous (`await` means we're handing the message)
-  const action = getActionForMessage(message.target);
+  const action = getActionForMessage(sender, message.target);
   if (action === "ignore") {
     return;
   }

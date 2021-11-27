@@ -86,6 +86,6 @@ export interface Target {
 }
 
 export interface PageTarget {
-  tabId?: number;
+  tabId?: number | "this";
   page: string;
 }

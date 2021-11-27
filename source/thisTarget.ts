@@ -1,21 +1,25 @@
 import { isBackgroundPage, isContentScript } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { Target, PageTarget, MessengerMeta } from "./types.js";
+import { MessengerMeta, Sender } from "./types.js";
 import { debug } from "./shared.js";
 
-type AnyTarget = Partial<Target & PageTarget>;
+interface AnyTarget {
+  tabId?: number | "this";
+  frameId?: number;
+  page?: string;
+}
 
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
 let thisTarget: AnyTarget | undefined;
 
-//
 export function getActionForMessage(
-  target: AnyTarget
+  from: Sender,
+  { ...to }: AnyTarget // Clone object because we're editing it
 ): "respond" | "forward" | "ignore" {
-  if (target.page === "any") {
+  if (to.page === "any") {
     return "respond";
   }
 
@@ -26,7 +30,7 @@ export function getActionForMessage(
   }
 
   // We're in an extension page, but the target is not one.
-  if (!("page" in target)) {
+  if (!to.page) {
     return "forward";
   }
 
@@ -36,22 +40,29 @@ export function getActionForMessage(
     return "ignore";
   }
 
+  // If requests "this" tab, then set it to allow the next condition
+  if (to.tabId === "this" && thisTarget.tabId === from.tab?.id) {
+    to.tabId = thisTarget.tabId;
+  }
+
   // Every `target` key must match `thisTarget`
-  const isThisTarget = Object.entries(target).every(
+  const isThisTarget = Object.entries(to).every(
     // @ts-expect-error Optional properties
     ([key, value]) => thisTarget[key] === value
   );
 
   if (!isThisTarget) {
-    debug("The message’s target is", target, "but this is", thisTarget);
+    debug("The message’s target is", to, "but this is", thisTarget);
   }
 
   return isThisTarget ? "respond" : "ignore";
 }
 
+let nameRequested = false;
 export async function nameThisTarget() {
   // Same as above: CS receives messages correctly
-  if (!thisTarget && !isContentScript()) {
+  if (!nameRequested && !thisTarget && !isContentScript()) {
+    nameRequested = true;
     thisTarget = await messenger("__getTabData", {}, { page: "any" });
     thisTarget.page = location.pathname;
   }
@@ -68,8 +79,9 @@ declare global {
 }
 
 export function initPrivateApi(): void {
+  // Any context can handler this message
+  registerMethods({ __getTabData });
   if (isBackgroundPage()) {
     thisTarget = { page: "background" };
-    registerMethods({ __getTabData });
   }
 }
