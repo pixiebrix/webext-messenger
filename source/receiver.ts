@@ -46,6 +46,8 @@ function onMessageListener(
 async function handleMessage(
   message: Message,
   sender: Sender,
+
+  // Once messages reach handleMessage they cannot be "ignored", they're already being handled
   action: "respond" | "forward"
 ): Promise<unknown> {
   const { type, target, args, options: { trace } = {} } = message;
