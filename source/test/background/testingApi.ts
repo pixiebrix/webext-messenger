@@ -28,8 +28,6 @@ export async function createTargets(): Promise<Targets> {
   let limit = 100;
   let frames;
   while (limit--) {
-    console.log("checking");
-
     // eslint-disable-next-line no-await-in-loop -- It's a retry loop
     frames = await browser.webNavigation.getAllFrames({
       tabId,

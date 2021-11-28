@@ -32,7 +32,7 @@ function onMessageListener(
     return;
   }
 
-  // Target check must be synchronous (`await` means we're handing the message)
+  // Target check must be synchronous (`await` means we're handling the message)
   const action = getActionForMessage(sender, message.target);
   if (action === "ignore") {
     return;
@@ -47,7 +47,7 @@ async function handleMessage(
   message: Message,
   sender: Sender,
 
-  // Once messages reach handleMessage they cannot be "ignored", they're already being handled
+  // Once messages reach this function they cannot be "ignored", they're already being handled
   action: "respond" | "forward"
 ): Promise<unknown> {
   const { type, target, args, options: { trace } = {} } = message;
@@ -73,19 +73,17 @@ async function handleMessage(
     handleMessage = async () => localHandler.apply(meta, args);
   }
 
-  return handleMessage()
-    .then(
-      (value) => ({ value }),
-      (error: unknown) => ({
-        // Errors must be serialized because the stacktraces are currently lost on Chrome
-        // and https://github.com/mozilla/webextension-polyfill/issues/210
-        error: serializeError(error),
-      })
-    )
-    .then((response) => {
-      debug(type, "↗️ responding", response);
-      return { ...response, __webextMessenger };
-    });
+  const response = await handleMessage().then(
+    (value) => ({ value }),
+    (error: unknown) => ({
+      // Errors must be serialized because the stack traces are currently lost on Chrome
+      // and https://github.com/mozilla/webextension-polyfill/issues/210
+      error: serializeError(error),
+    })
+  );
+
+  debug(type, "↗️ responding", response);
+  return { ...response, __webextMessenger };
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {

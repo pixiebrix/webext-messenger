@@ -38,7 +38,7 @@ export function getActionForMessage(
     return "ignore";
   }
 
-  // If requests "this" tab, then set it to allow the next condition
+  // Set "this" tab to the current tabId
   if (to.tabId === "this" && thisTarget.tabId === from.tab?.id) {
     to.tabId = thisTarget.tabId;
   }
