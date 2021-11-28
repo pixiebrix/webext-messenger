@@ -1,8 +1,7 @@
-import { Runtime } from "webextension-polyfill";
-import { MessengerMeta } from "../..";
+import { MessengerMeta, Sender } from "../..";
 
 export async function getSelf(
   this: MessengerMeta
-): Promise<Runtime.MessageSender | undefined> {
+): Promise<Sender | undefined> {
   return this.trace[0];
 }

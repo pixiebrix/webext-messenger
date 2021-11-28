@@ -16,7 +16,7 @@ declare global {
 type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
-  ? (target: Target, ...args: PreviousArguments) => TReturnValue
+  ? (target: Target | PageTarget, ...args: PreviousArguments) => TReturnValue
   : never;
 
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
@@ -33,7 +33,7 @@ export type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
   WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
-  trace: Runtime.MessageSender[];
+  trace: Sender[];
 }
 
 type RawMessengerResponse =
@@ -61,23 +61,30 @@ export interface Options {
    * @default false
    */
   isNotification?: boolean;
+  trace?: Sender[];
 }
 
 export type Message<LocalArguments extends Arguments = Arguments> = {
   type: keyof MessengerMethods;
   args: LocalArguments;
-
-  /** If the message is being sent to an intermediary receiver, also set the target */
-  target?: Target;
+  target: Target | PageTarget;
 
   /** If the message is being sent to an intermediary receiver, also set the options */
-  options?: Target;
+  options?: Options;
 };
+
+export type Sender = Runtime.MessageSender;
 
 export type MessengerMessage = Message & {
   /** Guarantees that a message is meant to be handled by this library */
   __webextMessenger: true;
 };
+
+export interface AnyTarget {
+  tabId?: number | "this";
+  frameId?: number;
+  page?: string;
+}
 
 export interface Target {
   tabId: number;
@@ -85,6 +92,6 @@ export interface Target {
 }
 
 export interface PageTarget {
-  tabId?: number;
+  tabId?: number | "this";
   page: string;
 }

@@ -11,6 +11,7 @@ import {
   Options,
   Target,
   PageTarget,
+  AnyTarget,
 } from "./types.js";
 import {
   isObject,
@@ -32,13 +33,15 @@ function isMessengerResponse(response: unknown): response is MessengerResponse {
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
-  target?: Target
+  target: Target | PageTarget,
+  options: Options
 ): MessengerMessage {
   return {
     __webextMessenger,
     type,
     args,
     target,
+    options,
   };
 }
 
@@ -46,10 +49,11 @@ function makeMessage(
 function manageConnection(
   type: string,
   options: Options,
+  target: AnyTarget,
   sendMessage: () => Promise<unknown>
 ): Promise<unknown> | void {
   if (!options.isNotification) {
-    return manageMessage(type, sendMessage);
+    return manageMessage(type, target, sendMessage);
   }
 
   void sendMessage().catch((error: unknown) => {
@@ -59,26 +63,38 @@ function manageConnection(
 
 async function manageMessage(
   type: string,
+  target: AnyTarget,
   sendMessage: () => Promise<MessengerResponse | unknown>
 ): Promise<unknown> {
-  const response = await pRetry(sendMessage, {
-    minTimeout: 100,
-    factor: 1.3,
-    maxRetryTime: 4000,
-    onFailedAttempt(error) {
-      if (!String(error?.message).startsWith(errorNonExistingTarget)) {
-        throw error;
+  const response = await pRetry(
+    async () => {
+      const response = await sendMessage();
+
+      if (!isMessengerResponse(response)) {
+        throw new MessengerError(
+          `No handler registered for ${type} in the receiving end`
+        );
       }
 
-      debug(type, "will retry");
+      return response;
     },
-  });
-
-  if (!isMessengerResponse(response)) {
-    throw new MessengerError(
-      `No handler for ${type} was registered in the receiving end`
-    );
-  }
+    {
+      minTimeout: 100,
+      factor: 1.3,
+      maxRetryTime: 4000,
+      onFailedAttempt(error) {
+        if (
+          // Don't retry sending to the background page unless it really hasn't loaded yet
+          (target.page !== "background" && error instanceof MessengerError) ||
+          String(error.message).startsWith(errorNonExistingTarget)
+        ) {
+          debug(type, "will retry. Attempt", error.attemptNumber);
+        } else {
+          throw error;
+        }
+      },
+    }
+  );
 
   if ("error" in response) {
     debug(type, "↘️ replied with error", response.error);
@@ -101,7 +117,7 @@ function messenger<
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  ReturnValue extends ReturnType<Method>
+  ReturnValue extends Promise<ReturnType<Method>>
 >(
   type: Type,
   options: Options,
@@ -111,13 +127,14 @@ function messenger<
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  ReturnValue extends ReturnType<Method>
+  ReturnValue extends Promise<ReturnType<Method>>
 >(
   type: Type,
   options: Options,
   target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
+  // Message goes to extension page
   if ("page" in target) {
     if (target.page === "background" && isBackgroundPage()) {
       const handler = handlers.get(type);
@@ -131,17 +148,21 @@ function messenger<
 
     const sendMessage = async () => {
       debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(makeMessage(type, args));
+      return browser.runtime.sendMessage(
+        makeMessage(type, args, target, options)
+      );
     };
 
-    return manageConnection(type, options, sendMessage) as ReturnValue;
+    return manageConnection(type, options, target, sendMessage) as ReturnValue;
   }
 
   // Contexts without direct Tab access must go through background
   if (!browser.tabs) {
-    return manageConnection(type, options, async () => {
+    return manageConnection(type, options, target, async () => {
       debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(makeMessage(type, args, target));
+      return browser.runtime.sendMessage(
+        makeMessage(type, args, target, options)
+      );
     }) as ReturnValue;
   }
 
@@ -149,11 +170,15 @@ function messenger<
   const { tabId, frameId = 0 } = target;
 
   // Message tab directly
-  return manageConnection(type, options, async () => {
+  return manageConnection(type, options, target, async () => {
     debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
-    return browser.tabs.sendMessage(tabId, makeMessage(type, args), {
-      frameId,
-    });
+    return browser.tabs.sendMessage(
+      tabId,
+      makeMessage(type, args, target, options),
+      {
+        frameId,
+      }
+    );
   }) as ReturnValue;
 }
 

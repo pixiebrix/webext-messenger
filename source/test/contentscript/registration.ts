@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-if (!isContentScript()) {
+if (!isContentScript() && location.pathname !== "/iframe.html") {
   throw new Error(
     "This file must only be run in the content script, which is the receiving end"
   );
