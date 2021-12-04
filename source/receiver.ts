@@ -56,12 +56,12 @@ async function handleMessage(
   trace.push(sender);
   const meta: MessengerMeta = { trace };
 
-  debug(type, "↘️ received", { sender, args });
+  debug(type, "↘️ received", { sender, args, wasForwarded: trace.length > 1 });
 
   let handleMessage: () => Promise<unknown>;
 
   if (action === "forward") {
-    debug(type, "🔀 forwarded", { sender, target, trace });
+    debug(type, "🔀 forwarded", { sender, target });
     handleMessage = async () => messenger(type, meta, target, ...args);
   } else {
     const localHandler = handlers.get(type);
@@ -71,7 +71,7 @@ async function handleMessage(
       );
     }
 
-    debug(type, "➡️ will be handled here");
+    debug(type, "➡️ will be handled here,", getContextName());
 
     handleMessage = async () => localHandler.apply(meta, args);
   }
