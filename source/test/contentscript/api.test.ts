@@ -1,7 +1,11 @@
 import test from "tape";
 import browser from "webextension-polyfill";
-import { isBackgroundPage, isContentScript } from "webext-detect-page";
-import { PageTarget, Target } from "../..";
+import {
+  isBackgroundPage,
+  isContentScript,
+  isWebPage,
+} from "webext-detect-page";
+import { PageTarget, Sender, Target } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
 import {
@@ -16,6 +20,27 @@ import {
   notRegisteredNotification,
   getPageTitleNotification,
 } from "./api";
+
+function senderIsCurrentPage(
+  t: test.Test,
+  sender: Sender | undefined,
+  message: string
+) {
+  t.equal(sender?.url, location.href, message);
+}
+
+function senderIsBackgroundPage(
+  t: test.Test,
+  sender: Sender | undefined,
+  message: string
+) {
+  t.true(
+    // TODO: `as any` because `self` is typed for Firefox only
+    (sender as any).origin === "null" || // Chrome
+      sender!.url?.endsWith("/_generated_background_page.html"), // Firefox
+    message
+  );
+}
 
 const { openTab, createTargets, ensureScripts, closeTab } = isBackgroundPage()
   ? localContext
@@ -116,20 +141,33 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     const originalSender = trace[0];
     const directSender = trace[trace.length - 1];
 
-    if (!("page" in target && isContentScript())) {
-      t.true(
-        // TODO: `as any` because `self` is typed for Firefox only
-        (directSender as any).origin === "null" || // Chrome
-          directSender!.url?.endsWith("/_generated_background_page.html"), // Firefox
-        "The direct sender must be the background page"
+    if (isContentScript() || !isBackgroundPage()) {
+      senderIsCurrentPage(
+        t,
+        originalSender,
+        "Messages should mention the current page in trace[0]"
+      );
+    } else {
+      senderIsBackgroundPage(
+        t,
+        directSender,
+        "Messages should mention the current page (background) in trace[0]"
       );
     }
 
-    if (isContentScript()) {
+    if (!("page" in target && isContentScript())) {
+      senderIsBackgroundPage(
+        t,
+        directSender,
+        "Messages originated in content scripts or background pages must come directly from the background page"
+      );
+    }
+
+    if (!isWebPage()) {
       t.equal(
-        originalSender?.url,
-        location.href,
-        "The message was sent from a content script so the trace should mention it at position 0"
+        trace.length,
+        1,
+        "Messages originated in extension pages don’t need to be forwarded"
       );
     }
   });
