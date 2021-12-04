@@ -50,15 +50,19 @@ async function handleMessage(
   // Once messages reach this function they cannot be "ignored", they're already being handled
   action: "respond" | "forward"
 ): Promise<unknown> {
-  const { type, target, args, options: { trace } = {} } = message;
+  const { type, target, args, options = {} } = message;
+
+  const { trace = [] } = options;
+  trace.push(sender);
+  const meta: MessengerMeta = { trace };
 
   debug(type, "↘️ received", { sender, args });
 
   let handleMessage: () => Promise<unknown>;
 
   if (action === "forward") {
-    debug(type, "🔀 forwarded", { sender, target });
-    handleMessage = async () => messenger(type, { trace }, target, ...args);
+    debug(type, "🔀 forwarded", { sender, target, trace });
+    handleMessage = async () => messenger(type, meta, target, ...args);
   } else {
     const localHandler = handlers.get(type);
     if (!localHandler) {
@@ -69,7 +73,6 @@ async function handleMessage(
 
     debug(type, "➡️ will be handled here");
 
-    const meta: MessengerMeta = { trace: [sender] };
     handleMessage = async () => localHandler.apply(meta, args);
   }
 

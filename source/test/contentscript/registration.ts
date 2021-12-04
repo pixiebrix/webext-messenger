@@ -9,6 +9,7 @@ import { contentScriptOnly } from "./contentScriptOnly";
 import { throws } from "./throws";
 import { notRegistered } from "./notRegistered";
 import { getSelf } from "./getSelf";
+import { getTrace } from "../background/getTrace";
 
 declare global {
   interface MessengerMethods {
@@ -20,6 +21,7 @@ declare global {
     throws: typeof throws;
     notRegistered: typeof notRegistered;
     getSelf: typeof getSelf;
+    getTrace: typeof getTrace;
   }
 }
 
@@ -37,4 +39,5 @@ registerMethods({
   contentScriptOnly,
   throws,
   getSelf,
+  getTrace,
 });

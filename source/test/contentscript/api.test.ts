@@ -1,6 +1,6 @@
 import test from "tape";
 import browser from "webextension-polyfill";
-import { isBackgroundPage } from "webext-detect-page";
+import { isBackgroundPage, isContentScript } from "webext-detect-page";
 import { PageTarget, Target } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
@@ -12,7 +12,7 @@ import {
   contentScriptOnly,
   throws,
   notRegistered,
-  getSelf,
+  getTrace,
   notRegisteredNotification,
   getPageTitleNotification,
 } from "./api";
@@ -110,17 +110,28 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     }
   );
 
-  test(expectedTitle + ": should receive echo", async (t) => {
-    const self = await getSelf(target);
-    t.true(self instanceof Object);
-    t.equals(self!.id, chrome.runtime.id);
-    // TODO: `as any` because `self` is typed for Firefox only
-    // TODO: self.url always points to the background page, but it should include the current tab when forwarded https://github.com/pixiebrix/webext-messenger/issues/32
-    // TODO: skip for now because the new named target actually works correctly when called from CS itself
-    // t.true(
-    //   (self as any).origin === "null" || // Chrome
-    //     self!.url?.endsWith("/_generated_background_page.html") // Firefox
-    // );
+  test(expectedTitle + ": should receive trace", async (t) => {
+    const trace = await getTrace(target);
+    t.true(Array.isArray(trace));
+    const originalSender = trace[0];
+    const directSender = trace[trace.length - 1];
+
+    if (!("page" in target && isContentScript())) {
+      t.true(
+        // TODO: `as any` because `self` is typed for Firefox only
+        (directSender as any).origin === "null" || // Chrome
+          directSender!.url?.endsWith("/_generated_background_page.html"), // Firefox
+        "The direct sender must be the background page"
+      );
+    }
+
+    if (isContentScript()) {
+      t.equal(
+        originalSender?.url,
+        location.href,
+        "The message was sent from a content script so the trace should mention it at position 0"
+      );
+    }
   });
 
   test(expectedTitle + ": notification should return undefined", async (t) => {
