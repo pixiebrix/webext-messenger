@@ -1,7 +1,11 @@
 import test from "tape";
 import browser from "webextension-polyfill";
-import { isBackgroundPage } from "webext-detect-page";
-import { PageTarget, Target } from "../..";
+import {
+  isBackgroundPage,
+  isContentScript,
+  isWebPage,
+} from "webext-detect-page";
+import { PageTarget, Sender, Target } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
 import {
@@ -12,10 +16,31 @@ import {
   contentScriptOnly,
   throws,
   notRegistered,
-  getSelf,
+  getTrace,
   notRegisteredNotification,
   getPageTitleNotification,
 } from "./api";
+
+function senderIsCurrentPage(
+  t: test.Test,
+  sender: Sender | undefined,
+  message: string
+) {
+  t.equal(sender?.url, location.href, message);
+}
+
+function senderIsBackgroundPage(
+  t: test.Test,
+  sender: Sender | undefined,
+  message: string
+) {
+  t.true(
+    // TODO: `as any` because `self` is typed for Firefox only
+    (sender as any).origin === "null" || // Chrome
+      sender!.url?.endsWith("/_generated_background_page.html"), // Firefox
+    message
+  );
+}
 
 const { openTab, createTargets, ensureScripts, closeTab } = isBackgroundPage()
   ? localContext
@@ -110,17 +135,41 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     }
   );
 
-  test(expectedTitle + ": should receive echo", async (t) => {
-    const self = await getSelf(target);
-    t.true(self instanceof Object);
-    t.equals(self!.id, chrome.runtime.id);
-    // TODO: `as any` because `self` is typed for Firefox only
-    // TODO: self.url always points to the background page, but it should include the current tab when forwarded https://github.com/pixiebrix/webext-messenger/issues/32
-    // TODO: skip for now because the new named target actually works correctly when called from CS itself
-    // t.true(
-    //   (self as any).origin === "null" || // Chrome
-    //     self!.url?.endsWith("/_generated_background_page.html") // Firefox
-    // );
+  test(expectedTitle + ": should receive trace", async (t) => {
+    const trace = await getTrace(target);
+    t.true(Array.isArray(trace));
+    const originalSender = trace[0];
+    const directSender = trace[trace.length - 1];
+
+    if (isContentScript() || !isBackgroundPage()) {
+      senderIsCurrentPage(
+        t,
+        originalSender,
+        "Messages should mention the current page in trace[0]"
+      );
+    } else {
+      senderIsBackgroundPage(
+        t,
+        directSender,
+        "Messages should mention the current page (background) in trace[0]"
+      );
+    }
+
+    if (!("page" in target && isContentScript())) {
+      senderIsBackgroundPage(
+        t,
+        directSender,
+        "Messages originated in content scripts or background pages must come directly from the background page"
+      );
+    }
+
+    if (!isWebPage()) {
+      t.equal(
+        trace.length,
+        1,
+        "Messages originated in extension pages don’t need to be forwarded"
+      );
+    }
   });
 
   test(expectedTitle + ": notification should return undefined", async (t) => {
