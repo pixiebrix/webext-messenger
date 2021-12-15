@@ -1,4 +1,4 @@
-import { isBackgroundPage } from "webext-detect-page";
+import { isBackground } from "webext-detect-page";
 import { registerMethods } from "../..";
 
 import { sum } from "./sum";
@@ -28,7 +28,7 @@ declare global {
   }
 }
 
-if (!isBackgroundPage()) {
+if (!isBackground()) {
   throw new Error(
     "This file must only be run in the background page, which is the receiving end"
   );

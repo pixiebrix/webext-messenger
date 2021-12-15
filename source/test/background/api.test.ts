@@ -1,5 +1,5 @@
 import test from "tape";
-import { isBackgroundPage } from "webext-detect-page";
+import { isBackground } from "webext-detect-page";
 import {
   backgroundOnly,
   getExtensionId,
@@ -18,7 +18,7 @@ test("support parameters", async (t) => {
   t.equal(await sum(1, 2, 3, 4), 10);
 });
 
-if (isBackgroundPage()) {
+if (isBackground()) {
   test("the messenger should be missing in local calls", async (t) => {
     try {
       await sumIfMeta(1, 2, 3, 4);
@@ -84,7 +84,7 @@ test("should receive error from the background if it’s not registered", async 
   }
 });
 
-if (isBackgroundPage()) {
+if (isBackground()) {
   test("should not receive information about self in local calls", async (t) => {
     t.equals(await getSelf(), undefined);
   });

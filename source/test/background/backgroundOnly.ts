@@ -1,7 +1,7 @@
-import { isBackgroundPage } from "webext-detect-page";
+import { isBackground } from "webext-detect-page";
 
 export async function backgroundOnly(): Promise<true> {
-  if (!isBackgroundPage()) {
+  if (!isBackground()) {
     throw new Error("Wrong context");
   }
 

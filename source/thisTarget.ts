@@ -1,5 +1,5 @@
 import {
-  isBackgroundPage,
+  isBackground,
   isContentScript,
   isExtensionContext,
 } from "webext-detect-page";
@@ -77,7 +77,7 @@ declare global {
 }
 
 export function initPrivateApi(): void {
-  if (isBackgroundPage()) {
+  if (isBackground()) {
     thisTarget = { page: "background" };
   }
 

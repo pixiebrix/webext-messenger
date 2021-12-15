@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import pRetry from "p-retry";
-import { isBackgroundPage } from "webext-detect-page";
+import { isBackground } from "webext-detect-page";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -136,7 +136,7 @@ function messenger<
 ): ReturnValue | void {
   // Message goes to extension page
   if ("page" in target) {
-    if (target.page === "background" && isBackgroundPage()) {
+    if (target.page === "background" && isBackground()) {
       const handler = handlers.get(type);
       if (handler) {
         warn(type, "is being handled locally");

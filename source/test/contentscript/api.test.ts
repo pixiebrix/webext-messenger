@@ -1,10 +1,6 @@
 import test from "tape";
 import browser from "webextension-polyfill";
-import {
-  isBackgroundPage,
-  isContentScript,
-  isWebPage,
-} from "webext-detect-page";
+import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { PageTarget, Sender, Target } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
@@ -29,7 +25,7 @@ function senderIsCurrentPage(
   t.equal(sender?.url, location.href, message);
 }
 
-function senderIsBackgroundPage(
+function senderisBackground(
   t: test.Test,
   sender: Sender | undefined,
   message: string
@@ -42,7 +38,7 @@ function senderIsBackgroundPage(
   );
 }
 
-const { openTab, createTargets, ensureScripts, closeTab } = isBackgroundPage()
+const { openTab, createTargets, ensureScripts, closeTab } = isBackground()
   ? localContext
   : backgroundContext;
 
@@ -141,14 +137,14 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     const originalSender = trace[0];
     const directSender = trace[trace.length - 1];
 
-    if (isContentScript() || !isBackgroundPage()) {
+    if (isContentScript() || !isBackground()) {
       senderIsCurrentPage(
         t,
         originalSender,
         "Messages should mention the current page in trace[0]"
       );
     } else {
-      senderIsBackgroundPage(
+      senderisBackground(
         t,
         directSender,
         "Messages should mention the current page (background) in trace[0]"
@@ -156,7 +152,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     }
 
     if (!("page" in target && isContentScript())) {
-      senderIsBackgroundPage(
+      senderisBackground(
         t,
         directSender,
         "Messages originated in content scripts or background pages must come directly from the background page"
