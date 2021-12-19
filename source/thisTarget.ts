@@ -9,6 +9,11 @@ import { AnyTarget, MessengerMeta, Sender } from "./types.js";
 import { debug } from "./shared.js";
 import { Entries } from "type-fest";
 
+// Soft warning: Race conditions are possible.
+// This CANNOT be awaited because waiting for it means "I will handle the message."
+// If a message is received before this is ready, it will just have to be ignored.
+let thisTarget: AnyTarget | undefined;
+
 function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
     if (thisTarget[key] === value) {
@@ -21,6 +26,10 @@ function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
 
     const toUrl = new URL(to.page!, location.origin);
     const thisUrl = new URL(thisTarget.page!, location.origin);
+    if (toUrl.pathname !== thisUrl.pathname) {
+      return false;
+    }
+
     for (const [parameterKey, parameterValue] of toUrl.searchParams) {
       if (thisUrl.searchParams.get(parameterKey) !== parameterValue) {
         return false;
@@ -30,11 +39,6 @@ function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
 
   return true;
 }
-
-// Soft warning: Race conditions are possible.
-// This CANNOT be awaited because waiting for it means "I will handle the message."
-// If a message is received before this is ready, it will just have to be ignored.
-let thisTarget: AnyTarget | undefined;
 
 export function getActionForMessage(
   from: Sender,
