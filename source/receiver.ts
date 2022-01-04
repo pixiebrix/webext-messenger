@@ -56,22 +56,24 @@ async function handleMessage(
   trace.push(sender);
   const meta: MessengerMeta = { trace };
 
-  debug(type, "↘️ received", { sender, args, wasForwarded: trace.length > 1 });
-
   let handleMessage: () => Promise<unknown>;
 
   if (action === "forward") {
     debug(type, "🔀 forwarded", { sender, target });
     handleMessage = async () => messenger(type, meta, target, ...args);
   } else {
+    debug(type, "↘️ received in", getContextName(), {
+      sender,
+      args,
+      wasForwarded: trace.length > 1,
+    });
+
     const localHandler = handlers.get(type);
     if (!localHandler) {
       throw new MessengerError(
         `No handler registered for ${type} in ${getContextName()}`
       );
     }
-
-    debug(type, "➡️ will be handled here,", getContextName());
 
     handleMessage = async () => localHandler.apply(meta, args);
   }
