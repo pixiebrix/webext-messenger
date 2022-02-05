@@ -270,6 +270,7 @@ async function init() {
       getPageTitleNotification({ tabId: 9001 });
     } catch (error: unknown) {
       t.fail("Should not throw");
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal -- Wrong
       throw error;
     }
 
