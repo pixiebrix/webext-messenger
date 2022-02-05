@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "demo:watch": "parcel watch --no-cache --no-hmr",
+    "demo:watch": "WEBEXT_MESSENGER_LOGGING=true parcel watch --no-cache --no-hmr",
     "demo:build": "parcel build --no-cache",
     "prepack": "tsc --sourceMap false",
     "test": "eslint . && tsc --noEmit",
