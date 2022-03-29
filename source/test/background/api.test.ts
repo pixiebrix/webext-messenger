@@ -79,7 +79,7 @@ test("should receive error from the background if it’s not registered", async 
 
     t.equal(
       error.message,
-      "No handler registered for notRegistered in backgroundPage"
+      "No handler registered for notRegistered in background"
     );
   }
 });

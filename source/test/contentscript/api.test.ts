@@ -1,5 +1,4 @@
 import test from "tape";
-import browser from "webextension-polyfill";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { PageTarget, Sender, Target } from "../..";
 import * as backgroundContext from "../background/api";
