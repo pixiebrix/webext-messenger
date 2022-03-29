@@ -1,4 +1,3 @@
-import browser from "webextension-polyfill";
 import pRetry from "p-retry";
 import { isBackground } from "webext-detect-page";
 import { deserializeError } from "serialize-error";

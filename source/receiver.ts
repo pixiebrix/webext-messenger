@@ -1,4 +1,3 @@
-import browser from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 
 import { messenger } from "./sender.js";

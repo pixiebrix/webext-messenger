@@ -1,7 +1,9 @@
-import browser from "webextension-polyfill";
 import { executeFunction } from "webext-content-scripts";
 
 export async function ensureScripts(tabId: number): Promise<void> {
+  await browser.tabs.executeScript(tabId, {
+    file: "webextensionPolyfill.js",
+  });
   await browser.tabs.executeScript(tabId, {
     file: "contentscript/registration.js",
   });
