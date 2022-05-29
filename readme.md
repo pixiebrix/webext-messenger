@@ -14,3 +14,7 @@ npm install webext-messenger
 ```js
 import messenger from "webext-messenger";
 ```
+
+## Context
+
+- [Initial considerations for this library](https://github.com/pixiebrix/webext-messenger/issues/1)
