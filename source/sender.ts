@@ -26,6 +26,12 @@ import { SetReturnType } from "type-fest";
 const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
 
+// https://github.com/mozilla/webextension-polyfill/issues/384
+const _errorTargetClosedEarly =
+  "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received";
+
+export const errorTargetClosedEarly =
+  "The target was closed before receiving a response";
 export const errorTabDoesntExist = "The tab doesn't exist";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
@@ -85,6 +91,10 @@ async function manageMessage(
       factor: 1.3,
       maxRetryTime: 4000,
       async onFailedAttempt(error) {
+        if (error.message === _errorTargetClosedEarly) {
+          throw new Error(errorTargetClosedEarly);
+        }
+
         if (
           // Don't retry sending to the background page unless it really hasn't loaded yet
           (target.page !== "background" && error instanceof MessengerError) ||

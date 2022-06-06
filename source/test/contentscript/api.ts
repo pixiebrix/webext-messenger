@@ -11,3 +11,4 @@ export const notRegistered = getMethod("notRegistered");
 export const notRegisteredNotification = getNotifier("notRegistered");
 export const getSelf = getMethod("getSelf");
 export const getTrace = getMethod("getTrace");
+export const sleep = getMethod("sleep");

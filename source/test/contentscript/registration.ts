@@ -10,6 +10,7 @@ import { throws } from "./throws";
 import { notRegistered } from "./notRegistered";
 import { getSelf } from "./getSelf";
 import { getTrace } from "../background/getTrace";
+import { sleep } from "./sleep";
 
 declare global {
   interface MessengerMethods {
@@ -22,6 +23,7 @@ declare global {
     notRegistered: typeof notRegistered;
     getSelf: typeof getSelf;
     getTrace: typeof getTrace;
+    sleep: typeof sleep;
   }
 }
 
@@ -40,4 +42,5 @@ registerMethods({
   throws,
   getSelf,
   getTrace,
+  sleep,
 });

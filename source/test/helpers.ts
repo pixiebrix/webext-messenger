@@ -19,6 +19,12 @@ export async function expectRejection(
   }
 }
 
+export async function sleep(milliseconds: number): Promise<number> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
 /** Helper to ensure we're tracking the specific promise’s duration without risking to track anything else */
 export async function trackSettleTime(
   promise: Promise<unknown>

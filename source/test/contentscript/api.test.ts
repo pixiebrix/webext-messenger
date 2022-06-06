@@ -234,6 +234,34 @@ async function init() {
     );
   });
 
+  test("stops trying immediately if tab is closed before the handler responds", async (t) => {
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Will-close-too-soon"
+    );
+
+    const naturalResolutionTimeout = 5000;
+    const tabClosureTimeout = 2000;
+
+    const request = contentScriptContext.sleep(
+      { tabId },
+      naturalResolutionTimeout
+    );
+    const durationPromise = trackSettleTime(request);
+
+    await sleep(tabClosureTimeout);
+    await closeTab(tabId);
+
+    await expectRejection(t, request, new Error(errorTargetClosedEarly));
+
+    const duration = await durationPromise;
+    t.ok(
+      duration > tabClosureTimeout - 100 && duration < tabClosureTimeout + 100,
+      `It should take about ${tabClosureTimeout / 1000}s (took ${
+        duration / 1000
+      }s)`
+    );
+  });
+
   test("retries until it times out", async (t) => {
     const tabId = await openTab(
       "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
