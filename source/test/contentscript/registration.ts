@@ -9,8 +9,8 @@ import { contentScriptOnly } from "./contentScriptOnly";
 import { throws } from "./throws";
 import { notRegistered } from "./notRegistered";
 import { getSelf } from "./getSelf";
-import { getTrace } from "../background/getTrace";
 import { sleep } from "./sleep";
+import { getTrace } from "./getTrace";
 
 declare global {
   interface MessengerMethods {

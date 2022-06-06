@@ -196,6 +196,8 @@ async function init() {
       getPageTitle({ tabId }),
       new Error("No handler registered for getPageTitle in the receiving end")
     );
+
+    await closeTab(tabId);
   });
 
   test("should be able to close the tab from the content script", async (t) => {
