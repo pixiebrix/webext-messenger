@@ -1,0 +1,69 @@
+{
+  "env": {
+    "browser": true
+  },
+  "parserOptions": {
+    "project": "tsconfig.json"
+  },
+  "plugins": ["import"],
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "xo",
+    "xo-typescript",
+    "prettier",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "plugin:unicorn/recommended"
+  ],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "./index",
+            "message": "The index file is only used to re-export internal files. Use direct imports instead."
+          }
+        ]
+      }
+    ],
+    "import/extensions": ["error", "always"],
+    "import/no-unresolved": "off",
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "camelCase"
+      }
+    ],
+    "unicorn/no-useless-undefined": [
+      "error",
+      {
+        "checkArguments": false
+      }
+    ],
+    "unicorn/prevent-abbreviations": [
+      "error",
+      {
+        "allowList": {
+          "args": true
+        }
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.test.ts", "testingApi.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off"
+      }
+    },
+    {
+      "files": ["source/test/**/*"],
+      "rules": {
+        "import/extensions": "off"
+      }
+    }
+  ]
+}
