@@ -3,6 +3,7 @@ import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { PageTarget, Sender, Target } from "../..";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
+import { expectRejection } from "../helpers";
 import {
   getPageTitle,
   setPageTitle,
@@ -111,22 +112,15 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     expectedTitle +
       ": should receive error from the content script if it’s not registered",
     async (t) => {
-      try {
-        await notRegistered(target);
-        t.fail("notRegistered() should have thrown but did not");
-      } catch (error: unknown) {
-        if (!(error instanceof Error)) {
-          t.fail("The error is not an instance of Error");
-          return;
-        }
-
-        t.equal(
-          error.message,
+      await expectRejection(
+        t,
+        notRegistered(target),
+        new Error(
           `No handler registered for notRegistered in ${
             "page" in target ? "extension" : "contentScript"
           }`
-        );
-      }
+        )
+      );
     }
   );
 
@@ -194,22 +188,12 @@ async function init() {
     const tabId = await openTab(
       "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page"
     );
-    try {
-      await getPageTitle({ tabId });
-      t.fail("getPageTitle() should have thrown but did not");
-    } catch (error: unknown) {
-      if (!(error instanceof Error)) {
-        t.fail("The error is not an instance of Error");
-        return;
-      }
 
-      t.equal(
-        error.message,
-        "No handler registered for getPageTitle in the receiving end"
-      );
-
-      await closeTab(tabId);
-    }
+    await expectRejection(
+      t,
+      getPageTitle({ tabId }),
+      new Error("No handler registered for getPageTitle in the receiving end")
+    );
   });
 
   test("should be able to close the tab from the content script", async (t) => {
@@ -241,25 +225,17 @@ async function init() {
     );
 
     const startTime = Date.now();
-    try {
-      await getPageTitle({ tabId });
-      t.fail("getPageTitle() should have thrown but did not");
-    } catch (error: unknown) {
-      if (!(error instanceof Error)) {
-        t.fail("The error is not an instance of Error");
-        return;
-      }
+    await expectRejection(
+      t,
+      getPageTitle({ tabId }),
+      new Error("Could not establish connection. Receiving end does not exist.")
+    );
 
-      t.equal(
-        error.message,
-        "Could not establish connection. Receiving end does not exist."
-      );
-      const duration = Date.now() - startTime;
-      t.ok(
-        duration > 4000 && duration < 5000,
-        `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
-      );
-    }
+    const duration = Date.now() - startTime;
+    t.ok(
+      duration > 4000 && duration < 5000,
+      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
+    );
 
     await closeTab(tabId);
   });
