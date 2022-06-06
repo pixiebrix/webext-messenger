@@ -1,6 +1,7 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { PageTarget, Sender, Target } from "../..";
+import { expectRejection, sleep, trackSettleTime } from "../helpers";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
 import { expectRejection } from "../helpers";
@@ -224,14 +225,16 @@ async function init() {
       "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
     );
 
-    const startTime = Date.now();
+    const request = getPageTitle({ tabId });
+    const durationPromise = trackSettleTime(request);
+
     await expectRejection(
       t,
-      getPageTitle({ tabId }),
+      request,
       new Error("Could not establish connection. Receiving end does not exist.")
     );
 
-    const duration = Date.now() - startTime;
+    const duration = await durationPromise;
     t.ok(
       duration > 4000 && duration < 5000,
       `It should take between 4 and 5 seconds (took ${duration / 1000}s)`

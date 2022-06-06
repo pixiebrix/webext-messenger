@@ -18,3 +18,15 @@ export async function expectRejection(
     t.equal((error as Error).message, expectedError.message);
   }
 }
+
+/** Helper to ensure we're tracking the specific promise’s duration without risking to track anything else */
+export async function trackSettleTime(
+  promise: Promise<unknown>
+): Promise<number> {
+  const startTime = Date.now();
+  try {
+    await promise;
+  } catch {}
+
+  return Date.now() - startTime;
+}
