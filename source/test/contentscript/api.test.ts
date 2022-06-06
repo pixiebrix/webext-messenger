@@ -1,10 +1,11 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { PageTarget, Sender, Target } from "../..";
+import { errorTabDoesntExist, errorTargetClosedEarly } from "../../sender";
 import { expectRejection, sleep, trackSettleTime } from "../helpers";
 import * as backgroundContext from "../background/api";
 import * as localContext from "../background/testingApi";
-import { expectRejection } from "../helpers";
+import * as contentScriptContext from "./api";
 import {
   getPageTitle,
   setPageTitle,
@@ -218,6 +219,19 @@ async function init() {
 
     t.equal(await request, "No static content scripts");
     await closeTab(tabId);
+  });
+
+  test("stops trying immediately if specific tab ID doesn't exist", async (t) => {
+    const request = getPageTitle({ tabId });
+    const durationPromise = trackSettleTime(request);
+
+    await expectRejection(t, request, new Error(errorTabDoesntExist));
+
+    const duration = await durationPromise;
+    t.ok(
+      duration < 100,
+      `It should take less than 100 ms (took ${duration}ms)`
+    );
   });
 
   test("retries until it times out", async (t) => {

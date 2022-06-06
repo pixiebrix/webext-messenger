@@ -1,5 +1,6 @@
 import pRetry from "p-retry";
 import { isBackground } from "webext-detect-page";
+import { doesTabExist } from "webext-tools";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -22,8 +23,10 @@ import {
 } from "./shared.js";
 import { SetReturnType } from "type-fest";
 
-export const errorNonExistingTarget =
+const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
+
+export const errorTabDoesntExist = "The tab doesn't exist";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webextMessenger"] === true;
@@ -81,12 +84,20 @@ async function manageMessage(
       minTimeout: 100,
       factor: 1.3,
       maxRetryTime: 4000,
-      onFailedAttempt(error) {
+      async onFailedAttempt(error) {
         if (
           // Don't retry sending to the background page unless it really hasn't loaded yet
           (target.page !== "background" && error instanceof MessengerError) ||
-          String(error.message).startsWith(errorNonExistingTarget)
+          String(error.message).startsWith(_errorNonExistingTarget)
         ) {
+          if (
+            browser.tabs &&
+            typeof target.tabId === "number" &&
+            !(await doesTabExist(target.tabId))
+          ) {
+            throw new Error(errorTabDoesntExist);
+          }
+
           debug(type, "will retry. Attempt", error.attemptNumber);
         } else {
           throw error;
