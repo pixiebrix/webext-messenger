@@ -1,4 +1,4 @@
-import { getMethod, getNotifier, backgroundTarget } from "../..";
+import { getMethod, getNotifier, backgroundTarget } from "../../index.js";
 
 // Dog-fooding, needed to run the tests
 export const openTab = getMethod("openTab", backgroundTarget);

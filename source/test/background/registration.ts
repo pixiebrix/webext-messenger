@@ -1,15 +1,20 @@
 import { isBackground } from "webext-detect-page";
-import { registerMethods } from "../..";
+import { registerMethods } from "../../index.js";
 
-import { sum } from "./sum";
-import { throws } from "./throws";
-import { sumIfMeta } from "./sumIfMeta";
-import { getExtensionId } from "./getExtensionId";
-import { backgroundOnly } from "./backgroundOnly";
-import { notRegistered } from "./notRegistered";
-import { getSelf } from "./getSelf";
-import { openTab, createTargets, ensureScripts, closeTab } from "./testingApi";
-import { getTrace } from "./getTrace";
+import { sum } from "./sum.js";
+import { throws } from "./throws.js";
+import { sumIfMeta } from "./sumIfMeta.js";
+import { getExtensionId } from "./getExtensionId.js";
+import { backgroundOnly } from "./backgroundOnly.js";
+import { notRegistered } from "./notRegistered.js";
+import { getSelf } from "./getSelf.js";
+import {
+  openTab,
+  createTargets,
+  ensureScripts,
+  closeTab,
+} from "./testingApi.js";
+import { getTrace } from "./getTrace.js";
 
 declare global {
   interface MessengerMethods {

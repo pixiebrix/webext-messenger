@@ -1,11 +1,11 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
-import { PageTarget, Sender, Target } from "../..";
-import { errorTabDoesntExist, errorTargetClosedEarly } from "../../sender";
-import { expectRejection, sleep, trackSettleTime } from "../helpers";
-import * as backgroundContext from "../background/api";
-import * as localContext from "../background/testingApi";
-import * as contentScriptContext from "./api";
+import { PageTarget, Sender, Target } from "../../index.js";
+import { errorTabDoesntExist, errorTargetClosedEarly } from "../../sender.js";
+import { expectRejection, sleep, trackSettleTime } from "../helpers.js";
+import * as backgroundContext from "../background/api.js";
+import * as localContext from "../background/testingApi.js";
+import * as contentScriptContext from "./api.js";
 import {
   getPageTitle,
   setPageTitle,
@@ -17,7 +17,7 @@ import {
   getTrace,
   notRegisteredNotification,
   getPageTitleNotification,
-} from "./api";
+} from "./api.js";
 
 function senderIsCurrentPage(
   t: test.Test,

@@ -72,7 +72,7 @@ function manageConnection(
 async function manageMessage(
   type: string,
   target: AnyTarget,
-  sendMessage: () => Promise<MessengerResponse | unknown>
+  sendMessage: () => Promise<unknown>
 ): Promise<unknown> {
   const response = await pRetry(
     async () => {

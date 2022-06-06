@@ -8,7 +8,7 @@ import {
   sumIfMeta,
   throws,
   getSelf,
-} from "./api";
+} from "./api.js";
 
 test("send message and get response", async (t) => {
   t.equal(await getExtensionId(), chrome.runtime.id);

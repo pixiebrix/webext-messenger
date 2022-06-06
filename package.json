@@ -78,7 +78,8 @@
     "overrides": [
       {
         "files": [
-          "*.test.ts"
+          "*.test.ts",
+          "testingApi.ts"
         ],
         "rules": {
           "@typescript-eslint/no-explicit-any": "off",
@@ -97,36 +98,36 @@
     ]
   },
   "dependencies": {
-    "p-retry": "^5.1.0",
+    "p-retry": "^5.1.1",
     "serialize-error": "^11.0.0",
-    "type-fest": "^2.12.1",
+    "type-fest": "^2.13.0",
     "webext-detect-page": "^4.0.1",
     "webext-tools": "^1.1.0"
   },
   "devDependencies": {
-    "@parcel/config-webextension": "^2.4.0",
-    "@sindresorhus/tsconfig": "^2.0.0",
-    "@types/chrome": "^0.0.180",
+    "@parcel/config-webextension": "^2.6.0",
+    "@sindresorhus/tsconfig": "^3.0.1",
+    "@types/chrome": "^0.0.188",
     "@types/tape": "^4.13.2",
-    "@types/webextension-polyfill": "^0.8.3",
-    "@typescript-eslint/eslint-plugin": "^5.17.0",
-    "@typescript-eslint/parser": "^5.17.0",
+    "@types/webextension-polyfill": "^0.9.0",
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
     "buffer": "^6.0.3",
-    "eslint": "^8.12.0",
+    "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
-    "eslint-config-xo": "^0.40.0",
-    "eslint-config-xo-typescript": "^0.50.0",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-unicorn": "^41.0.1",
+    "eslint-config-xo": "^0.41.0",
+    "eslint-config-xo-typescript": "^0.51.1",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-unicorn": "^42.0.0",
     "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
-    "parcel": "^2.4.0",
+    "parcel": "^2.6.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "tape": "^5.5.2",
-    "typescript": "^4.6.3",
-    "webext-content-scripts": "^1.0.1",
+    "tape": "^5.5.3",
+    "typescript": "^4.7.3",
+    "webext-content-scripts": "^1.0.2",
     "webextension-polyfill": "^0.9.0"
   },
   "alias": {

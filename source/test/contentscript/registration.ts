@@ -1,16 +1,16 @@
 import { isContentScript } from "webext-detect-page";
-import { registerMethods } from "../..";
+import { registerMethods } from "../../index.js";
 
-import { getPageTitle } from "./getPageTitle";
-import { setPageTitle } from "./setPageTitle";
-import { closeSelf } from "./closeSelf";
-import { sumIfMeta } from "./sumIfMeta";
-import { contentScriptOnly } from "./contentScriptOnly";
-import { throws } from "./throws";
-import { notRegistered } from "./notRegistered";
-import { getSelf } from "./getSelf";
-import { sleep } from "./sleep";
-import { getTrace } from "./getTrace";
+import { getPageTitle } from "./getPageTitle.js";
+import { setPageTitle } from "./setPageTitle.js";
+import { closeSelf } from "./closeSelf.js";
+import { sumIfMeta } from "./sumIfMeta.js";
+import { contentScriptOnly } from "./contentScriptOnly.js";
+import { throws } from "./throws.js";
+import { notRegistered } from "./notRegistered.js";
+import { getSelf } from "./getSelf.js";
+import { sleep } from "./sleep.js";
+import { getTrace } from "./getTrace.js";
 
 declare global {
   interface MessengerMethods {
