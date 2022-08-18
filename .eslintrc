@@ -48,7 +48,8 @@
           "args": true
         }
       }
-    ]
+    ],
+    "@typescript-eslint/consistent-type-definitions": "off"
   },
   "overrides": [
     {
