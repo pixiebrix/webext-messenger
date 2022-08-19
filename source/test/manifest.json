@@ -42,7 +42,7 @@
       ],
       "js": [
         "webextensionPolyfill.ts",
-        "./contentscript/fixtures/unrelatedMessageListener.ts"
+        "contentscript/fixtures/unrelatedMessageListener.ts"
       ]
     },
     {
@@ -50,10 +50,7 @@
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed"
       ],
-      "js": [
-        "webextensionPolyfill.ts",
-        "./contentscript/missed-registration.ts"
-      ]
+      "js": ["webextensionPolyfill.ts", "contentscript/missedRegistration.ts"]
     }
   ],
   "web_accessible_resources": ["*.html", "**/*.ts"]
