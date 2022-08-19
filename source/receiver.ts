@@ -10,7 +10,7 @@ import {
   __webextMessenger,
 } from "./shared.js";
 import { getActionForMessage, nameThisTarget } from "./thisTarget.js";
-import { didUserRegistereMethods, handlers } from "./handlers.js";
+import { didUserRegisterMethods, handlers } from "./handlers.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (
@@ -67,7 +67,7 @@ async function handleMessage(
       wasForwarded: trace.length > 1,
     });
 
-    if (!didUserRegistereMethods()) {
+    if (!didUserRegisterMethods()) {
       throw new MessengerError(`No handlers registered in ${getContextName()}`);
     }
 
