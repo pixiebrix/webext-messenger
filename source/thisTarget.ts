@@ -90,14 +90,8 @@ export async function nameThisTarget() {
   }
 }
 
-function __getTabData(this: MessengerMeta): AnyTarget {
+export function __getTabData(this: MessengerMeta): AnyTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
-}
-
-declare global {
-  interface MessengerMethods {
-    __getTabData: typeof __getTabData;
-  }
 }
 
 export function initPrivateApi(): void {

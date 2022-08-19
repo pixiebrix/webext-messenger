@@ -288,6 +288,29 @@ async function init() {
     await closeTab(tabId);
   });
 
+  test("retries until it times out even if webext-messenger was loaded (but nothing was registered)", async (t) => {
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed"
+    );
+
+    const request = getPageTitle({ tabId });
+    const durationPromise = trackSettleTime(request);
+
+    await expectRejection(
+      t,
+      request,
+      new Error("No handlers registered in contentScript")
+    );
+
+    const duration = await durationPromise;
+    t.ok(
+      duration > 4000 && duration < 5000,
+      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
+    );
+
+    await closeTab(tabId);
+  });
+
   test("notifications on non-existing targets", async (t) => {
     try {
       getPageTitleNotification({ tabId: 9001 });

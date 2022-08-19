@@ -1,16 +1,16 @@
 import { serializeError } from "serialize-error";
+import { getContextName, isBackground } from "webext-detect-page";
 
 import { messenger } from "./sender.js";
 import { Message, MessengerMeta, Method, Sender } from "./types.js";
 import {
-  handlers,
   isObject,
   MessengerError,
   debug,
   __webextMessenger,
 } from "./shared.js";
-import { getContextName, isBackground } from "webext-detect-page";
 import { getActionForMessage, nameThisTarget } from "./thisTarget.js";
+import { didUserRegisterMethods, handlers } from "./handlers.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (
@@ -66,6 +66,10 @@ async function handleMessage(
       args,
       wasForwarded: trace.length > 1,
     });
+
+    if (!didUserRegisterMethods()) {
+      throw new MessengerError(`No handlers registered in ${getContextName()}`);
+    }
 
     const localHandler = handlers.get(type);
     if (!localHandler) {
