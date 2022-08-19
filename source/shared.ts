@@ -1,5 +1,4 @@
 import { JsonObject } from "type-fest";
-import { Method } from "./types.js";
 
 type ErrorObject = {
   name?: string;
@@ -29,8 +28,6 @@ export function isObject(value: unknown): value is Record<string, unknown> {
 export class MessengerError extends Error {
   override name = "MessengerError";
 }
-
-export const handlers = new Map<string, Method>();
 
 // .bind preserves the call location in the console
 export const debug = logging ? console.debug.bind(console, "Messenger:") : noop;

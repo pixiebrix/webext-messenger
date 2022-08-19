@@ -17,11 +17,11 @@ import {
   isObject,
   MessengerError,
   __webextMessenger,
-  handlers,
   debug,
   warn,
 } from "./shared.js";
 import { SetReturnType } from "type-fest";
+import { handlers } from "./handlers.js";
 
 const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -98,7 +98,10 @@ async function manageMessage(
         if (
           // Don't retry sending to the background page unless it really hasn't loaded yet
           (target.page !== "background" && error instanceof MessengerError) ||
-          String(error.message).startsWith(_errorNonExistingTarget)
+          // Page or its content script not yet loaded
+          String(error.message).startsWith(_errorNonExistingTarget) ||
+          // `registerMethods` not yet loaded
+          String(error.message).startsWith("No handlers registered in ")
         ) {
           if (
             browser.tabs &&
