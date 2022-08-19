@@ -97,7 +97,8 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
 
         t.equal(error.message, "This my error");
         t.true(
-          error.stack.includes("/contentscript/registration.js"),
+          error.stack.includes("/contentscript/registration.js") ||
+            error.stack.includes("/iframe."), // Parcel 2.6+ rebundles the same file under a different name
           "The stacktrace must come from the content script"
         );
         t.true(
