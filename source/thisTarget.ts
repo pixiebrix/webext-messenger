@@ -1,8 +1,4 @@
-import {
-  isBackground,
-  isContentScript,
-  isExtensionContext,
-} from "webext-detect-page";
+import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import { AnyTarget, MessengerMeta, Sender } from "./types.js";
@@ -90,7 +86,7 @@ export async function nameThisTarget() {
   }
 }
 
-export function __getTabData(this: MessengerMeta): AnyTarget {
+export async function __getTabData(this: MessengerMeta): Promise<AnyTarget> {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
@@ -99,8 +95,9 @@ export function initPrivateApi(): void {
     thisTarget = { page: "background" };
   }
 
-  if (isExtensionContext()) {
-    // Any context can handler this message
+  if (!isWebPage()) {
+    // Excludes www scripts and content scripts
+    // Any `runtime` context can handler this message
     registerMethods({ __getTabData });
   }
 }
