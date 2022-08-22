@@ -12,7 +12,9 @@ import { Entries } from "type-fest";
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
-let thisTarget: AnyTarget | undefined;
+let thisTarget: AnyTarget | undefined = isBackground()
+  ? { page: "background" }
+  : undefined;
 
 function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
@@ -95,10 +97,6 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
 }
 
 export function initPrivateApi(): void {
-  if (isBackground()) {
-    thisTarget = { page: "background" };
-  }
-
   if (isExtensionContext()) {
     // Any context can handler this message
     registerMethods({ __getTabData });
