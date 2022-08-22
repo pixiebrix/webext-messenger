@@ -33,8 +33,7 @@ function senderisBackground(
   message: string
 ) {
   t.true(
-    // TODO: `as any` because `self` is typed for Firefox only
-    (sender as any).origin === "null" || // Chrome
+    sender?.origin === "null" || // Chrome
       sender!.url?.endsWith("/_generated_background_page.html"), // Firefox
     message
   );

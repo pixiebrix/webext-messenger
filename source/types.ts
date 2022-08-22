@@ -73,7 +73,7 @@ export type Message<LocalArguments extends Arguments = Arguments> = {
   options?: Options;
 };
 
-export type Sender = Runtime.MessageSender;
+export type Sender = Runtime.MessageSender & { origin?: string }; // Chrome includes the origin
 
 export type MessengerMessage = Message & {
   /** Guarantees that a message is meant to be handled by this library */

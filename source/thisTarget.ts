@@ -98,7 +98,9 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
 
 export function initPrivateApi(): void {
   if (isExtensionContext()) {
-    // Any context can handler this message
+    // Only `runtime` pages can handle this message but I can't remove it  because its listener
+    // also serves the purpose of throwing a specific error when no methods have been registered.
+    // https://github.com/pixiebrix/webext-messenger/pull/80
     registerMethods({ __getTabData });
   }
 }
