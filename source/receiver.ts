@@ -67,12 +67,14 @@ async function handleMessage(
       wasForwarded: trace.length > 1,
     });
 
-    if (!didUserRegisterMethods()) {
-      throw new MessengerError(`No handlers registered in ${getContextName()}`);
-    }
-
     const localHandler = handlers.get(type);
     if (!localHandler) {
+      if (!didUserRegisterMethods()) {
+        throw new MessengerError(
+          `No handlers registered in ${getContextName()}`
+        );
+      }
+
       throw new MessengerError(
         `No handler registered for ${type} in ${getContextName()}`
       );
