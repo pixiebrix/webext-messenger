@@ -5,16 +5,20 @@ import {
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { AnyTarget, MessengerMeta, Sender } from "./types.js";
-import { debug } from "./shared.js";
+import { AnyTarget, Message, MessengerMeta, Sender } from "./types.js";
+import { debug, MessengerError } from "./shared.js";
 import { Entries } from "type-fest";
 
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
-let thisTarget: AnyTarget | undefined = isBackground()
+const thisTarget: AnyTarget = isBackground()
   ? { page: "background" }
-  : undefined;
+  : {
+      get page(): string {
+        return location.pathname + location.search;
+      },
+    };
 
 function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
@@ -42,10 +46,13 @@ function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   return true;
 }
 
+// TODO: Test this in Jest, outside the browser
 export function getActionForMessage(
   from: Sender,
-  { ...to }: AnyTarget // Clone object because we're editing it
+  message: Message
 ): "respond" | "forward" | "ignore" {
+  // Clone object because we're editing it
+  const to: AnyTarget = { ...message.target };
   if (to.page === "any") {
     return "respond";
   }
@@ -61,12 +68,6 @@ export function getActionForMessage(
     return "forward";
   }
 
-  if (!thisTarget) {
-    console.warn("A message was received before this context was ready");
-    // If this *was* the target, then probably no one else answered
-    return "ignore";
-  }
-
   // Set "this" tab to the current tabId
   if (to.tabId === "this" && thisTarget.tabId === from.tab?.id) {
     to.tabId = thisTarget.tabId;
@@ -76,19 +77,41 @@ export function getActionForMessage(
   const isThisTarget = compareTargets(to, thisTarget);
 
   if (!isThisTarget) {
-    debug("The message’s target is", to, "but this is", thisTarget);
+    debug(message.type, "🤫 ignored due to target mismatch", {
+      requestedTarget: to,
+      thisTarget,
+      tabInfoStatus,
+    });
   }
 
   return isThisTarget ? "respond" : "ignore";
 }
 
-let nameRequested = false;
-export async function nameThisTarget() {
-  // Same as above: CS receives messages correctly
-  if (!nameRequested && !thisTarget && !isContentScript()) {
-    nameRequested = true;
-    thisTarget = await messenger("__getTabData", {}, { page: "any" });
-    thisTarget.page = location.pathname + location.search;
+let tabInfoStatus: "needed" | "pending" | "done" | "error" =
+  // The background page already has it
+  isBackground() ||
+  // Same as above: content scripts don't receive broadcasts (yet)
+  isContentScript()
+    ? "done"
+    : "needed";
+async function getTabInformation() {
+  if (tabInfoStatus !== "needed") {
+    return;
+  }
+
+  try {
+    tabInfoStatus = "pending";
+    Object.assign(thisTarget, {
+      ...(await messenger("__getTabData", {}, { page: "any" })),
+    });
+    tabInfoStatus = "done";
+  } catch (error: unknown) {
+    tabInfoStatus = "error";
+    throw new MessengerError(
+      "Tab registration failed. This page won’t be able to receive messages that require tab information",
+      // @ts-expect-error TODO: update lib to accept Error#cause
+      { cause: error }
+    );
   }
 }
 
@@ -102,5 +125,8 @@ export function initPrivateApi(): void {
     // also serves the purpose of throwing a specific error when no methods have been registered.
     // https://github.com/pixiebrix/webext-messenger/pull/80
     registerMethods({ __getTabData });
+
+    // Already includes per-context exclusion logic
+    void getTabInformation();
   }
 }

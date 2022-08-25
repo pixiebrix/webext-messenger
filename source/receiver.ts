@@ -1,5 +1,5 @@
 import { serializeError } from "serialize-error";
-import { getContextName, isBackground } from "webext-detect-page";
+import { getContextName } from "webext-detect-page";
 
 import { messenger } from "./sender.js";
 import { Message, MessengerMeta, Method, Sender } from "./types.js";
@@ -9,7 +9,7 @@ import {
   debug,
   __webextMessenger,
 } from "./shared.js";
-import { getActionForMessage, nameThisTarget } from "./thisTarget.js";
+import { getActionForMessage } from "./thisTarget.js";
 import { didUserRegisterMethods, handlers } from "./handlers.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
@@ -32,7 +32,7 @@ function onMessageListener(
   }
 
   // Target check must be synchronous (`await` means we're handling the message)
-  const action = getActionForMessage(sender, message.target);
+  const action = getActionForMessage(sender, message);
   if (action === "ignore") {
     return;
   }
@@ -99,10 +99,6 @@ async function handleMessage(
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
-  if (!isBackground()) {
-    void nameThisTarget();
-  }
-
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
       throw new MessengerError(`Handler already set for ${type}`);
