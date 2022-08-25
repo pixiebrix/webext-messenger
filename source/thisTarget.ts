@@ -46,10 +46,6 @@ export function getActionForMessage(
   from: Sender,
   { ...to }: AnyTarget // Clone object because we're editing it
 ): "respond" | "forward" | "ignore" {
-  if (to.page === "any") {
-    return "respond";
-  }
-
   // Content scripts only receive messages that are meant for them. In the future
   // they'll also forward them, but that still means they need to be handled here.
   if (isContentScript()) {
@@ -87,7 +83,7 @@ export async function nameThisTarget() {
   // Same as above: CS receives messages correctly
   if (!nameRequested && !thisTarget && !isContentScript()) {
     nameRequested = true;
-    thisTarget = await messenger("__getTabData", {}, { page: "any" });
+    thisTarget = await messenger("__getTabData", {}, { page: "background" });
     thisTarget.page = location.pathname + location.search;
   }
 }
