@@ -18,6 +18,7 @@ import {
   notRegisteredNotification,
   getPageTitleNotification,
 } from "./api.js";
+import { MessengerError } from "../../shared.js";
 
 function senderIsCurrentPage(
   t: test.Test,
@@ -112,7 +113,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
 
   test(
     expectedTitle +
-      ": should receive error from the content script if it’s not registered",
+      ": should receive error from the target if it’s not registered",
     async (t) => {
       await expectRejection(
         t,
@@ -194,7 +195,19 @@ async function init() {
     await expectRejection(
       t,
       getPageTitle({ tabId }),
-      new Error("No handler registered for getPageTitle in the receiving end")
+      new Error(
+        `Messenger was not available in the target ${JSON.stringify({
+          tabId,
+        })} for getPageTitle`
+      )
+    );
+
+    await expectRejection(
+      t,
+      contentScriptContext.sleep({ tabId }, 100),
+      new Error(
+        "Conflict: The message sleep was handled by a third-party listener"
+      )
     );
 
     await closeTab(tabId);
@@ -225,6 +238,19 @@ async function init() {
 
   test("stops trying immediately if specific tab ID doesn't exist", async (t) => {
     const request = getPageTitle({ tabId });
+    const durationPromise = trackSettleTime(request);
+
+    await expectRejection(t, request, new Error(errorTabDoesntExist));
+
+    const duration = await durationPromise;
+    t.ok(
+      duration < 100,
+      `It should take less than 100 ms (took ${duration}ms)`
+    );
+  });
+
+  test("stops trying immediately if specific tab ID doesn't exist, even if targeting a named target", async (t) => {
+    const request = getPageTitle({ tabId, page: "/void.html" });
     const durationPromise = trackSettleTime(request);
 
     await expectRejection(t, request, new Error(errorTabDoesntExist));
@@ -275,7 +301,9 @@ async function init() {
     await expectRejection(
       t,
       request,
-      new Error("Could not establish connection. Receiving end does not exist.")
+      new MessengerError(
+        `The target ${JSON.stringify({ tabId })} for getPageTitle was not found`
+      )
     );
 
     const duration = await durationPromise;
@@ -299,6 +327,51 @@ async function init() {
       t,
       request,
       new Error("No handlers registered in contentScript")
+    );
+
+    const duration = await durationPromise;
+    t.ok(
+      duration > 4000 && duration < 5000,
+      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
+    );
+
+    await closeTab(tabId);
+  });
+
+  test("throws the right error after retrying if a named target isn't found", async (t) => {
+    const target = { page: "/wasnt-me.html" };
+    const request = getPageTitle(target);
+    const durationPromise = trackSettleTime(request);
+
+    await expectRejection(
+      t,
+      request,
+      new Error(
+        `The target ${JSON.stringify(target)} for getPageTitle was not found`
+      )
+    );
+
+    const duration = await durationPromise;
+    t.ok(
+      duration > 4000 && duration < 5000,
+      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
+    );
+  });
+
+  test("throws the right error after retrying if a named target with tabId isn't found", async (t) => {
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/No-frames-on-the-page"
+    );
+    const target = { tabId, page: "/memes.html" };
+    const request = getPageTitle(target);
+    const durationPromise = trackSettleTime(request);
+
+    await expectRejection(
+      t,
+      request,
+      new Error(
+        `The target ${JSON.stringify(target)} for getPageTitle was not found`
+      )
     );
 
     const duration = await durationPromise;

@@ -78,13 +78,38 @@ async function manageMessage(
     async () => {
       const response = await sendMessage();
 
-      if (!isMessengerResponse(response)) {
+      if (isMessengerResponse(response)) {
+        return response;
+      }
+
+      // If no one answers, `response` will be `undefined`
+      // If the target does not have any `onMessage` listener at all, it will throw
+      // Possible:
+      // - Any target exists and has onMessage handler, but never handled the message
+      // - Extension page exists and has Messenger, but never handled the message (Messenger in Runtime ignores messages when the target isn't found)
+      // Not possible:
+      // - Tab exists and has Messenger, but never handled the message (Messenger in CS always handles messages)
+      // - Any target exists, but Messenger didn't have the specific Type handler (The receiving Messenger will throw an error)
+      // - No targets exist (the browser immediately throws "Could not establish connection. Receiving end does not exist.")
+      if (response === undefined) {
+        if ("page" in target) {
+          throw new MessengerError(
+            `The target ${JSON.stringify(target)} for ${type} was not found`
+          );
+        }
+
         throw new MessengerError(
-          `No handler registered for ${type} in the receiving end`
+          `Messenger was not available in the target ${JSON.stringify(
+            target
+          )} for ${type}`
         );
       }
 
-      return response;
+      // Possible:
+      // - Non-Messenger handler responded
+      throw new MessengerError(
+        `Conflict: The message ${type} was handled by a third-party listener`
+      );
     },
     {
       minTimeout: 100,
@@ -99,7 +124,7 @@ async function manageMessage(
           // Don't retry sending to the background page unless it really hasn't loaded yet
           (target.page !== "background" && error instanceof MessengerError) ||
           // Page or its content script not yet loaded
-          String(error.message).startsWith(_errorNonExistingTarget) ||
+          error.message === _errorNonExistingTarget ||
           // `registerMethods` not yet loaded
           String(error.message).startsWith("No handlers registered in ")
         ) {
@@ -117,7 +142,15 @@ async function manageMessage(
         }
       },
     }
-  );
+  ).catch((error: Error) => {
+    if (error?.message === _errorNonExistingTarget) {
+      throw new MessengerError(
+        `The target ${JSON.stringify(target)} for ${type} was not found`
+      );
+    }
+
+    throw error;
+  });
 
   if ("error" in response) {
     debug(type, "↘️ replied with error", response.error);
@@ -166,7 +199,7 @@ function messenger<
         return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
-      throw new MessengerError("No handler registered for " + type);
+      throw new MessengerError("No handler registered locally for " + type);
     }
 
     const sendMessage = async () => {
