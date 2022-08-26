@@ -9,6 +9,27 @@ import { AnyTarget, Message, MessengerMeta, Sender } from "./types.js";
 import { debug, MessengerError } from "./shared.js";
 import { Entries } from "type-fest";
 
+/**
+ * @file This file exists because `runtime.sendMessage` acts as a broadcast to
+ * all open extension pages, so the receiver needs a way to figure out if the
+ * message was intended for them.
+ *
+ * If the requested target only includes a `page` (URL), then it can be determined
+ * immediately. If the target also specifies a tab, like `{tabId: 1, page: '/sidebar.html'}`,
+ * then the receiving target needs to fetch the tab information via `__getTabData`.
+ *
+ * `__getTabData` is called automatically when `webext-messenger` is imported in
+ * a context that requires this logic (most extension:// pages).
+ *
+ * If a broadcast message with `tabId` target is received before `__getTabData` is "received",
+ * the message will be ignored and it can be retried. If `__getTabData` somehow fails,
+ * the target will forever ignore any messages that require the `tabId`. An error message
+ * would be shown in the context in that case.
+ *
+ * Content scripts do not use this logic at all at the moment because they're
+ * always targeted via `tabId/frameId` combo and `tabs.sendMessage`.
+ */
+
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
@@ -19,6 +40,14 @@ const thisTarget: AnyTarget = isBackground()
         return location.pathname + location.search;
       },
     };
+
+let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
+  // The background page doesn't have a tab
+  isBackground() ||
+  // Content scripts don't use named targets yet
+  isContentScript()
+    ? "not-needed"
+    : "needed";
 
 function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
@@ -80,33 +109,26 @@ export function getActionForMessage(
     debug(message.type, "🤫 ignored due to target mismatch", {
       requestedTarget: to,
       thisTarget,
-      tabInfoStatus,
+      tabDataStatus,
     });
   }
 
   return isThisTarget ? "respond" : "ignore";
 }
 
-let tabInfoStatus: "needed" | "pending" | "done" | "error" =
-  // The background page already has it
-  isBackground() ||
-  // Same as above: content scripts don't receive broadcasts (yet)
-  isContentScript()
-    ? "done"
-    : "needed";
-async function getTabInformation() {
-  if (tabInfoStatus !== "needed") {
+async function storeTabData() {
+  if (tabDataStatus !== "needed") {
     return;
   }
 
   try {
-    tabInfoStatus = "pending";
+    tabDataStatus = "pending";
     Object.assign(thisTarget, {
       ...(await messenger("__getTabData", {}, { page: "any" })),
     });
-    tabInfoStatus = "done";
+    tabDataStatus = "received";
   } catch (error: unknown) {
-    tabInfoStatus = "error";
+    tabDataStatus = "error";
     throw new MessengerError(
       "Tab registration failed. This page won’t be able to receive messages that require tab information",
       // @ts-expect-error TODO: update lib to accept Error#cause
@@ -126,7 +148,7 @@ export function initPrivateApi(): void {
     // https://github.com/pixiebrix/webext-messenger/pull/80
     registerMethods({ __getTabData });
 
-    // Already includes per-context exclusion logic
-    void getTabInformation();
+    // `getTabInformation` includes per-context exclusion logic
+    void storeTabData();
   }
 }
