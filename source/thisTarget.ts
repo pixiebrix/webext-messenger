@@ -23,8 +23,8 @@ import { Entries } from "type-fest";
  *
  * If a broadcast message with `tabId` target is received before `__getTabData` is "received",
  * the message will be ignored and it can be retried. If `__getTabData` somehow fails,
- * the target will forever ignore any messages that require the `tabId`. An error message
- * would be shown in the context in that case.
+ * the target will forever ignore any messages that require the `tabId`. In that case,
+ * an error would be thrown once and will be visible in the console, uncaught.
  *
  * Content scripts do not use this logic at all at the moment because they're
  * always targeted via `tabId/frameId` combo and `tabs.sendMessage`.
