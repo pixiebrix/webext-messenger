@@ -20,6 +20,34 @@ import {
 } from "./api.js";
 import { MessengerError } from "../../shared.js";
 
+function expectDuration(
+  t: test.Test,
+  actualDuration: number,
+  expectedDuration: number,
+  maximumDuration?: number
+) {
+  if (maximumDuration) {
+    t.ok(
+      actualDuration > expectedDuration && actualDuration < maximumDuration,
+      expectedDuration > 0
+        ? `It should take between ${expectedDuration / 1000} and ${
+            maximumDuration / 1000
+          } seconds (took ${actualDuration / 1000}s)`
+        : `It should take less than ${maximumDuration / 1000} seconds (took ${
+            actualDuration / 1000
+          }s)`
+    );
+  } else {
+    t.ok(
+      actualDuration > expectedDuration - 100 &&
+        actualDuration < expectedDuration + 100,
+      `It should take about ${expectedDuration / 1000}s (took ${
+        actualDuration / 1000
+      }s)`
+    );
+  }
+}
+
 function senderIsCurrentPage(
   t: test.Test,
   sender: Sender | undefined,
@@ -179,7 +207,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
   );
 }
 
-async function init() {
+async function testEveryTarget() {
   const { tabId, parentFrame, iframe } = await createTargets();
 
   // All `test` calls must be done synchronously, or else the runner assumes they're done
@@ -187,6 +215,18 @@ async function init() {
   runOnTarget({ tabId, frameId: iframe }, "Child");
   runOnTarget({ tabId, page: "/iframe.html" }, "Extension frame");
 
+  test("should be able to close the tab from the content script", async (t) => {
+    await closeSelf({ tabId, frameId: parentFrame });
+    try {
+      // Since the tab was closed, this is expected to throw
+      t.notOk(await browser.tabs.get(tabId), "The tab should not be open");
+    } catch {
+      t.pass("The tab was closed");
+    }
+  });
+}
+
+function additionalTests() {
   test("should throw the right error when `registerMethod` was never called", async (t) => {
     const tabId = await openTab(
       "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page"
@@ -213,16 +253,6 @@ async function init() {
     await closeTab(tabId);
   });
 
-  test("should be able to close the tab from the content script", async (t) => {
-    await closeSelf({ tabId, frameId: parentFrame });
-    try {
-      // Since the tab was closed, this is expected to throw
-      t.notOk(await browser.tabs.get(tabId), "The tab should not be open");
-    } catch {
-      t.pass("The tab was closed");
-    }
-  });
-
   test("retries until target is ready", async (t) => {
     const tabId = await openTab(
       "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
@@ -237,29 +267,33 @@ async function init() {
   });
 
   test("stops trying immediately if specific tab ID doesn't exist", async (t) => {
-    const request = getPageTitle({ tabId });
+    const request = getPageTitle({ tabId: 69_420 });
     const durationPromise = trackSettleTime(request);
 
     await expectRejection(t, request, new Error(errorTabDoesntExist));
 
-    const duration = await durationPromise;
-    t.ok(
-      duration < 100,
-      `It should take less than 100 ms (took ${duration}ms)`
-    );
+    expectDuration(t, await durationPromise, 0, 100);
   });
 
   test("stops trying immediately if specific tab ID doesn't exist, even if targeting a named target", async (t) => {
-    const request = getPageTitle({ tabId, page: "/void.html" });
+    const target = { tabId: 69_420, page: "/void.html" };
+    const request = getPageTitle(target);
     const durationPromise = trackSettleTime(request);
 
-    await expectRejection(t, request, new Error(errorTabDoesntExist));
-
-    const duration = await durationPromise;
-    t.ok(
-      duration < 100,
-      `It should take less than 100 ms (took ${duration}ms)`
-    );
+    if (isContentScript()) {
+      // CS-to-named-target can message it directly, but can't query the tab and quit early
+      await expectRejection(
+        t,
+        request,
+        new Error(
+          `The target ${JSON.stringify(target)} for getPageTitle was not found`
+        )
+      );
+      expectDuration(t, await durationPromise, 4000, 5000);
+    } else {
+      await expectRejection(t, request, new Error(errorTabDoesntExist));
+      expectDuration(t, await durationPromise, 0, 100);
+    }
   });
 
   test("stops trying immediately if tab is closed before the handler responds", async (t) => {
@@ -281,13 +315,7 @@ async function init() {
 
     await expectRejection(t, request, new Error(errorTargetClosedEarly));
 
-    const duration = await durationPromise;
-    t.ok(
-      duration > tabClosureTimeout - 100 && duration < tabClosureTimeout + 100,
-      `It should take about ${tabClosureTimeout / 1000}s (took ${
-        duration / 1000
-      }s)`
-    );
+    expectDuration(t, await durationPromise, tabClosureTimeout);
   });
 
   test("retries until it times out", async (t) => {
@@ -306,11 +334,7 @@ async function init() {
       )
     );
 
-    const duration = await durationPromise;
-    t.ok(
-      duration > 4000 && duration < 5000,
-      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
-    );
+    expectDuration(t, await durationPromise, 4000, 5000);
 
     await closeTab(tabId);
   });
@@ -329,11 +353,7 @@ async function init() {
       new Error("No handlers registered in contentScript")
     );
 
-    const duration = await durationPromise;
-    t.ok(
-      duration > 4000 && duration < 5000,
-      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
-    );
+    expectDuration(t, await durationPromise, 4000, 5000);
 
     await closeTab(tabId);
   });
@@ -351,11 +371,7 @@ async function init() {
       )
     );
 
-    const duration = await durationPromise;
-    t.ok(
-      duration > 4000 && duration < 5000,
-      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
-    );
+    expectDuration(t, await durationPromise, 4000, 5000);
   });
 
   test("throws the right error after retrying if a named target with tabId isn't found", async (t) => {
@@ -374,11 +390,7 @@ async function init() {
       )
     );
 
-    const duration = await durationPromise;
-    t.ok(
-      duration > 4000 && duration < 5000,
-      `It should take between 4 and 5 seconds (took ${duration / 1000}s)`
-    );
+    expectDuration(t, await durationPromise, 4000, 5000);
 
     await closeTab(tabId);
   });
@@ -403,4 +415,5 @@ async function init() {
   });
 }
 
-void init();
+testEveryTarget();
+additionalTests();
