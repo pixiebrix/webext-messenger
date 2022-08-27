@@ -415,5 +415,5 @@ function additionalTests() {
   });
 }
 
-testEveryTarget();
+void testEveryTarget();
 additionalTests();
