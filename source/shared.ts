@@ -1,4 +1,5 @@
 import { JsonObject } from "type-fest";
+import { errorConstructors } from "serialize-error";
 
 type ErrorObject = {
   name?: string;
@@ -28,6 +29,9 @@ export function isObject(value: unknown): value is Record<string, unknown> {
 export class MessengerError extends Error {
   override name = "MessengerError";
 }
+
+// @ts-expect-error Wrong `errorConstructors` types
+errorConstructors.set("MessengerError", MessengerError);
 
 // .bind preserves the call location in the console
 export const debug = logging ? console.debug.bind(console, "Messenger:") : noop;
