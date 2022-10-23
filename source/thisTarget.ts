@@ -5,7 +5,7 @@ import {
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { AnyTarget, Message, MessengerMeta, Sender, Target } from "./types.js";
+import { AnyTarget, Message, MessengerMeta, Sender } from "./types.js";
 import { debug, MessengerError, once } from "./shared.js";
 import { Entries } from "type-fest";
 
