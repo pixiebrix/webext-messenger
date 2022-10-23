@@ -5,8 +5,8 @@ import {
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { AnyTarget, Message, MessengerMeta, Sender } from "./types.js";
-import { debug, MessengerError } from "./shared.js";
+import { AnyTarget, Message, MessengerMeta, Sender, Target } from "./types.js";
+import { debug, MessengerError, once } from "./shared.js";
 import { Entries } from "type-fest";
 
 /**
@@ -116,7 +116,7 @@ export function getActionForMessage(
   return isThisTarget ? "respond" : "ignore";
 }
 
-async function storeTabData() {
+const storeTabData = once(async () => {
   if (tabDataStatus !== "needed") {
     return;
   }
@@ -135,15 +135,20 @@ async function storeTabData() {
       { cause: error }
     );
   }
-}
+});
 
 export function __getTabData(this: MessengerMeta): AnyTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
+export async function getThisTarget(): Promise<AnyTarget> {
+  await storeTabData(); // It should already have been called by we still need to await it
+  return thisTarget;
+}
+
 export function initPrivateApi(): void {
   if (isExtensionContext()) {
-    // Only `runtime` pages can handle this message but I can't remove it  because its listener
+    // Only `runtime` pages can handle this message but I can't remove it because its listener
     // also serves the purpose of throwing a specific error when no methods have been registered.
     // https://github.com/pixiebrix/webext-messenger/pull/80
     registerMethods({ __getTabData });

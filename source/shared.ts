@@ -47,3 +47,18 @@ export async function delay(milliseconds: number): Promise<void> {
     setTimeout(resolve, milliseconds);
   });
 }
+
+export function once<Callback extends (...arguments_: unknown[]) => unknown>(
+  function_: Callback
+): Callback {
+  let called = false;
+  let returnValue: unknown;
+  return function (this: unknown, ...arguments_) {
+    if (called) {
+      returnValue = function_.apply(this, arguments_);
+      called = true;
+    }
+
+    return returnValue;
+  } as Callback;
+}
