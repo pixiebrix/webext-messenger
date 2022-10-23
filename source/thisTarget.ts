@@ -5,7 +5,13 @@ import {
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { AnyTarget, Message, MessengerMeta, Sender } from "./types.js";
+import {
+  AnyTarget,
+  KnownTarget,
+  Message,
+  MessengerMeta,
+  Sender,
+} from "./types.js";
 import { debug, MessengerError, once } from "./shared.js";
 import { Entries } from "type-fest";
 
@@ -33,7 +39,7 @@ import { Entries } from "type-fest";
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
-const thisTarget: AnyTarget = isBackground()
+const thisTarget: KnownTarget = isBackground()
   ? { page: "background" }
   : {
       get page(): string {
@@ -141,7 +147,7 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
-export async function getThisTarget(): Promise<AnyTarget> {
+export async function getThisTarget(): Promise<KnownTarget> {
   await storeTabData(); // It should already have been called by we still need to await it
   return thisTarget;
 }

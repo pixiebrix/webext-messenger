@@ -86,6 +86,12 @@ export interface AnyTarget {
   page?: string;
 }
 
+export interface KnownTarget {
+  tabId?: number;
+  frameId?: number;
+  page: string;
+}
+
 export interface Target {
   tabId: number;
   frameId?: number;
