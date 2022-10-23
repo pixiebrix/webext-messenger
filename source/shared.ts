@@ -54,7 +54,7 @@ export function once<Callback extends (...arguments_: unknown[]) => unknown>(
   let called = false;
   let returnValue: unknown;
   return function (this: unknown, ...arguments_) {
-    if (called) {
+    if (!called) {
       returnValue = function_.apply(this, arguments_);
       called = true;
     }
