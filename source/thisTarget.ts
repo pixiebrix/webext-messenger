@@ -6,14 +6,14 @@ import {
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import {
-  AnyTarget,
-  KnownTarget,
-  Message,
-  MessengerMeta,
-  Sender,
+  type AnyTarget,
+  type KnownTarget,
+  type Message,
+  type MessengerMeta,
+  type Sender,
 } from "./types.js";
 import { debug, MessengerError, once } from "./shared.js";
-import { Entries } from "type-fest";
+import { type Entries } from "type-fest";
 
 /**
  * @file This file exists because `runtime.sendMessage` acts as a broadcast to

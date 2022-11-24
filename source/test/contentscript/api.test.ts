@@ -1,6 +1,6 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
-import { PageTarget, Sender, Target } from "../../index.js";
+import { type PageTarget, type Sender, type Target } from "../../index.js";
 import { errorTabDoesntExist, errorTargetClosedEarly } from "../../sender.js";
 import { expectRejection, sleep, trackSettleTime } from "../helpers.js";
 import * as backgroundContext from "../background/api.js";

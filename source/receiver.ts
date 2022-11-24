@@ -2,7 +2,12 @@ import { serializeError } from "serialize-error";
 import { getContextName } from "webext-detect-page";
 
 import { messenger } from "./sender.js";
-import { Message, MessengerMeta, Method, Sender } from "./types.js";
+import {
+  type Message,
+  type MessengerMeta,
+  type Method,
+  type Sender,
+} from "./types.js";
 import {
   isObject,
   MessengerError,

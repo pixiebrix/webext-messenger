@@ -29,6 +29,7 @@
     ],
     "import/extensions": ["error", "always"],
     "import/no-unresolved": "off",
+    "unicorn/prefer-top-level-await": "off",
     "unicorn/filename-case": [
       "error",
       {
@@ -48,8 +49,7 @@
           "args": true
         }
       }
-    ],
-    "@typescript-eslint/consistent-type-definitions": "off"
+    ]
   },
   "overrides": [
     {

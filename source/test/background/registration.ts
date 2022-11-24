@@ -6,7 +6,7 @@ import { throws } from "./throws.js";
 import { sumIfMeta } from "./sumIfMeta.js";
 import { getExtensionId } from "./getExtensionId.js";
 import { backgroundOnly } from "./backgroundOnly.js";
-import { notRegistered } from "./notRegistered.js";
+import { type notRegistered } from "./notRegistered.js";
 import { getSelf } from "./getSelf.js";
 import {
   openTab,
@@ -17,6 +17,7 @@ import {
 import { getTrace } from "./getTrace.js";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Interface required for declaration merging
   interface MessengerMethods {
     sum: typeof sum;
     throws: typeof throws;

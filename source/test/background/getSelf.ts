@@ -1,4 +1,4 @@
-import { MessengerMeta, Sender } from "../../index.js";
+import { type MessengerMeta, type Sender } from "../../index.js";
 
 export async function getSelf(
   this: MessengerMeta

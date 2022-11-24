@@ -1,6 +1,6 @@
-import { Runtime } from "webextension-polyfill";
-import { Asyncify, ValueOf } from "type-fest";
-import { ErrorObject } from "serialize-error";
+import { type Runtime } from "webextension-polyfill";
+import { type Asyncify, type ValueOf } from "type-fest";
+import { type ErrorObject } from "serialize-error";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
@@ -8,6 +8,7 @@ import { ErrorObject } from "serialize-error";
 // because an index signature would allow any string to return Method and
 // it would make `getMethod` too loose.
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Interface required for declaration merging
   interface MessengerMethods {
     _: Method;
   }
@@ -32,9 +33,9 @@ export type PublicMethod<Method extends ValueOf<MessengerMethods>> = Asyncify<
 export type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
   WithTarget<PublicMethod<Method>>;
 
-export interface MessengerMeta {
+export type MessengerMeta = {
   trace: Sender[];
-}
+};
 
 type RawMessengerResponse =
   | {
@@ -55,14 +56,14 @@ export type Method = (
   ...args: Arguments
 ) => Promise<unknown>;
 
-export interface Options {
+export type Options = {
   /**
    * "Notifications" won't await the response, return values, attempt retries, nor throw errors
    * @default false
    */
   isNotification?: boolean;
   trace?: Sender[];
-}
+};
 
 export type Message<LocalArguments extends Arguments = Arguments> = {
   type: keyof MessengerMethods;
@@ -80,24 +81,29 @@ export type MessengerMessage = Message & {
   __webextMessenger: true;
 };
 
-export interface AnyTarget {
+export type AnyTarget = {
   tabId?: number | "this";
   frameId?: number;
   page?: string;
-}
+};
 
-export interface KnownTarget {
+export type TopLevelFrame = {
+  tabId: number;
+  frameId: 0;
+};
+
+export type KnownTarget = {
   tabId?: number;
   frameId?: number;
   page: string;
-}
+};
 
-export interface Target {
+export type Target = {
   tabId: number;
   frameId?: number;
-}
+};
 
-export interface PageTarget {
+export type PageTarget = {
   tabId?: number | "this";
   page: string;
-}
+};

@@ -1,4 +1,4 @@
-import test from "tape";
+import type test from "tape";
 
 export async function expectRejection(
   t: test.Test,
