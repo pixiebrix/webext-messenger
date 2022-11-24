@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/no-await-expression-member */
 import test from "tape";
 import { isBackground } from "webext-detect-page";
-import { getThisTarget } from "../../thisTarget.js";
+import { getThisFrame } from "../../thisTarget.js";
 import { expectDuration, trackSettleTime } from "../helpers.js";
 import {
   backgroundOnly,
@@ -99,8 +99,8 @@ if (isBackground()) {
     t.equals(self!.url, location.href);
   });
 
-  test("getThisTarget should be correct and immediate", async (t) => {
-    const localRequest = getThisTarget();
+  test("getThisFrame should be correct and immediate", async (t) => {
+    const localRequest = getThisFrame();
     const localRequestDuration = trackSettleTime(localRequest);
     const messengerRequest = getSelf();
     const messengerRequestDuration = trackSettleTime(messengerRequest);
@@ -111,7 +111,7 @@ if (isBackground()) {
     expectDuration(t, await localRequestDuration, 0, 1);
     t.true(
       (await localRequestDuration) < (await messengerRequestDuration),
-      "getThisTarget should be faster than a Messenger round-trip"
+      "getThisFrame should be faster than a Messenger round-trip"
     );
   });
 }

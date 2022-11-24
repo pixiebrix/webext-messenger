@@ -12,6 +12,7 @@ import {
   type Message,
   type MessengerMeta,
   type Sender,
+  type FrameTarget,
 } from "./types.js";
 import { debug, MessengerError, once } from "./shared.js";
 import { type Entries } from "type-fest";
@@ -150,17 +151,21 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
-export async function getThisTarget(): Promise<KnownTarget> {
+export async function getThisFrame(): Promise<FrameTarget> {
   await storeTabData(); // It should already have been called by we still need to await it
-  return thisTarget;
+
+  const { tabId, frameId } = thisTarget;
+
+  if (typeof tabId !== "number" || typeof frameId !== "number") {
+    throw new TypeError("This target is not in a frame");
+  }
+
+  // Rebuild object to return exactly these two properties and nothing more
+  return { tabId, frameId };
 }
 
 export async function getTopLevelFrame(): Promise<TopLevelFrame> {
-  const { tabId } = await getThisTarget();
-  if (typeof tabId !== "number") {
-    throw new TypeError("This target is not in a tab");
-  }
-
+  const { tabId } = await getThisFrame();
   return {
     tabId,
     frameId: 0,
