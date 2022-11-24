@@ -1,5 +1,8 @@
+/* eslint-disable unicorn/no-await-expression-member */
 import test from "tape";
 import { isBackground } from "webext-detect-page";
+import { getThisTarget } from "../../thisTarget.js";
+import { expectDuration, trackSettleTime } from "../helpers.js";
 import {
   backgroundOnly,
   getExtensionId,
@@ -94,5 +97,21 @@ if (isBackground()) {
     t.true(self instanceof Object);
     t.equals(self!.id, chrome.runtime.id);
     t.equals(self!.url, location.href);
+  });
+
+  test("getThisTarget should be correct and immediate", async (t) => {
+    const localRequest = getThisTarget();
+    const localRequestDuration = trackSettleTime(localRequest);
+    const messengerRequest = getSelf();
+    const messengerRequestDuration = trackSettleTime(messengerRequest);
+
+    t.is((await localRequest).tabId, (await messengerRequest)!.tab!.id);
+    t.is((await localRequest).frameId, (await messengerRequest)!.frameId);
+
+    expectDuration(t, await localRequestDuration, 0, 1);
+    t.true(
+      (await localRequestDuration) < (await messengerRequestDuration),
+      "getThisTarget should be faster than a Messenger round-trip"
+    );
   });
 }

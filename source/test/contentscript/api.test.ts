@@ -2,7 +2,12 @@ import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { type PageTarget, type Sender, type Target } from "../../index.js";
 import { errorTabDoesntExist, errorTargetClosedEarly } from "../../sender.js";
-import { expectRejection, sleep, trackSettleTime } from "../helpers.js";
+import {
+  expectRejection,
+  sleep,
+  trackSettleTime,
+  expectDuration,
+} from "../helpers.js";
 import * as backgroundContext from "../background/api.js";
 import * as localContext from "../background/testingApi.js";
 import * as contentScriptContext from "./api.js";
@@ -19,34 +24,6 @@ import {
   getPageTitleNotification,
 } from "./api.js";
 import { MessengerError } from "../../shared.js";
-
-function expectDuration(
-  t: test.Test,
-  actualDuration: number,
-  expectedDuration: number,
-  maximumDuration?: number
-) {
-  if (maximumDuration) {
-    t.ok(
-      actualDuration > expectedDuration && actualDuration < maximumDuration,
-      expectedDuration > 0
-        ? `It should take between ${expectedDuration / 1000} and ${
-            maximumDuration / 1000
-          } seconds (took ${actualDuration / 1000}s)`
-        : `It should take less than ${maximumDuration / 1000} seconds (took ${
-            actualDuration / 1000
-          }s)`
-    );
-  } else {
-    t.ok(
-      actualDuration > expectedDuration - 100 &&
-        actualDuration < expectedDuration + 100,
-      `It should take about ${expectedDuration / 1000}s (took ${
-        actualDuration / 1000
-      }s)`
-    );
-  }
-}
 
 function senderIsCurrentPage(
   t: test.Test,

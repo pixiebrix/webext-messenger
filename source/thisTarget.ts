@@ -44,17 +44,19 @@ const thisTarget: KnownTarget = isBackground()
   ? { page: "background" }
   : {
       get page(): string {
-        return location.pathname + location.search;
+        // Extension pages have relative URLs to simplify comparison
+        const origin = location.protocol.startsWith("http")
+          ? location.origin
+          : "";
+
+        // Don't use the hash
+        return origin + location.pathname + location.search;
       },
     };
 
 let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
   // The background page doesn't have a tab
-  isBackground() ||
-  // Content scripts don't use named targets yet
-  isContentScript()
-    ? "not-needed"
-    : "needed";
+  isBackground() ? "not-needed" : "needed";
 
 function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
