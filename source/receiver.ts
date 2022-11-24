@@ -116,15 +116,8 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   browser.runtime.onMessage.addListener(onMessageListener);
 }
 
-/** Ensure that the current function was called via Messenger */
+/** Ensure/document that the current function was called via Messenger */
 export function assertMessengerCall(
-  theThis: unknown
-): asserts theThis is MessengerMeta {
-  if (isObject(theThis) && "__webextMessenger" in theThis) {
-    return;
-  }
-
-  throw new MessengerError(
-    "This function shpould only be called via the Messenger"
-  );
-}
+  theThis: MessengerMeta
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- TypeScript already does this, it's a documentation-only call
+): asserts theThis is MessengerMeta {}
