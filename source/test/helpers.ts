@@ -29,10 +29,39 @@ export async function sleep(milliseconds: number): Promise<number> {
 export async function trackSettleTime(
   promise: Promise<unknown>
 ): Promise<number> {
-  const startTime = Date.now();
+  const startTime = performance.now();
   try {
     await promise;
   } catch {}
 
-  return Date.now() - startTime;
+  return performance.now() - startTime;
+}
+
+export function expectDuration(
+  t: test.Test,
+  actualDuration: number,
+  expectedDuration: number,
+  maximumDuration?: number
+) {
+  console.log({ actualDuration, expectedDuration, maximumDuration });
+  if (maximumDuration) {
+    t.ok(
+      actualDuration >= expectedDuration && actualDuration <= maximumDuration,
+      expectedDuration > 0
+        ? `It should take between ${expectedDuration / 1000} and ${
+            maximumDuration / 1000
+          } seconds (took ${actualDuration / 1000}s)`
+        : `It should take less than ${maximumDuration / 1000} seconds (took ${
+            actualDuration / 1000
+          }s)`
+    );
+  } else {
+    t.ok(
+      actualDuration > expectedDuration - 100 &&
+        actualDuration < expectedDuration + 100,
+      `It should take about ${expectedDuration / 1000}s (took ${
+        actualDuration / 1000
+      }s)`
+    );
+  }
 }

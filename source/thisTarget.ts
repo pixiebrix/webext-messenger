@@ -7,11 +7,14 @@ import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import {
   type AnyTarget,
+  type KnownTarget,
+  type TopLevelFrame,
   type Message,
   type MessengerMeta,
   type Sender,
+  type FrameTarget,
 } from "./types.js";
-import { debug, MessengerError } from "./shared.js";
+import { debug, MessengerError, once } from "./shared.js";
 import { type Entries } from "type-fest";
 
 /**
@@ -38,21 +41,23 @@ import { type Entries } from "type-fest";
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
-const thisTarget: AnyTarget = isBackground()
+const thisTarget: KnownTarget = isBackground()
   ? { page: "background" }
   : {
       get page(): string {
-        return location.pathname + location.search;
+        // Extension pages have relative URLs to simplify comparison
+        const origin = location.protocol.startsWith("http")
+          ? location.origin
+          : "";
+
+        // Don't use the hash
+        return origin + location.pathname + location.search;
       },
     };
 
 let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
   // The background page doesn't have a tab
-  isBackground() ||
-  // Content scripts don't use named targets yet
-  isContentScript()
-    ? "not-needed"
-    : "needed";
+  isBackground() ? "not-needed" : "needed";
 
 function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
@@ -121,7 +126,7 @@ export function getActionForMessage(
   return isThisTarget ? "respond" : "ignore";
 }
 
-async function storeTabData() {
+const storeTabData = once(async () => {
   if (tabDataStatus !== "needed") {
     return;
   }
@@ -140,15 +145,36 @@ async function storeTabData() {
       { cause: error }
     );
   }
-}
+});
 
 export function __getTabData(this: MessengerMeta): AnyTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
+export async function getThisFrame(): Promise<FrameTarget> {
+  await storeTabData(); // It should already have been called by we still need to await it
+
+  const { tabId, frameId } = thisTarget;
+
+  if (typeof tabId !== "number" || typeof frameId !== "number") {
+    throw new TypeError("This target is not in a frame");
+  }
+
+  // Rebuild object to return exactly these two properties and nothing more
+  return { tabId, frameId };
+}
+
+export async function getTopLevelFrame(): Promise<TopLevelFrame> {
+  const { tabId } = await getThisFrame();
+  return {
+    tabId,
+    frameId: 0,
+  };
+}
+
 export function initPrivateApi(): void {
   if (isExtensionContext()) {
-    // Only `runtime` pages can handle this message but I can't remove it  because its listener
+    // Only `runtime` pages can handle this message but I can't remove it because its listener
     // also serves the purpose of throwing a specific error when no methods have been registered.
     // https://github.com/pixiebrix/webext-messenger/pull/80
     registerMethods({ __getTabData });

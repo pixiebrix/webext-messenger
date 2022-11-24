@@ -2,6 +2,12 @@ import { type Runtime } from "webextension-polyfill";
 import { type Asyncify, type ValueOf } from "type-fest";
 import { type ErrorObject } from "serialize-error";
 
+/**
+ * @file Target types are a bit overlapping. That's because some are "request" targets
+ * and some are "known" targets. The difference is that you could "request" `{tabId: 1}`, but you "know" that a specific target is exactly `{tabId: 1, frameId: 5}`
+ * TODO: Cleanup, clarify, deduplicate Target types
+ */
+
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what
 // `MessengerMethods[string]` may look like. Do not use `Record<string, Method>`
@@ -85,6 +91,22 @@ export type AnyTarget = {
   tabId?: number | "this";
   frameId?: number;
   page?: string;
+};
+
+export type TopLevelFrame = {
+  tabId: number;
+  frameId: 0;
+};
+
+export type FrameTarget = {
+  tabId: number;
+  frameId: number;
+};
+
+export type KnownTarget = {
+  tabId?: number;
+  frameId?: number;
+  page: string;
 };
 
 export type Target = {

@@ -3,6 +3,7 @@
 export * from "./receiver.js";
 export * from "./sender.js";
 export * from "./types.js";
+export { getThisFrame, getTopLevelFrame } from "./thisTarget.js";
 import { initPrivateApi } from "./thisTarget.js";
 
 initPrivateApi();
