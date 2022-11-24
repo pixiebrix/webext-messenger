@@ -49,7 +49,7 @@
     "tape": "^5.5.3",
     "typescript": "^4.7.3",
     "webext-content-scripts": "^1.0.2",
-    "webextension-polyfill": "^0.9.0"
+    "webextension-polyfill": "^0.10.0"
   },
   "alias": {
     "./this-stuff-is-just-for-local-parcel-tests": "https://github.com/parcel-bundler/parcel/issues/4936",
