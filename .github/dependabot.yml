@@ -1,15 +1,26 @@
 # https://github.com/pixiebrix/webext-messenger/network/updates
-# # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
-    open-pull-requests-limit: 20
     schedule:
       interval: weekly
+      day: sunday
+      time: "08:42"
+      timezone: Etc/UTC
+    versioning-strategy: increase # Update package.json too https://stackoverflow.com/a/66819358/288906
+    open-pull-requests-limit: 20
+    reviewers:
+      - fregante
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+      day: sunday
+      time: "08:42"
+      timezone: Etc/UTC
     open-pull-requests-limit: 20
+    reviewers:
+      - fregante
