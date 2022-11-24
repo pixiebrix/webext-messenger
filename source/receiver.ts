@@ -58,7 +58,7 @@ async function handleMessage(
 
   const { trace = [] } = options;
   trace.push(sender);
-  const meta: MessengerMeta = { trace };
+  const meta: MessengerMeta = { trace, __webextMessenger: true };
 
   let handleMessage: () => Promise<unknown>;
 
@@ -114,4 +114,17 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   }
 
   browser.runtime.onMessage.addListener(onMessageListener);
+}
+
+/** Ensure that the current function was called via Messenger */
+export function assertMessengerCall(
+  theThis: unknown
+): asserts theThis is MessengerMeta {
+  if (isObject(theThis) && "__webextMessenger" in theThis) {
+    return;
+  }
+
+  throw new MessengerError(
+    "This function shpould only be called via the Messenger"
+  );
 }
