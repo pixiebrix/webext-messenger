@@ -21,7 +21,7 @@
   "dependencies": {
     "p-retry": "^5.1.1",
     "serialize-error": "^11.0.0",
-    "type-fest": "^2.13.0",
+    "type-fest": "^3.2.0",
     "webext-detect-page": "^4.0.1",
     "webext-tools": "^1.1.0"
   },
