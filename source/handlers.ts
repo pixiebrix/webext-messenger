@@ -2,6 +2,7 @@ import { __getTabData } from "./thisTarget.js";
 import { type Method } from "./types.js";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Interface required for declaration merging
   interface MessengerMethods {
     // Update `privateMethods` if more methods are added
     __getTabData: typeof __getTabData;

@@ -17,6 +17,7 @@ import {
 import { getTrace } from "./getTrace.js";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Interface required for declaration merging
   interface MessengerMethods {
     sum: typeof sum;
     throws: typeof throws;
