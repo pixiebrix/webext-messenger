@@ -1,6 +1,6 @@
-import { Runtime } from "webextension-polyfill";
-import { Asyncify, ValueOf } from "type-fest";
-import { ErrorObject } from "serialize-error";
+import { type Runtime } from "webextension-polyfill";
+import { type Asyncify, type ValueOf } from "type-fest";
+import { type ErrorObject } from "serialize-error";
 
 // The global interface is used to declare the types of the methods.
 // This "empty" declaration helps the local code understand what

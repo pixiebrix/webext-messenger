@@ -1,4 +1,4 @@
-import { JsonObject } from "type-fest";
+import { type JsonObject } from "type-fest";
 import { errorConstructors } from "serialize-error";
 
 type ErrorObject = {

@@ -7,7 +7,7 @@ import { closeSelf } from "./closeSelf.js";
 import { sumIfMeta } from "./sumIfMeta.js";
 import { contentScriptOnly } from "./contentScriptOnly.js";
 import { throws } from "./throws.js";
-import { notRegistered } from "./notRegistered.js";
+import { type notRegistered } from "./notRegistered.js";
 import { getSelf } from "./getSelf.js";
 import { sleep } from "./sleep.js";
 import { getTrace } from "./getTrace.js";

@@ -5,9 +5,14 @@ import {
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
-import { AnyTarget, Message, MessengerMeta, Sender } from "./types.js";
+import {
+  type AnyTarget,
+  type Message,
+  type MessengerMeta,
+  type Sender,
+} from "./types.js";
 import { debug, MessengerError } from "./shared.js";
-import { Entries } from "type-fest";
+import { type Entries } from "type-fest";
 
 /**
  * @file This file exists because `runtime.sendMessage` acts as a broadcast to

@@ -1,5 +1,5 @@
 import { __getTabData } from "./thisTarget.js";
-import { Method } from "./types.js";
+import { type Method } from "./types.js";
 
 declare global {
   interface MessengerMethods {

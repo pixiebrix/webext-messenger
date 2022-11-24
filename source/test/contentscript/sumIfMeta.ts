@@ -1,4 +1,4 @@
-import { MessengerMeta } from "../../index.js";
+import { type MessengerMeta } from "../../index.js";
 
 export async function sumIfMeta(
   this: MessengerMeta,

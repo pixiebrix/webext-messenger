@@ -4,14 +4,14 @@ import { doesTabExist } from "webext-tools";
 import { deserializeError } from "serialize-error";
 
 import {
-  MessengerMessage,
-  MessengerResponse,
-  PublicMethod,
-  PublicMethodWithTarget,
-  Options,
-  Target,
-  PageTarget,
-  AnyTarget,
+  type MessengerMessage,
+  type MessengerResponse,
+  type PublicMethod,
+  type PublicMethodWithTarget,
+  type Options,
+  type Target,
+  type PageTarget,
+  type AnyTarget,
 } from "./types.js";
 import {
   isObject,
@@ -20,7 +20,7 @@ import {
   debug,
   warn,
 } from "./shared.js";
-import { SetReturnType } from "type-fest";
+import { type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 
 const _errorNonExistingTarget =
