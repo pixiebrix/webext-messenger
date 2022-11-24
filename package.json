@@ -31,7 +31,7 @@
     "@types/chrome": "^0.0.203",
     "@types/tape": "^4.13.2",
     "@types/webextension-polyfill": "^0.9.0",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.27.0",
     "buffer": "^6.0.3",
     "eslint": "^8.28.0",
