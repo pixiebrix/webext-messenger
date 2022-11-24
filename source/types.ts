@@ -14,7 +14,6 @@ import { type ErrorObject } from "serialize-error";
 // because an index signature would allow any string to return Method and
 // it would make `getMethod` too loose.
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Interface required for declaration merging
   interface MessengerMethods {
     _: Method;
   }
@@ -39,9 +38,9 @@ export type PublicMethod<Method extends ValueOf<MessengerMethods>> = Asyncify<
 export type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
   WithTarget<PublicMethod<Method>>;
 
-export type MessengerMeta = {
+export interface MessengerMeta {
   trace: Sender[];
-};
+}
 
 type RawMessengerResponse =
   | {
@@ -62,14 +61,14 @@ export type Method = (
   ...args: Arguments
 ) => Promise<unknown>;
 
-export type Options = {
+export interface Options {
   /**
    * "Notifications" won't await the response, return values, attempt retries, nor throw errors
    * @default false
    */
   isNotification?: boolean;
   trace?: Sender[];
-};
+}
 
 export type Message<LocalArguments extends Arguments = Arguments> = {
   type: keyof MessengerMethods;
@@ -87,34 +86,34 @@ export type MessengerMessage = Message & {
   __webextMessenger: true;
 };
 
-export type AnyTarget = {
+export interface AnyTarget {
   tabId?: number | "this";
   frameId?: number;
   page?: string;
-};
+}
 
-export type TopLevelFrame = {
+export interface TopLevelFrame {
   tabId: number;
   frameId: 0;
-};
+}
 
-export type FrameTarget = {
+export interface FrameTarget {
   tabId: number;
   frameId: number;
-};
+}
 
-export type KnownTarget = {
+export interface KnownTarget {
   tabId?: number;
   frameId?: number;
   page: string;
-};
+}
 
-export type Target = {
+export interface Target {
   tabId: number;
   frameId?: number;
-};
+}
 
-export type PageTarget = {
+export interface PageTarget {
   tabId?: number | "this";
   page: string;
-};
+}
