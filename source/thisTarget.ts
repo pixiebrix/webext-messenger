@@ -8,6 +8,7 @@ import { registerMethods } from "./receiver.js";
 import {
   type AnyTarget,
   type KnownTarget,
+  type TopLevelFrame,
   type Message,
   type MessengerMeta,
   type Sender,
@@ -150,6 +151,18 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
 export async function getThisTarget(): Promise<KnownTarget> {
   await storeTabData(); // It should already have been called by we still need to await it
   return thisTarget;
+}
+
+export async function getTopLevelFrame(): Promise<TopLevelFrame> {
+  const { tabId } = await getThisTarget();
+  if (typeof tabId !== "number") {
+    throw new TypeError("This target is not in a tab");
+  }
+
+  return {
+    tabId,
+    frameId: 0,
+  };
 }
 
 export function initPrivateApi(): void {
