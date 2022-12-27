@@ -39,8 +39,6 @@ export type PublicMethodWithTarget<Method extends ValueOf<MessengerMethods>> =
   WithTarget<PublicMethod<Method>>;
 
 export interface MessengerMeta {
-  /** Used to determine whether a function was called by the Messenger */
-  __webextMessenger: true;
   trace: Sender[];
 }
 

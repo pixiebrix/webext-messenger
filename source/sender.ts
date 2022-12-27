@@ -196,10 +196,7 @@ function messenger<
       const handler = handlers.get(type);
       if (handler) {
         warn(type, "is being handled locally");
-        return handler.apply(
-          { trace: [], __webextMessenger: true },
-          args
-        ) as ReturnValue;
+        return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
       throw new MessengerError("No handler registered locally for " + type);

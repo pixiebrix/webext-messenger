@@ -58,7 +58,7 @@ async function handleMessage(
 
   const { trace = [] } = options;
   trace.push(sender);
-  const meta: MessengerMeta = { trace, __webextMessenger: true };
+  const meta: MessengerMeta = { trace };
 
   let handleMessage: () => Promise<unknown>;
 
