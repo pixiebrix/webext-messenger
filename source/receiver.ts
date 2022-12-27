@@ -113,7 +113,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
     handlers.set(type, method as Method);
   }
 
-  browser.runtime.onMessage.addListener(onMessageListener);
+  chrome.runtime.onMessage.addListener(onMessageListener);
 }
 
 /** Ensure/document that the current function was called via Messenger */

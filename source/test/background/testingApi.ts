@@ -1,10 +1,11 @@
+import chromeP from "webext-polyfill-kinda";
 import { executeFunction } from "webext-content-scripts";
 
 export async function ensureScripts(tabId: number): Promise<void> {
-  await browser.tabs.executeScript(tabId, {
+  await chromeP.tabs.executeScript(tabId, {
     file: "webextensionPolyfill.js",
   });
-  await browser.tabs.executeScript(tabId, {
+  await chromeP.tabs.executeScript(tabId, {
     file: "contentscript/registration.js",
   });
 }
@@ -31,16 +32,16 @@ export async function createTargets(): Promise<Targets> {
   let frames;
   while (limit--) {
     // eslint-disable-next-line no-await-in-loop -- It's a retry loop
-    frames = await browser.webNavigation.getAllFrames({
+    frames = await chromeP.webNavigation.getAllFrames({
       tabId,
     });
 
-    if (frames.length >= 2) {
+    if (frames!.length >= 2) {
       // The local frame won't appear in Chrome 🤷‍♂️ but it will in Firefox
       return {
         tabId,
-        parentFrame: frames[0]!.frameId,
-        iframe: frames.find(
+        parentFrame: frames![0]!.frameId,
+        iframe: frames!.find(
           (frame) => frame.frameId > 0 && frame.url.startsWith("http")
         )!.frameId,
       };
@@ -57,7 +58,7 @@ export async function createTargets(): Promise<Targets> {
 }
 
 export async function openTab(url: string): Promise<number> {
-  const tab = await browser.tabs.create({
+  const tab = await chromeP.tabs.create({
     active: false,
     url,
   });
@@ -65,5 +66,5 @@ export async function openTab(url: string): Promise<number> {
 }
 
 export async function closeTab(tabId: number): Promise<void> {
-  await browser.tabs.remove(tabId);
+  await chromeP.tabs.remove(tabId);
 }

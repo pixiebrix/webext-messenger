@@ -1,3 +1,4 @@
+import chromeP from "webext-polyfill-kinda";
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { type PageTarget, type Sender, type Target } from "../../index.js";
@@ -196,7 +197,7 @@ async function testEveryTarget() {
     await closeSelf({ tabId, frameId: parentFrame });
     try {
       // Since the tab was closed, this is expected to throw
-      t.notOk(await browser.tabs.get(tabId), "The tab should not be open");
+      t.notOk(await chromeP.tabs.get(tabId), "The tab should not be open");
     } catch {
       t.pass("The tab was closed");
     }

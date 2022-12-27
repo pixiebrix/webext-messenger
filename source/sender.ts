@@ -1,3 +1,4 @@
+import chromeP from "webext-polyfill-kinda";
 import pRetry from "p-retry";
 import { isBackground } from "webext-detect-page";
 import { doesTabExist } from "webext-tools";
@@ -129,7 +130,7 @@ async function manageMessage(
           String(error.message).startsWith("No handlers registered in ")
         ) {
           if (
-            browser.tabs &&
+            chrome.tabs &&
             typeof target.tabId === "number" &&
             !(await doesTabExist(target.tabId))
           ) {
@@ -204,7 +205,7 @@ function messenger<
 
     const sendMessage = async () => {
       debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(
+      return chromeP.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
     };
@@ -213,10 +214,10 @@ function messenger<
   }
 
   // Contexts without direct Tab access must go through background
-  if (!browser.tabs) {
+  if (!chrome.tabs) {
     return manageConnection(type, options, target, async () => {
       debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(
+      return chromeP.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
     }) as ReturnValue;
@@ -228,7 +229,7 @@ function messenger<
   // Message tab directly
   return manageConnection(type, options, target, async () => {
     debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
-    return browser.tabs.sendMessage(
+    return chromeP.tabs.sendMessage(
       tabId,
       makeMessage(type, args, target, options),
       {

@@ -1,4 +1,4 @@
-browser.runtime.onMessage.addListener(
+chrome.runtime.onMessage.addListener(
   (message: unknown): Promise<string> | void => {
     if ((message as any)?.type === "sleep") {
       console.log(
