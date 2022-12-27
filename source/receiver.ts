@@ -115,3 +115,9 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
 
   browser.runtime.onMessage.addListener(onMessageListener);
 }
+
+/** Ensure/document that the current function was called via Messenger */
+export function assertMessengerCall(
+  _this: MessengerMeta
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- TypeScript already does this, it's a documentation-only call
+): asserts _this is MessengerMeta {}
