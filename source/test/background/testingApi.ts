@@ -3,9 +3,6 @@ import { executeFunction } from "webext-content-scripts";
 
 export async function ensureScripts(tabId: number): Promise<void> {
   await chromeP.tabs.executeScript(tabId, {
-    file: "webextensionPolyfill.js",
-  });
-  await chromeP.tabs.executeScript(tabId, {
     file: "contentscript/registration.js",
   });
 }
@@ -36,12 +33,12 @@ export async function createTargets(): Promise<Targets> {
       tabId,
     });
 
-    if (frames!.length >= 2) {
+    if (frames.length >= 2) {
       // The local frame won't appear in Chrome 🤷‍♂️ but it will in Firefox
       return {
         tabId,
-        parentFrame: frames![0]!.frameId,
-        iframe: frames!.find(
+        parentFrame: frames[0]!.frameId,
+        iframe: frames.find(
           (frame) => frame.frameId > 0 && frame.url.startsWith("http")
         )!.frameId,
       };
