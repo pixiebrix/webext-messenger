@@ -16,6 +16,7 @@ import {
 } from "./types.js";
 import {
   isObject,
+  isErrorObject,
   MessengerError,
   __webextMessenger,
   debug,
@@ -77,7 +78,17 @@ async function manageMessage(
 ): Promise<unknown> {
   const response = await pRetry(
     async () => {
-      const response = await sendMessage();
+      const response = await sendMessage().catch((error: unknown) => {
+        if (
+          isErrorObject(error) &&
+          error.message ===
+            "The message port closed before a response was received."
+        ) {
+          return;
+        }
+
+        throw error;
+      });
 
       if (isMessengerResponse(response)) {
         return response;
@@ -117,6 +128,8 @@ async function manageMessage(
       factor: 1.3,
       maxRetryTime: 4000,
       async onFailedAttempt(error) {
+        console.log({ error });
+
         if (error.message === _errorTargetClosedEarly) {
           throw new Error(errorTargetClosedEarly);
         }

@@ -29,8 +29,9 @@ export function isMessengerMessage(message: unknown): message is Message {
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: Sender
-): Promise<unknown> | void {
+  sender: Sender,
+  sendResponse: (response: unknown) => void
+): true | void {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
     return;
@@ -42,7 +43,13 @@ function onMessageListener(
     return;
   }
 
-  return handleMessage(message, sender, action);
+  void handleMessage(message, sender, action).then(
+    sendResponse,
+    (error: unknown) => {
+      sendResponse({ __webextMessenger: true, error: serializeError(error) });
+    }
+  );
+  return true;
 }
 
 // This function can only be called when the message *will* be handled locally.

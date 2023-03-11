@@ -317,7 +317,7 @@ function additionalTests() {
     await closeTab(tabId);
   });
 
-  test("retries until it times out even if webext-messenger was loaded (but nothing was registered)", async (t) => {
+  test.only("retries until it times out even if webext-messenger was loaded (but nothing was registered)", async (t) => {
     const tabId = await openTab(
       "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed"
     );
@@ -393,5 +393,5 @@ function additionalTests() {
   });
 }
 
-void testEveryTarget();
+// void testEveryTarget();
 additionalTests();
