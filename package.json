@@ -26,7 +26,7 @@
     "webext-tools": "^1.1.0"
   },
   "devDependencies": {
-    "@parcel/config-webextension": "^2.8.1",
+    "@parcel/config-webextension": "^2.6.2",
     "@sindresorhus/tsconfig": "^3.0.1",
     "@types/chrome": "^0.0.203",
     "@types/tape": "^4.13.2",
@@ -36,7 +36,7 @@
     "eslint-config-pixiebrix": "^0.20.0",
     "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
-    "parcel": "^2.8.1",
+    "parcel": "^2.6.2",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
