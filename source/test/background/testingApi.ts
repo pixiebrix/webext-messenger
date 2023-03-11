@@ -33,7 +33,7 @@ export async function createTargets(): Promise<Targets> {
       tabId,
     });
 
-    if (frames.length >= 2) {
+    if (frames && frames.length >= 2) {
       // The local frame won't appear in Chrome 🤷‍♂️ but it will in Firefox
       return {
         tabId,
