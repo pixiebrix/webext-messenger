@@ -3,7 +3,7 @@
 ## Notes
 
 - Every extension page except the background page and dev tools pages can be messaged via both `chrome.tabs` and `chrome.runtime`.
-- `chrome.tabs` the first one requires having `chrome.tabs` API access + knowing the tab ID;
+- `chrome.tabs` requires having `chrome.tabs` API access + knowing the tab ID;
 - `chrome.runtime` will message all the extension pages at once, which then have to synchronously know whether to handle the received message.
 
 ## Pitfalls
