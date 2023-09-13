@@ -68,6 +68,9 @@ export interface Options {
    */
   isNotification?: boolean;
   trace?: Sender[];
+
+  /** Automatically generated internally */
+  seq?: number;
 }
 
 export type Message<LocalArguments extends Arguments = Arguments> = {

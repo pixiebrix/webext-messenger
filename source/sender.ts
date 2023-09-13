@@ -56,22 +56,23 @@ function makeMessage(
 // Do not turn this into an `async` function; Notifications must turn `void`
 function manageConnection(
   type: string,
-  options: Options,
+  { seq, isNotification }: Options,
   target: AnyTarget,
   sendMessage: () => Promise<unknown>
 ): Promise<unknown> | void {
-  if (!options.isNotification) {
-    return manageMessage(type, target, sendMessage);
+  if (!isNotification) {
+    return manageMessage(type, target, seq!, sendMessage);
   }
 
   void sendMessage().catch((error: unknown) => {
-    debug(type, "notification failed", { error });
+    debug(type, seq, "notification failed", { error });
   });
 }
 
 async function manageMessage(
   type: string,
   target: AnyTarget,
+  seq: number,
   sendMessage: () => Promise<unknown>
 ): Promise<unknown> {
   const response = await pRetry(
@@ -136,7 +137,7 @@ async function manageMessage(
             throw new Error(errorTabDoesntExist);
           }
 
-          debug(type, "will retry. Attempt", error.attemptNumber);
+          debug(type, seq, "will retry. Attempt", error.attemptNumber);
         } else {
           throw error;
         }
@@ -153,11 +154,11 @@ async function manageMessage(
   });
 
   if ("error" in response) {
-    debug(type, "↘️ replied with error", response.error);
+    debug(type, seq, "↘️ replied with error", response.error);
     throw deserializeError(response.error);
   }
 
-  debug(type, "↘️ replied successfully", response.value);
+  debug(type, seq, "↘️ replied successfully", response.value);
   return response.value;
 }
 
@@ -190,12 +191,16 @@ function messenger<
   target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
+  // Not a UID. Signal / console noise compromise. They repeat every 100 seconds
+  options.seq = Date.now() % 100_000;
+  const { seq } = options;
+
   // Message goes to extension page
   if ("page" in target) {
     if (target.page === "background" && isBackground()) {
       const handler = handlers.get(type);
       if (handler) {
-        warn(type, "is being handled locally");
+        warn(type, seq, "is being handled locally");
         return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
@@ -203,7 +208,7 @@ function messenger<
     }
 
     const sendMessage = async () => {
-      debug(type, "↗️ sending message to runtime");
+      debug(type, seq, "↗️ sending message to runtime");
       return browser.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
@@ -215,7 +220,7 @@ function messenger<
   // Contexts without direct Tab access must go through background
   if (!browser.tabs) {
     return manageConnection(type, options, target, async () => {
-      debug(type, "↗️ sending message to runtime");
+      debug(type, seq, "↗️ sending message to runtime");
       return browser.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
@@ -227,7 +232,7 @@ function messenger<
 
   // Message tab directly
   return manageConnection(type, options, target, async () => {
-    debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
+    debug(type, seq, "↗️ sending message to tab", tabId, "frame", frameId);
     return browser.tabs.sendMessage(
       tabId,
       makeMessage(type, args, target, options),
