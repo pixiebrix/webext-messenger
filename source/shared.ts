@@ -28,12 +28,15 @@ errorConstructors.set("MessengerError", MessengerError);
 const debug = console.debug.bind(console, "Messenger:");
 const warn = console.warn.bind(console, "Messenger:");
 
-export const log = { debug: noop, warn: noop };
+export const log = { debug, warn };
 
 export function toggleLogging(enabled: boolean): void {
   log.debug = enabled ? debug : noop;
   log.warn = enabled ? warn : noop;
 }
+
+// Default to "no logs"
+toggleLogging(false);
 
 export function isErrorObject(error: unknown): error is ErrorObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- This is a type guard function and it uses ?.
