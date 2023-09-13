@@ -22,6 +22,7 @@ import {
 } from "./shared.js";
 import { type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
+import { events } from "./events.js";
 
 const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -116,6 +117,10 @@ async function manageMessage(
       factor: 1.3,
       maxRetryTime: 4000,
       async onFailedAttempt(error) {
+        events.dispatchEvent(
+          new CustomEvent("failed-attempt", { detail: error })
+        );
+
         if (error.message === _errorTargetClosedEarly) {
           throw new Error(errorTargetClosedEarly);
         }
@@ -148,6 +153,10 @@ async function manageMessage(
         `The target ${JSON.stringify(target)} for ${type} was not found`
       );
     }
+
+    events.dispatchEvent(
+      new CustomEvent("attempts-exhausted", { detail: error })
+    );
 
     throw error;
   });
