@@ -104,7 +104,13 @@ export function getActionForMessage(
 
   // We're in an extension page, but the target is not one.
   if (!to.page) {
-    return "forward";
+    // Only the background page can forward messages at the moment
+    // https://github.com/pixiebrix/webext-messenger/issues/85
+    if (isBackground()) {
+      return "forward";
+    }
+
+    return "ignore";
   }
 
   // Set "this" tab to the current tabId
