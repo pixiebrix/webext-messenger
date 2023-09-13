@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.6.2",
-    "@sindresorhus/tsconfig": "^3.0.1",
+    "@sindresorhus/tsconfig": "^4.0.0",
     "@types/chrome": "^0.0.203",
     "@types/tape": "^5.6.1",
     "@types/webextension-polyfill": "^0.9.0",
