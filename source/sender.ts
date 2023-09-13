@@ -38,8 +38,8 @@ function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webextMessenger"] === true;
 }
 
-function attemptLog(attemptNumber: number): string {
-  return attemptNumber > 1 ? `(try: ${attemptNumber})` : "";
+function attemptLog(attemptCount: number): string {
+  return attemptCount > 1 ? `(try: ${attemptCount})` : "";
 }
 
 function makeMessage(
@@ -79,8 +79,8 @@ async function manageMessage(
   sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> {
   const response = await pRetry(
-    async (attemptNumber) => {
-      const response = await sendMessage(attemptNumber);
+    async (attemptCount) => {
+      const response = await sendMessage(attemptCount);
 
       if (isMessengerResponse(response)) {
         return response;
@@ -206,8 +206,8 @@ function messenger<
       throw new MessengerError("No handler registered locally for " + type);
     }
 
-    const sendMessage = async (attemptNumber: number) => {
-      debug(type, "↗️ sending message to runtime", attemptLog(attemptNumber));
+    const sendMessage = async (attemptCount: number) => {
+      debug(type, "↗️ sending message to runtime", attemptLog(attemptCount));
       return browser.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
@@ -222,8 +222,8 @@ function messenger<
       type,
       options,
       target,
-      async (attemptNumber: number) => {
-        debug(type, "↗️ sending message to runtime", attemptLog(attemptNumber));
+      async (attemptCount: number) => {
+        debug(type, "↗️ sending message to runtime", attemptLog(attemptCount));
         return browser.runtime.sendMessage(
           makeMessage(type, args, target, options)
         );
@@ -239,14 +239,14 @@ function messenger<
     type,
     options,
     target,
-    async (attemptNumber: number) => {
+    async (attemptCount: number) => {
       debug(
         type,
         "↗️ sending message to tab",
         tabId,
         "frame",
         frameId,
-        attemptLog(attemptNumber)
+        attemptLog(attemptCount)
       );
       return browser.tabs.sendMessage(
         tabId,
