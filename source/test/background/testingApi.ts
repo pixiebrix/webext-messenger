@@ -31,11 +31,9 @@ export async function createTargets(): Promise<Targets> {
   let frames;
   while (limit--) {
     // eslint-disable-next-line no-await-in-loop -- It's a retry loop
-    frames = await browser.webNavigation.getAllFrames({
+    frames = (await browser.webNavigation.getAllFrames({
       tabId,
-    });
-
-    console.assert(frames, "Tab was discarded");
+    }))!;
 
     if (frames.length >= 2) {
       // The local frame won't appear in Chrome 🤷‍♂️ but it will in Firefox
