@@ -25,6 +25,8 @@ import {
 } from "./api.js";
 import { MessengerError } from "../../shared.js";
 
+const extensionUrl = new URL(chrome.runtime.getURL(""));
+
 function senderIsCurrentPage(
   t: test.Test,
   sender: Sender | undefined,
@@ -39,7 +41,8 @@ function senderisBackground(
   message: string
 ) {
   t.true(
-    sender?.origin === "null" || // Chrome
+    sender?.origin === extensionUrl.origin || // Chrome
+      sender?.origin === "null" || // Chrome, old
       sender!.url?.endsWith("/_generated_background_page.html"), // Firefox
     message
   );
