@@ -118,7 +118,9 @@ async function manageMessage(
       maxRetryTime: 4000,
       async onFailedAttempt(error) {
         events.dispatchEvent(
-          new CustomEvent("failed-attempt", { detail: { type, target, error } })
+          new CustomEvent("failed-attempt", {
+            detail: { type, target, error, attemptCount: error.attemptNumber },
+          })
         );
 
         if (error.message === _errorTargetClosedEarly) {
