@@ -35,6 +35,8 @@ export async function createTargets(): Promise<Targets> {
       tabId,
     });
 
+    console.assert(frames, "Tab was discarded");
+
     if (frames.length >= 2) {
       // The local frame won't appear in Chrome 🤷‍♂️ but it will in Firefox
       return {
