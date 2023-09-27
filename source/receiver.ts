@@ -51,17 +51,17 @@ async function handleMessage(
 ): Promise<unknown> {
   const { type, target, args, options = {} } = message;
 
-  const { trace = [] } = options;
+  const { trace = [], seq } = options;
   trace.push(sender);
   const meta: MessengerMeta = { trace };
 
   let handleMessage: () => Promise<unknown>;
 
   if (action === "forward") {
-    log.debug(type, "🔀 forwarded", { sender, target });
+    log.debug(type, seq, "🔀 forwarded", { sender, target });
     handleMessage = async () => messenger(type, meta, target, ...args);
   } else {
-    log.debug(type, "↘️ received in", getContextName(), {
+    log.debug(type, seq, "↘️ received in", getContextName(), {
       sender,
       args,
       wasForwarded: trace.length > 1,
@@ -94,7 +94,7 @@ async function handleMessage(
     })
   );
 
-  log.debug(type, "↗️ responding", response);
+  log.debug(type, seq, "↗️ responding", response);
   return { ...response, __webextMessenger };
 }
 

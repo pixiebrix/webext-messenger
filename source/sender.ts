@@ -54,22 +54,23 @@ function makeMessage(
 // Do not turn this into an `async` function; Notifications must turn `void`
 function manageConnection(
   type: string,
-  options: Options,
+  { seq, isNotification }: Options,
   target: AnyTarget,
   sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> | void {
-  if (!options.isNotification) {
-    return manageMessage(type, target, sendMessage);
+  if (!isNotification) {
+    return manageMessage(type, target, seq!, sendMessage);
   }
 
   void sendMessage(1).catch((error: unknown) => {
-    log.debug(type, "notification failed", { error });
+    log.debug(type, seq, "notification failed", { error });
   });
 }
 
 async function manageMessage(
   type: string,
   target: AnyTarget,
+  seq: number,
   sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> {
   const response = await pRetry(
@@ -134,7 +135,7 @@ async function manageMessage(
             throw new Error(errorTabDoesntExist);
           }
 
-          log.debug(type, "will retry. Attempt", error.attemptNumber);
+          log.debug(type, seq, "will retry. Attempt", error.attemptNumber);
         } else {
           throw error;
         }
@@ -151,11 +152,11 @@ async function manageMessage(
   });
 
   if ("error" in response) {
-    log.debug(type, "↘️ replied with error", response.error);
+    log.debug(type, seq, "↘️ replied with error", response.error);
     throw deserializeError(response.error);
   }
 
-  log.debug(type, "↘️ replied successfully", response.value);
+  log.debug(type, seq, "↘️ replied successfully", response.value);
   return response.value;
 }
 
@@ -188,12 +189,16 @@ function messenger<
   target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
+  // Not a UID. Signal / console noise compromise. They repeat every 100 seconds
+  options.seq = Date.now() % 100_000;
+  const { seq } = options;
+
   // Message goes to extension page
   if ("page" in target) {
     if (target.page === "background" && isBackground()) {
       const handler = handlers.get(type);
       if (handler) {
-        log.warn(type, "is being handled locally");
+        log.warn(type, seq, "is being handled locally");
         return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
@@ -203,6 +208,7 @@ function messenger<
     const sendMessage = async (attemptCount: number) => {
       log.debug(
         type,
+        seq,
         "↗️ sending message to runtime",
         attemptLog(attemptCount)
       );
@@ -223,6 +229,7 @@ function messenger<
       async (attemptCount: number) => {
         log.debug(
           type,
+          seq,
           "↗️ sending message to runtime",
           attemptLog(attemptCount)
         );
@@ -244,6 +251,7 @@ function messenger<
     async (attemptCount: number) => {
       log.debug(
         type,
+        seq,
         "↗️ sending message to tab",
         tabId,
         "frame",
