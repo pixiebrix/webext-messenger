@@ -13,13 +13,7 @@ import {
   type PageTarget,
   type AnyTarget,
 } from "./types.js";
-import {
-  isObject,
-  MessengerError,
-  __webextMessenger,
-  debug,
-  warn,
-} from "./shared.js";
+import { isObject, MessengerError, __webextMessenger, log } from "./shared.js";
 import { type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 
@@ -69,7 +63,7 @@ function manageConnection(
   }
 
   void sendMessage(1).catch((error: unknown) => {
-    debug(type, "notification failed", { error });
+    log.debug(type, "notification failed", { error });
   });
 }
 
@@ -140,7 +134,7 @@ async function manageMessage(
             throw new Error(errorTabDoesntExist);
           }
 
-          // Fall through, will retry
+          log.debug(type, "will retry. Attempt", error.attemptNumber);
         } else {
           throw error;
         }
@@ -157,11 +151,11 @@ async function manageMessage(
   });
 
   if ("error" in response) {
-    debug(type, "↘️ replied with error", response.error);
+    log.debug(type, "↘️ replied with error", response.error);
     throw deserializeError(response.error);
   }
 
-  debug(type, "↘️ replied successfully", response.value);
+  log.debug(type, "↘️ replied successfully", response.value);
   return response.value;
 }
 
@@ -199,7 +193,7 @@ function messenger<
     if (target.page === "background" && isBackground()) {
       const handler = handlers.get(type);
       if (handler) {
-        warn(type, "is being handled locally");
+        log.warn(type, "is being handled locally");
         return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
@@ -207,7 +201,11 @@ function messenger<
     }
 
     const sendMessage = async (attemptCount: number) => {
-      debug(type, "↗️ sending message to runtime", attemptLog(attemptCount));
+      log.debug(
+        type,
+        "↗️ sending message to runtime",
+        attemptLog(attemptCount)
+      );
       return browser.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
@@ -223,7 +221,11 @@ function messenger<
       options,
       target,
       async (attemptCount: number) => {
-        debug(type, "↗️ sending message to runtime", attemptLog(attemptCount));
+        log.debug(
+          type,
+          "↗️ sending message to runtime",
+          attemptLog(attemptCount)
+        );
         return browser.runtime.sendMessage(
           makeMessage(type, args, target, options)
         );
@@ -240,7 +242,7 @@ function messenger<
     options,
     target,
     async (attemptCount: number) => {
-      debug(
+      log.debug(
         type,
         "↗️ sending message to tab",
         tabId,
