@@ -14,7 +14,7 @@ import {
   type Sender,
   type FrameTarget,
 } from "./types.js";
-import { debug, MessengerError, once } from "./shared.js";
+import { log, MessengerError, once } from "./shared.js";
 import { type Entries } from "type-fest";
 
 /**
@@ -116,7 +116,7 @@ export function getActionForMessage(
   const isThisTarget = compareTargets(to, thisTarget);
 
   if (!isThisTarget) {
-    debug(message.type, "🤫 ignored due to target mismatch", {
+    log.debug(message.type, "🤫 ignored due to target mismatch", {
       requestedTarget: to,
       thisTarget,
       tabDataStatus,

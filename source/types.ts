@@ -55,7 +55,7 @@ export type MessengerResponse = RawMessengerResponse & {
   __webextMessenger: true;
 };
 
-type Arguments = any[];
+type Arguments = unknown[];
 export type Method = (
   this: MessengerMeta,
   ...args: Arguments
