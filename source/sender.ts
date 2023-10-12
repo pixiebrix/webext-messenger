@@ -118,7 +118,13 @@ async function manageMessage(
       async onFailedAttempt(error) {
         events.dispatchEvent(
           new CustomEvent("failed-attempt", {
-            detail: { type, target, error, attemptCount: error.attemptNumber },
+            detail: {
+              type,
+              seq,
+              target,
+              error,
+              attemptCount: error.attemptNumber,
+            },
           })
         );
 
@@ -156,7 +162,9 @@ async function manageMessage(
     }
 
     events.dispatchEvent(
-      new CustomEvent("attempts-exhausted", { detail: { type, target, error } })
+      new CustomEvent("attempts-exhausted", {
+        detail: { type, seq, target, error },
+      })
     );
 
     throw error;
