@@ -13,13 +13,7 @@ import {
   type PageTarget,
   type AnyTarget,
 } from "./types.js";
-import {
-  isObject,
-  MessengerError,
-  __webextMessenger,
-  debug,
-  warn,
-} from "./shared.js";
+import { isObject, MessengerError, __webextMessenger, log } from "./shared.js";
 import { type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 import { events } from "./events.js";
@@ -37,6 +31,10 @@ export const errorTabDoesntExist = "The tab doesn't exist";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webextMessenger"] === true;
+}
+
+function attemptLog(attemptCount: number): string {
+  return attemptCount > 1 ? `(try: ${attemptCount})` : "";
 }
 
 function makeMessage(
@@ -57,27 +55,28 @@ function makeMessage(
 // Do not turn this into an `async` function; Notifications must turn `void`
 function manageConnection(
   type: string,
-  options: Options,
+  { seq, isNotification }: Options,
   target: AnyTarget,
-  sendMessage: () => Promise<unknown>
+  sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> | void {
-  if (!options.isNotification) {
-    return manageMessage(type, target, sendMessage);
+  if (!isNotification) {
+    return manageMessage(type, target, seq!, sendMessage);
   }
 
-  void sendMessage().catch((error: unknown) => {
-    debug(type, "notification failed", { error });
+  void sendMessage(1).catch((error: unknown) => {
+    log.debug(type, seq, "notification failed", { error });
   });
 }
 
 async function manageMessage(
   type: string,
   target: AnyTarget,
-  sendMessage: () => Promise<unknown>
+  seq: number,
+  sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> {
   const response = await pRetry(
-    async () => {
-      const response = await sendMessage();
+    async (attemptCount) => {
+      const response = await sendMessage(attemptCount);
 
       if (isMessengerResponse(response)) {
         return response;
@@ -143,7 +142,7 @@ async function manageMessage(
             throw new Error(errorTabDoesntExist);
           }
 
-          debug(type, "will retry. Attempt", error.attemptNumber);
+          log.debug(type, seq, "will retry. Attempt", error.attemptNumber);
         } else {
           throw error;
         }
@@ -164,11 +163,11 @@ async function manageMessage(
   });
 
   if ("error" in response) {
-    debug(type, "↘️ replied with error", response.error);
+    log.debug(type, seq, "↘️ replied with error", response.error);
     throw deserializeError(response.error);
   }
 
-  debug(type, "↘️ replied successfully", response.value);
+  log.debug(type, seq, "↘️ replied successfully", response.value);
   return response.value;
 }
 
@@ -201,20 +200,29 @@ function messenger<
   target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
+  // Not a UID. Signal / console noise compromise. They repeat every 100 seconds
+  options.seq = Date.now() % 100_000;
+  const { seq } = options;
+
   // Message goes to extension page
   if ("page" in target) {
     if (target.page === "background" && isBackground()) {
       const handler = handlers.get(type);
       if (handler) {
-        warn(type, "is being handled locally");
+        log.warn(type, seq, "is being handled locally");
         return handler.apply({ trace: [] }, args) as ReturnValue;
       }
 
       throw new MessengerError("No handler registered locally for " + type);
     }
 
-    const sendMessage = async () => {
-      debug(type, "↗️ sending message to runtime");
+    const sendMessage = async (attemptCount: number) => {
+      log.debug(
+        type,
+        seq,
+        "↗️ sending message to runtime",
+        attemptLog(attemptCount)
+      );
       return browser.runtime.sendMessage(
         makeMessage(type, args, target, options)
       );
@@ -225,28 +233,51 @@ function messenger<
 
   // Contexts without direct Tab access must go through background
   if (!browser.tabs) {
-    return manageConnection(type, options, target, async () => {
-      debug(type, "↗️ sending message to runtime");
-      return browser.runtime.sendMessage(
-        makeMessage(type, args, target, options)
-      );
-    }) as ReturnValue;
+    return manageConnection(
+      type,
+      options,
+      target,
+      async (attemptCount: number) => {
+        log.debug(
+          type,
+          seq,
+          "↗️ sending message to runtime",
+          attemptLog(attemptCount)
+        );
+        return browser.runtime.sendMessage(
+          makeMessage(type, args, target, options)
+        );
+      }
+    ) as ReturnValue;
   }
 
   // `frameId` must be specified. If missing, the message is sent to every frame
   const { tabId, frameId = 0 } = target;
 
   // Message tab directly
-  return manageConnection(type, options, target, async () => {
-    debug(type, "↗️ sending message to tab", tabId, "frame", frameId);
-    return browser.tabs.sendMessage(
-      tabId,
-      makeMessage(type, args, target, options),
-      {
+  return manageConnection(
+    type,
+    options,
+    target,
+    async (attemptCount: number) => {
+      log.debug(
+        type,
+        seq,
+        "↗️ sending message to tab",
+        tabId,
+        "frame",
         frameId,
-      }
-    );
-  }) as ReturnValue;
+        attemptLog(attemptCount)
+      );
+      return browser.tabs.sendMessage(
+        tabId,
+        makeMessage(type, args, target, options),
+        {
+          frameId,
+        }
+      );
+    }
+  ) as ReturnValue;
 }
 
 function getMethod<

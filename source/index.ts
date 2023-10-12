@@ -5,6 +5,8 @@ export * from "./sender.js";
 export * from "./types.js";
 export * from "./events.js";
 export { getThisFrame, getTopLevelFrame } from "./thisTarget.js";
+export { toggleLogging } from "./shared.js";
+
 import { initPrivateApi } from "./thisTarget.js";
 
 initPrivateApi();

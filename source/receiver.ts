@@ -8,12 +8,7 @@ import {
   type Method,
   type Sender,
 } from "./types.js";
-import {
-  isObject,
-  MessengerError,
-  debug,
-  __webextMessenger,
-} from "./shared.js";
+import { isObject, MessengerError, log, __webextMessenger } from "./shared.js";
 import { getActionForMessage } from "./thisTarget.js";
 import { didUserRegisterMethods, handlers } from "./handlers.js";
 
@@ -56,17 +51,17 @@ async function handleMessage(
 ): Promise<unknown> {
   const { type, target, args, options = {} } = message;
 
-  const { trace = [] } = options;
+  const { trace = [], seq } = options;
   trace.push(sender);
   const meta: MessengerMeta = { trace };
 
   let handleMessage: () => Promise<unknown>;
 
   if (action === "forward") {
-    debug(type, "🔀 forwarded", { sender, target });
+    log.debug(type, seq, "🔀 forwarded", { sender, target });
     handleMessage = async () => messenger(type, meta, target, ...args);
   } else {
-    debug(type, "↘️ received in", getContextName(), {
+    log.debug(type, seq, "↘️ received in", getContextName(), {
       sender,
       args,
       wasForwarded: trace.length > 1,
@@ -99,7 +94,7 @@ async function handleMessage(
     })
   );
 
-  debug(type, "↗️ responding", response);
+  log.debug(type, seq, "↗️ responding", response);
   return { ...response, __webextMessenger };
 }
 
@@ -109,7 +104,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
       throw new MessengerError(`Handler already set for ${type}`);
     }
 
-    debug("Registered", type);
+    log.debug("Registered", type);
     handlers.set(type, method as Method);
   }
 

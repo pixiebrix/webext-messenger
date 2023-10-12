@@ -8,22 +8,13 @@ type ErrorObject = {
   code?: string;
 } & JsonObject;
 
-const logging = (() => {
-  try {
-    // @ts-expect-error it would break Webpack
-    return process.env.WEBEXT_MESSENGER_LOGGING === "true";
-  } catch {
-    return false;
-  }
-})();
-
-function noop() {
-  /* */
-}
-
 export const __webextMessenger = true;
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function noop() {
+  /* */
 }
 
 export class MessengerError extends Error {
@@ -34,8 +25,18 @@ export class MessengerError extends Error {
 errorConstructors.set("MessengerError", MessengerError);
 
 // .bind preserves the call location in the console
-export const debug = logging ? console.debug.bind(console, "Messenger:") : noop;
-export const warn = logging ? console.warn.bind(console, "Messenger:") : noop;
+const debug = console.debug.bind(console, "Messenger:");
+const warn = console.warn.bind(console, "Messenger:");
+
+export const log = { debug, warn };
+
+export function toggleLogging(enabled: boolean): void {
+  log.debug = enabled ? debug : noop;
+  log.warn = enabled ? warn : noop;
+}
+
+// Default to "no logs"
+toggleLogging(false);
 
 export function isErrorObject(error: unknown): error is ErrorObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- This is a type guard function and it uses ?.
