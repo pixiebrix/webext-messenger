@@ -1,6 +1,5 @@
 import pRetry from "p-retry";
 import { isBackground } from "webext-detect-page";
-import { doesTabExist } from "webext-tools";
 import { deserializeError } from "serialize-error";
 
 import {
