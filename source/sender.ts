@@ -27,6 +27,7 @@ const _errorTargetClosedEarly =
 export const errorTargetClosedEarly =
   "The target was closed before receiving a response";
 export const errorTabDoesntExist = "The tab doesn't exist";
+export const errorTabWasDiscarded = "The tab was discarded";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webextMessenger"] === true;
@@ -120,25 +121,34 @@ async function manageMessage(
         }
 
         if (
-          // Don't retry sending to the background page unless it really hasn't loaded yet
-          (target.page !== "background" && error instanceof MessengerError) ||
-          // Page or its content script not yet loaded
-          error.message === _errorNonExistingTarget ||
-          // `registerMethods` not yet loaded
-          String(error.message).startsWith("No handlers registered in ")
+          !(
+            // If NONE of these conditions is true, stop retrying
+            // Don't retry sending to the background page unless it really hasn't loaded yet
+            (
+              (target.page !== "background" &&
+                error instanceof MessengerError) ||
+              // Page or its content script not yet loaded
+              error.message === _errorNonExistingTarget ||
+              // `registerMethods` not yet loaded
+              String(error.message).startsWith("No handlers registered in ")
+            )
+          )
         ) {
-          if (
-            browser.tabs &&
-            typeof target.tabId === "number" &&
-            !(await doesTabExist(target.tabId))
-          ) {
-            throw new Error(errorTabDoesntExist);
-          }
-
-          log.debug(type, seq, "will retry. Attempt", error.attemptNumber);
-        } else {
           throw error;
         }
+
+        if (browser.tabs && typeof target.tabId === "number") {
+          try {
+            const tabInfo = await browser.tabs.get(target.tabId);
+            if (tabInfo.discarded) {
+              throw new Error(errorTabWasDiscarded);
+            }
+          } catch {
+            throw new Error(errorTabDoesntExist);
+          }
+        }
+
+        log.debug(type, seq, "will retry. Attempt", error.attemptNumber);
       },
     }
   ).catch((error: Error) => {
