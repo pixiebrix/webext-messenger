@@ -22,8 +22,7 @@
     "p-retry": "^6.0.0",
     "serialize-error": "^11.0.2",
     "type-fest": "^4.3.1",
-    "webext-detect-page": "^4.1.1",
-    "webext-tools": "^1.1.4"
+    "webext-detect-page": "^4.1.1"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.6.2",
