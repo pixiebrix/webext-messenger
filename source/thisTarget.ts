@@ -14,7 +14,8 @@ import {
   type Sender,
   type FrameTarget,
 } from "./types.js";
-import { log, MessengerError, once } from "./shared.js";
+import { MessengerError, once } from "./shared.js";
+import { log } from "./logging.js";
 import { type Entries } from "type-fest";
 
 /**
@@ -152,7 +153,7 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
 }
 
 export async function getThisFrame(): Promise<FrameTarget> {
-  await storeTabData(); // It should already have been called by we still need to await it
+  await storeTabData(); // It should already have been called but we still need to await it
 
   const { tabId, frameId } = thisTarget;
 
