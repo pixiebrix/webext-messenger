@@ -8,7 +8,8 @@ import {
   type Method,
   type Sender,
 } from "./types.js";
-import { isObject, MessengerError, log, __webextMessenger } from "./shared.js";
+import { isObject, MessengerError, __webextMessenger } from "./shared.js";
+import { log } from "./logging.js";
 import { getActionForMessage } from "./thisTarget.js";
 import { didUserRegisterMethods, handlers } from "./handlers.js";
 

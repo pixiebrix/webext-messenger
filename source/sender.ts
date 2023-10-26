@@ -12,7 +12,8 @@ import {
   type PageTarget,
   type AnyTarget,
 } from "./types.js";
-import { isObject, MessengerError, __webextMessenger, log } from "./shared.js";
+import { isObject, MessengerError, __webextMessenger } from "./shared.js";
+import { log } from "./logging.js";
 import { type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 
