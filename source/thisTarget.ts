@@ -142,7 +142,6 @@ const storeTabData = once(async () => {
     tabDataStatus = "error";
     throw new MessengerError(
       "Tab registration failed. This page won’t be able to receive messages that require tab information",
-      // @ts-expect-error TODO: update lib to accept Error#cause
       { cause: error }
     );
   }
