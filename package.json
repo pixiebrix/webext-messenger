@@ -27,7 +27,7 @@
   "dependencies": {
     "p-retry": "^6.0.0",
     "serialize-error": "^11.0.2",
-    "type-fest": "^4.3.1",
+    "type-fest": "^4.6.0",
     "webext-detect-page": "^4.1.1"
   },
   "devDependencies": {
@@ -35,9 +35,9 @@
     "@sindresorhus/tsconfig": "^4.0.0",
     "@types/chrome": "^0.0.245",
     "@types/tape": "^5.6.1",
-    "@types/webextension-polyfill": "^0.10.2",
+    "@types/webextension-polyfill": "^0.10.5",
     "buffer": "^6.0.3",
-    "eslint": "^8.50.0",
+    "eslint": "^8.52.0",
     "eslint-config-pixiebrix": "^0.29.1",
     "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
