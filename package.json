@@ -50,6 +50,9 @@
     "webext-content-scripts": "^2.5.5",
     "webextension-polyfill": "^0.10.0"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "alias": {
     "./this-stuff-is-just-for-local-parcel-tests": "https://github.com/parcel-bundler/parcel/issues/4936",
     "./source/**/*.js": "./source/$1/$2.ts"
