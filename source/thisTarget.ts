@@ -177,7 +177,9 @@ export function initPrivateApi(): void {
   // https://github.com/pixiebrix/webext-messenger/issues/88
   if (globalThis.__webextMessenger) {
     // TODO: Use Error#cause after https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
-    console.log(globalThis.__webextMessenger.replace(/^Error: /, ""));
+    console.log(
+      globalThis.__webextMessenger.replace(/^Error/, "webext-messenger")
+    );
     console.error(
       "webext-messenger: Duplicate execution. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88"
     );
