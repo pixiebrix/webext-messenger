@@ -8,4 +8,6 @@ export { toggleLogging } from "./logging.js";
 
 import { initPrivateApi } from "./thisTarget.js";
 
+// Required side effect to better track errors:
+// https://github.com/pixiebrix/webext-messenger/pull/80
 initPrivateApi();

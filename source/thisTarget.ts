@@ -173,6 +173,19 @@ export async function getTopLevelFrame(): Promise<TopLevelFrame> {
 }
 
 export function initPrivateApi(): void {
+  // Improve DX by informing the developer that it's being loaded the wrong way
+  // https://github.com/pixiebrix/webext-messenger/issues/88
+  if (globalThis.__webextMessenger) {
+    console.error(
+      "webext-messenger has already been imported in this context. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88",
+      {
+        existing: globalThis.__webextMessenger,
+        current: import.meta.url,
+      }
+    );
+  }
+
+  globalThis.__webextMessenger = import.meta.url;
   if (isExtensionContext()) {
     // Only `runtime` pages can handle this message but I can't remove it because its listener
     // also serves the purpose of throwing a specific error when no methods have been registered.
