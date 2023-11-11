@@ -176,16 +176,16 @@ export function initPrivateApi(): void {
   // Improve DX by informing the developer that it's being loaded the wrong way
   // https://github.com/pixiebrix/webext-messenger/issues/88
   if (globalThis.__webextMessenger) {
+    // TODO: Use Error#cause after https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
+    console.log(globalThis.__webextMessenger.replace(/^Error: /, ""));
     console.error(
-      "webext-messenger has already been imported in this context. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88",
-      {
-        existing: globalThis.__webextMessenger,
-        current: import.meta.url,
-      }
+      "webext-messenger: Duplicate execution. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88"
     );
+    return;
   }
 
-  globalThis.__webextMessenger = import.meta.url;
+  // Use Error to capture the stack and make it easier to find the cause
+  globalThis.__webextMessenger = new Error("First execution").stack!;
   if (isExtensionContext()) {
     // Only `runtime` pages can handle this message but I can't remove it because its listener
     // also serves the purpose of throwing a specific error when no methods have been registered.
