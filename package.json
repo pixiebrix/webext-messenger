@@ -47,7 +47,7 @@
     "stream-browserify": "^3.0.0",
     "tape": "^5.7.2",
     "typescript": "^5.2.2",
-    "webext-content-scripts": "^2.5.5",
+    "webext-content-scripts": "^2.6.0",
     "webextension-polyfill": "^0.10.0"
   },
   "alias": {
