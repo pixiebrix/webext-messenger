@@ -34,7 +34,7 @@
     "@parcel/config-webextension": "^2.6.2",
     "@sindresorhus/tsconfig": "^5.0.0",
     "@types/chrome": "^0.0.248",
-    "@types/tape": "^5.6.3",
+    "@types/tape": "^5.6.4",
     "@types/webextension-polyfill": "^0.10.5",
     "buffer": "^6.0.3",
     "eslint": "^8.52.0",
