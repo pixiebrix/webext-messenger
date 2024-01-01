@@ -25,7 +25,7 @@
     "watch": "tsc --watch"
   },
   "dependencies": {
-    "p-retry": "^6.0.0",
+    "p-retry": "^6.2.0",
     "serialize-error": "^11.0.2",
     "type-fest": "^4.9.0",
     "webext-detect-page": "^4.1.1"
