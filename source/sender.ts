@@ -60,12 +60,12 @@ function makeMessage(
 // Do not turn this into an `async` function; Notifications must turn `void`
 function manageConnection(
   type: string,
-  { seq, isNotification }: Options,
+  { seq, isNotification, retry }: Options,
   target: AnyTarget,
   sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> | void {
   if (!isNotification) {
-    return manageMessage(type, target, seq!, sendMessage);
+    return manageMessage(type, target, seq!, retry ?? true, sendMessage);
   }
 
   void sendMessage(1).catch((error: unknown) => {
@@ -77,8 +77,10 @@ async function manageMessage(
   type: string,
   target: AnyTarget,
   seq: number,
+  retry: boolean,
   sendMessage: (attempt: number) => Promise<unknown>
 ): Promise<unknown> {
+  // TODO: Split this up a bit because it's too long. Probably drop p-retry
   const response = await pRetry(
     async (attemptCount) => {
       const response = await sendMessage(attemptCount);
@@ -119,6 +121,8 @@ async function manageMessage(
     {
       minTimeout: 100,
       factor: 1.3,
+      // Do not set this to undefined or Infinity, it doesn't work the same way
+      ...(retry ? {} : { retries: 0 }),
       maxRetryTime: 4000,
       async onFailedAttempt(error) {
         events.dispatchEvent(

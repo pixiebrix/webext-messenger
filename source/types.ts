@@ -68,6 +68,7 @@ export interface Options {
    */
   isNotification?: boolean;
   trace?: Sender[];
+  retry?: boolean;
 
   /** Automatically generated internally */
   seq?: number;
