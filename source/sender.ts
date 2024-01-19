@@ -38,6 +38,10 @@ function attemptLog(attemptCount: number): string {
   return attemptCount > 1 ? `(try: ${attemptCount})` : "";
 }
 
+function wasContextInvalidated() {
+  return !chrome.runtime?.id;
+}
+
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
@@ -128,6 +132,13 @@ async function manageMessage(
             },
           })
         );
+
+        if (wasContextInvalidated()) {
+          // The error matches the native context invalidated error
+          // *.sendMessage() might fail with a message-specific error that is less useful,
+          // like "Sender closed without responding"
+          throw new Error("Extension context invalidated.");
+        }
 
         if (error.message === _errorTargetClosedEarly) {
           throw new Error(errorTargetClosedEarly);
