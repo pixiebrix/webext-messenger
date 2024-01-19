@@ -1,4 +1,5 @@
 import { executeFunction } from "webext-content-scripts";
+import { once } from "../../shared.js";
 
 export async function ensureScripts(tabId: number): Promise<void> {
   await browser.tabs.executeScript(tabId, {
@@ -56,12 +57,25 @@ export async function createTargets(): Promise<Targets> {
   throw new Error("The expected frames were not found");
 }
 
+const getHiddenWindow = once(async (): Promise<number> => {
+  const { id } = await browser.windows.create({
+    focused: false,
+    state: "minimized",
+  });
+  return id!;
+});
+
 export async function openTab(url: string): Promise<number> {
   const tab = await browser.tabs.create({
+    windowId: await getHiddenWindow(),
     active: false,
     url,
   });
   return tab.id!;
+}
+
+export async function closeHiddenWindow(): Promise<void> {
+  return browser.windows.remove(await getHiddenWindow());
 }
 
 export async function closeTab(tabId: number): Promise<void> {
