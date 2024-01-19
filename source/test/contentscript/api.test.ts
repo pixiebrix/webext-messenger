@@ -5,6 +5,7 @@ import {
   errorTabDoesntExist,
   errorTargetClosedEarly,
   getMethod,
+  messenger,
 } from "../../sender.js";
 import {
   expectRejection,
@@ -319,6 +320,27 @@ function additionalTests() {
     );
 
     expectDuration(t, await durationPromise, 4000, 5000);
+
+    await closeTab(tabId);
+  });
+
+  test("does not retry if specifically asked not to", async (t) => {
+    const tabId = await openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+    );
+
+    const request = messenger("getPageTitle", { retry: false }, { tabId });
+    const durationPromise = trackSettleTime(request);
+
+    await expectRejection(
+      t,
+      request,
+      new MessengerError(
+        `The target ${JSON.stringify({ tabId })} for getPageTitle was not found`
+      )
+    );
+
+    expectDuration(t, await durationPromise, 0);
 
     await closeTab(tabId);
   });
