@@ -1,13 +1,19 @@
 {
   "name": "webext-messenger",
-  "version": "0.23.0",
+  "version": "0.25.0-0",
   "description": "Browser Extension component messaging framework",
   "keywords": [],
   "repository": "pixiebrix/webext-messenger",
   "license": "MIT",
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
-  "main": "distribution/index.js",
+  "exports": {
+    ".": {
+      "types": "./distribution/index.js",
+      "default": "./distribution/index.js"
+    },
+    "./*": "./distribution/*"
+  },
   "scripts": {
     "build": "tsc",
     "demo:watch": "parcel watch --no-cache --no-hmr",
@@ -19,30 +25,29 @@
     "watch": "tsc --watch"
   },
   "dependencies": {
-    "p-retry": "^6.0.0",
+    "p-retry": "^6.2.0",
     "serialize-error": "^11.0.2",
-    "type-fest": "^4.3.1",
-    "webext-detect-page": "^4.1.1",
-    "webext-tools": "^1.1.4"
+    "type-fest": "^4.9.0",
+    "webext-detect-page": "^4.2.1"
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.6.2",
-    "@sindresorhus/tsconfig": "^4.0.0",
-    "@types/chrome": "^0.0.245",
-    "@types/tape": "^5.6.1",
-    "@types/webextension-polyfill": "^0.10.2",
+    "@sindresorhus/tsconfig": "^5.0.0",
+    "@types/chrome": "^0.0.254",
+    "@types/tape": "^5.6.4",
+    "@types/webextension-polyfill": "^0.10.7",
     "buffer": "^6.0.3",
-    "eslint": "^8.50.0",
-    "eslint-config-pixiebrix": "^0.27.2",
+    "eslint": "^8.56.0",
+    "eslint-config-pixiebrix": "^0.32.0",
     "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
     "parcel": "^2.6.2",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "tape": "^5.7.0",
-    "typescript": "^5.2.2",
-    "webext-content-scripts": "^2.5.5",
+    "tape": "^5.7.2",
+    "typescript": "^5.3.3",
+    "webext-content-scripts": "^2.6.0",
     "webextension-polyfill": "^0.10.0"
   },
   "alias": {

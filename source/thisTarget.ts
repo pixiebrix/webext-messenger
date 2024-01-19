@@ -14,7 +14,8 @@ import {
   type Sender,
   type FrameTarget,
 } from "./types.js";
-import { log, MessengerError, once } from "./shared.js";
+import { MessengerError, once } from "./shared.js";
+import { log } from "./logging.js";
 import { type Entries } from "type-fest";
 
 /**
@@ -141,7 +142,6 @@ const storeTabData = once(async () => {
     tabDataStatus = "error";
     throw new MessengerError(
       "Tab registration failed. This page won’t be able to receive messages that require tab information",
-      // @ts-expect-error TODO: update lib to accept Error#cause
       { cause: error }
     );
   }
@@ -152,7 +152,7 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
 }
 
 export async function getThisFrame(): Promise<FrameTarget> {
-  await storeTabData(); // It should already have been called by we still need to await it
+  await storeTabData(); // It should already have been called but we still need to await it
 
   const { tabId, frameId } = thisTarget;
 
@@ -173,6 +173,21 @@ export async function getTopLevelFrame(): Promise<TopLevelFrame> {
 }
 
 export function initPrivateApi(): void {
+  // Improve DX by informing the developer that it's being loaded the wrong way
+  // https://github.com/pixiebrix/webext-messenger/issues/88
+  if (globalThis.__webextMessenger) {
+    // TODO: Use Error#cause after https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
+    console.log(
+      globalThis.__webextMessenger.replace(/^Error/, "webext-messenger")
+    );
+    console.error(
+      "webext-messenger: Duplicate execution. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88"
+    );
+    return;
+  }
+
+  // Use Error to capture the stack and make it easier to find the cause
+  globalThis.__webextMessenger = new Error("First execution").stack!;
   if (isExtensionContext()) {
     // Only `runtime` pages can handle this message but I can't remove it because its listener
     // also serves the purpose of throwing a specific error when no methods have been registered.
