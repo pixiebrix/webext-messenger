@@ -1,7 +1,11 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
 import { type PageTarget, type Sender, type Target } from "../../index.js";
-import { errorTabDoesntExist, errorTargetClosedEarly } from "../../sender.js";
+import {
+  errorTabDoesntExist,
+  errorTargetClosedEarly,
+  getMethod,
+} from "../../sender.js";
 import {
   expectRejection,
   sleep,
@@ -392,6 +396,18 @@ function additionalTests() {
     );
     getPageTitleNotification({ tabId });
     await closeTab(tabId);
+  });
+
+  test("should support target promises in methods with static targets", async (t) => {
+    const tabIdPromise = openTab(
+      "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Promised-target"
+    );
+    const targetPromise = tabIdPromise.then((tabId) => ({ tabId }));
+
+    const request = getMethod("getPageTitle", targetPromise);
+    t.equal(await request(), "Promised target");
+
+    await closeTab(await tabIdPromise);
   });
 }
 
