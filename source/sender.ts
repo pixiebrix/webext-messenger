@@ -14,7 +14,7 @@ import {
 } from "./types.js";
 import { isObject, MessengerError, __webextMessenger } from "./shared.js";
 import { log } from "./logging.js";
-import { type SetReturnType } from "type-fest";
+import { type Promisable, type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 import { events } from "./events.js";
 
@@ -302,7 +302,7 @@ function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends PublicMethod<Method>
->(type: Type, target: Target | PageTarget): PublicMethodType;
+>(type: Type, target: Promisable<Target | PageTarget>): PublicMethodType;
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -315,21 +315,21 @@ function getMethod<
   PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>
 >(
   type: Type,
-  target?: Target | PageTarget
+  target?: Promisable<Target | PageTarget>
 ): PublicMethodType | PublicMethodWithDynamicTarget {
-  if (arguments.length === 1) {
+  if (!target) {
     return messenger.bind(undefined, type, {}) as PublicMethodWithDynamicTarget;
   }
 
-  // @ts-expect-error `bind` types are junk
-  return messenger.bind(undefined, type, {}, target) as PublicMethodType;
+  return (async (...args: Parameters<Method>) =>
+    messenger(type, {}, await target, ...args)) as PublicMethodType;
 }
 
 function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends SetReturnType<PublicMethod<Method>, void>
->(type: Type, target: Target | PageTarget): PublicMethodType;
+>(type: Type, target: Promisable<Target | PageTarget>): PublicMethodType;
 function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -348,10 +348,10 @@ function getNotifier<
   >
 >(
   type: Type,
-  target?: Target | PageTarget
+  target?: Promisable<Target | PageTarget>
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   const options = { isNotification: true };
-  if (arguments.length === 1) {
+  if (!target) {
     // @ts-expect-error `bind` types are junk
     return messenger.bind(
       undefined,
@@ -360,8 +360,10 @@ function getNotifier<
     ) as PublicMethodWithDynamicTarget;
   }
 
-  // @ts-expect-error `bind` types are junk
-  return messenger.bind(undefined, type, options, target) as PublicMethodType;
+  return ((...args: Parameters<Method>) => {
+    // Async wrapper needed to use `await` while preserving a non-Promise return type
+    (async () => messenger(type, options, await target, ...args))();
+  }) as PublicMethodType;
 }
 
 export { messenger, getMethod, getNotifier };
