@@ -1,5 +1,5 @@
 import { isContentScript } from "webext-detect-page";
-import { registerMethods } from "../../index.js";
+import { registerMethods } from "webext-messenger";
 
 import { getPageTitle } from "./getPageTitle.js";
 import { setPageTitle } from "./setPageTitle.js";

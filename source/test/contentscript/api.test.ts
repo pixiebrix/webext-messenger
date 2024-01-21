@@ -1,6 +1,6 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
-import { type PageTarget, type Sender, type Target } from "../../index.js";
+import { type PageTarget, type Sender, type Target } from "webext-messenger";
 import {
   errorTabDoesntExist,
   errorTargetClosedEarly,

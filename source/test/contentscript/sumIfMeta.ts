@@ -1,4 +1,4 @@
-import { type MessengerMeta } from "../../index.js";
+import { type MessengerMeta } from "webext-messenger";
 
 export async function sumIfMeta(
   this: MessengerMeta,
