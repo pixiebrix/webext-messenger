@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "alias": {
+    "_info": "`exports` can't be followed or else it will have to depend on the main `build` to run",
+    "webext-messenger/**/*.js": "../$1/$2.ts",
+    "webext-messenger": "../"
+  }
+}

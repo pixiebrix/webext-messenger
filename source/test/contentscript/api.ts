@@ -1,4 +1,4 @@
-import { getNotifier, getMethod } from "../../index.js";
+import { getNotifier, getMethod } from "webext-messenger";
 
 export const getPageTitle = getMethod("getPageTitle");
 export const getPageTitleNotification = getNotifier("getPageTitle"); // Test-only; Notifications can't be getters

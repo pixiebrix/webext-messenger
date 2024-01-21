@@ -1,5 +1,5 @@
 import { isBackground } from "webext-detect-page";
-import { registerMethods } from "../../index.js";
+import { registerMethods } from "webext-messenger";
 
 import { sum } from "./sum.js";
 import { throws } from "./throws.js";

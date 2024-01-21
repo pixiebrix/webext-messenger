@@ -2,7 +2,12 @@
   "extends": "@sindresorhus/tsconfig",
   "include": ["source/**/*"],
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "distribution",
-    "skipLibCheck": false
+    "skipLibCheck": false,
+    "paths": {
+      "webext-messenger/*": ["source/*"],
+      "webext-messenger": ["source/index.ts"]
+    }
   }
 }

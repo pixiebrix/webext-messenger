@@ -1,4 +1,4 @@
-import { getMethod, getNotifier, backgroundTarget } from "../../index.js";
+import { getMethod, getNotifier, backgroundTarget } from "webext-messenger";
 
 // Dog-fooding, needed to run the tests
 export const openTab = getMethod("openTab", backgroundTarget);

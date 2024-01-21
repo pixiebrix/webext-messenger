@@ -1,5 +1,5 @@
 import { executeFunction } from "webext-content-scripts";
-import { once } from "../../shared.js";
+import { once } from "webext-messenger/shared.js";
 
 export async function ensureScripts(tabId: number): Promise<void> {
   await browser.tabs.executeScript(tabId, {
