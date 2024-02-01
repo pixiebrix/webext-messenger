@@ -27,7 +27,7 @@
   "dependencies": {
     "p-retry": "^6.2.0",
     "serialize-error": "^11.0.2",
-    "type-fest": "^4.9.0",
+    "type-fest": "^4.10.2",
     "webext-detect-page": "^4.2.1"
   },
   "@parcel/resolver-default": {
@@ -41,16 +41,16 @@
     "@types/webextension-polyfill": "^0.10.7",
     "buffer": "^6.0.3",
     "eslint": "^8.56.0",
-    "eslint-config-pixiebrix": "^0.32.0",
+    "eslint-config-pixiebrix": "^0.34.1",
     "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
     "parcel": "^2.11.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "tape": "^5.7.2",
+    "tape": "^5.7.4",
     "typescript": "^5.3.3",
-    "webext-content-scripts": "^2.6.0",
+    "webext-content-scripts": "^2.6.1",
     "webextension-polyfill": "^0.10.0"
   },
   "targets": {
