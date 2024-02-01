@@ -50,7 +50,7 @@
     "stream-browserify": "^3.0.0",
     "tape": "^5.7.4",
     "typescript": "^5.3.3",
-    "webext-content-scripts": "^2.6.0",
+    "webext-content-scripts": "^2.6.1",
     "webextension-polyfill": "^0.10.0"
   },
   "targets": {
