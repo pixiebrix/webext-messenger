@@ -1,4 +1,5 @@
 import {
+  getContextName,
   isBackground,
   isContentScript,
   isExtensionContext,
@@ -151,13 +152,18 @@ export function __getTabData(this: MessengerMeta): AnyTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
+// TODO: Add tests
 export async function getThisFrame(): Promise<FrameTarget> {
   await storeTabData(); // It should already have been called but we still need to await it
 
   const { tabId, frameId } = thisTarget;
 
   if (typeof tabId !== "number" || typeof frameId !== "number") {
-    throw new TypeError("This target is not in a frame");
+    throw new TypeError(
+      `This target is not in a frame (context: ${getContextName()}, url: ${
+        location.href
+      })`
+    );
   }
 
   // Rebuild object to return exactly these two properties and nothing more
