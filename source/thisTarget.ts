@@ -159,11 +159,14 @@ export async function getThisFrame(): Promise<FrameTarget> {
   const { tabId, frameId } = thisTarget;
 
   if (typeof tabId !== "number" || typeof frameId !== "number") {
-    throw new TypeError(
-      `This target is not in a frame (context: ${getContextName()}, url: ${
-        location.href
-      })`
-    );
+    let moreInfo = "(error retrieving context information)";
+    try {
+      moreInfo = `(context: ${getContextName()}, url: ${
+        globalThis.location?.href
+      })`;
+    } catch {}
+
+    throw new TypeError(`This target is not in a frame ${moreInfo}`);
   }
 
   // Rebuild object to return exactly these two properties and nothing more
