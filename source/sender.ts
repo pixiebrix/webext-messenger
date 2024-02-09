@@ -204,7 +204,7 @@ async function manageMessage(
   return response.value;
 }
 
-// Not a UID nor global sequence. Signal / console noise compromise.
+// Not a UID nor a truly global sequence. Signal / console noise compromise.
 // The time part is a pseudo-random number between 0 and 99 that helps visually
 // group messages from the same context. Keeping it a number also gives it a different
 // color in the console log.
