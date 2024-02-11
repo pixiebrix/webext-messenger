@@ -204,6 +204,15 @@ async function manageMessage(
   return response.value;
 }
 
+// Not a UID nor a truly global sequence. Signal / console noise compromise.
+// The time part is a pseudo-random number between 0 and 99 that helps visually
+// group messages from the same context. Keeping it a number also gives it a different
+// color in the console log.
+// Example log when seen in the background page:
+// Tab 1 sends: 33000, 33001, 33002
+// Tab 2 sends: 12000, 12001, 12002
+let globalSeq = (Date.now() % 100) * 10_000;
+
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type]
@@ -233,8 +242,7 @@ function messenger<
   target: Target | PageTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
-  // Not a UID. Signal / console noise compromise. They repeat every 100 seconds
-  options.seq = Date.now() % 100_000;
+  options.seq = globalSeq++;
   const { seq } = options;
 
   // Message goes to extension page
