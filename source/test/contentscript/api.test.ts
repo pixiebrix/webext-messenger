@@ -431,6 +431,16 @@ function additionalTests() {
 
     await closeTab(await tabIdPromise);
   });
+
+  test("`frameId: allFrames` messages every frame in tab, receives only one response", async (t) => {
+    // `chrome.*.sendMessage` can exclusively receive one response
+    const tabId = await openTab(
+      "https://ephiframe.vercel.app/No-content-script-in-top-frame?iframe=https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Receives-with-allFrames-on-tab"
+    );
+
+    const title = await getPageTitle({ tabId, frameId: "allFrames" });
+    t.equal(title, "Receives with allFrames on tab");
+  });
 }
 
 void testEveryTarget();
