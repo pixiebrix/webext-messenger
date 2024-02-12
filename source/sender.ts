@@ -313,9 +313,11 @@ function messenger<
       return browser.tabs.sendMessage(
         tabId,
         makeMessage(type, args, target, options),
-        {
-          frameId,
-        }
+        frameId === "allFrames"
+          ? {}
+          : {
+              frameId,
+            }
       );
     }
   ) as ReturnValue;
