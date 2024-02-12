@@ -92,7 +92,7 @@ export type MessengerMessage = Message & {
 
 export interface AnyTarget {
   tabId?: number | "this";
-  frameId?: number;
+  frameId?: number | "allFrames";
   page?: string;
 }
 
@@ -114,7 +114,7 @@ export interface KnownTarget {
 
 export interface Target {
   tabId: number;
-  frameId?: number;
+  frameId?: number | "allFrames";
 }
 
 export interface PageTarget {
