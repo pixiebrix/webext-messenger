@@ -48,7 +48,7 @@
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "tape": "^5.7.4",
+    "tape": "^5.7.5",
     "typescript": "^5.3.3",
     "webext-content-scripts": "^2.6.1",
     "webextension-polyfill": "^0.10.0"
