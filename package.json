@@ -27,7 +27,7 @@
   "dependencies": {
     "p-retry": "^6.2.0",
     "serialize-error": "^11.0.2",
-    "type-fest": "^4.10.2",
+    "type-fest": "^4.10.3",
     "webext-detect-page": "^5.0.0"
   },
   "@parcel/resolver-default": {
