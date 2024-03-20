@@ -1,7 +1,6 @@
 import {
   getContextName,
   isBackground,
-  isContentScript,
   isExtensionContext,
 } from "webext-detect-page";
 import { messenger } from "./sender.js";
@@ -10,14 +9,10 @@ import {
   type AnyTarget,
   type KnownTarget,
   type TopLevelFrame,
-  type Message,
   type MessengerMeta,
-  type Sender,
   type FrameTarget,
 } from "./types.js";
 import { MessengerError, once } from "./shared.js";
-import { log } from "./logging.js";
-import { type Entries } from "type-fest";
 
 /**
  * @file This file exists because `runtime.sendMessage` acts as a broadcast to
@@ -43,7 +38,7 @@ import { type Entries } from "type-fest";
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
-const thisTarget: KnownTarget = isBackground()
+export const thisTarget: KnownTarget = isBackground()
   ? { page: "background" }
   : {
       get page(): string {
@@ -61,71 +56,8 @@ let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
   // The background page doesn't have a tab
   isBackground() ? "not-needed" : "needed";
 
-function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
-  for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
-    if (thisTarget[key] === value) {
-      continue;
-    }
-
-    if (key !== "page") {
-      return false;
-    }
-
-    const toUrl = new URL(to.page!, location.origin);
-    const thisUrl = new URL(thisTarget.page!, location.origin);
-    if (toUrl.pathname !== thisUrl.pathname) {
-      return false;
-    }
-
-    for (const [parameterKey, parameterValue] of toUrl.searchParams) {
-      if (thisUrl.searchParams.get(parameterKey) !== parameterValue) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-// TODO: Test this in Jest, outside the browser
-export function getActionForMessage(
-  from: Sender,
-  message: Message
-): "respond" | "forward" | "ignore" {
-  // Clone object because we're editing it
-  const to: AnyTarget = { ...message.target };
-  if (to.page === "any") {
-    return "respond";
-  }
-
-  // Content scripts only receive messages that are meant for them. In the future
-  // they'll also forward them, but that still means they need to be handled here.
-  if (isContentScript()) {
-    return "respond";
-  }
-
-  // We're in an extension page, but the target is not one.
-  if (!to.page) {
-    return "forward";
-  }
-
-  // Set "this" tab to the current tabId
-  if (to.tabId === "this" && thisTarget.tabId === from.tab?.id) {
-    to.tabId = thisTarget.tabId;
-  }
-
-  // Every `target` key must match `thisTarget`
-  const isThisTarget = compareTargets(to, thisTarget);
-
-  if (!isThisTarget) {
-    log.debug(message.type, "🤫 ignored due to target mismatch", {
-      requestedTarget: to,
-      thisTarget,
-      tabDataStatus,
-    });
-  }
-
-  return isThisTarget ? "respond" : "ignore";
+export function getTabDataStatus(): typeof tabDataStatus {
+  return tabDataStatus;
 }
 
 const storeTabData = once(async () => {
@@ -135,15 +67,16 @@ const storeTabData = once(async () => {
 
   try {
     tabDataStatus = "pending";
-    Object.assign(thisTarget, {
-      ...(await messenger("__getTabData", {}, { page: "any" })),
-    });
+    Object.assign(
+      thisTarget,
+      await messenger("__getTabData", {}, { page: "any" }),
+    );
     tabDataStatus = "received";
   } catch (error: unknown) {
     tabDataStatus = "error";
     throw new MessengerError(
       "Tab registration failed. This page won’t be able to receive messages that require tab information",
-      { cause: error }
+      { cause: error },
     );
   }
 });
@@ -161,9 +94,8 @@ export async function getThisFrame(): Promise<FrameTarget> {
   if (typeof tabId !== "number" || typeof frameId !== "number") {
     let moreInfo = "(error retrieving context information)";
     try {
-      moreInfo = `(context: ${getContextName()}, url: ${
-        globalThis.location?.href
-      })`;
+      moreInfo = `(context: ${getContextName()}, url: ${globalThis.location
+        ?.href})`;
     } catch {}
 
     throw new TypeError(`This target is not in a frame ${moreInfo}`);
@@ -187,10 +119,10 @@ export function initPrivateApi(): void {
   if (globalThis.__webextMessenger) {
     // TODO: Use Error#cause after https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
     console.log(
-      globalThis.__webextMessenger.replace(/^Error/, "webext-messenger")
+      globalThis.__webextMessenger.replace(/^Error/, "webext-messenger"),
     );
     console.error(
-      "webext-messenger: Duplicate execution. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88"
+      "webext-messenger: Duplicate execution. This is a fatal error.\nhttps://github.com/pixiebrix/webext-messenger/issues/88",
     );
     return;
   }
