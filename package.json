@@ -9,7 +9,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./distribution/index.js",
+      "types": "./distribution/index.d.ts",
       "default": "./distribution/index.js"
     },
     "./*": "./distribution/*"
@@ -19,7 +19,8 @@
     "demo:watch": "parcel watch --no-cache --no-hmr",
     "demo:build": "parcel build --no-cache --no-scope-hoist",
     "prepack": "tsc --sourceMap false",
-    "test": "eslint . && tsc --noEmit",
+    "test": "run-p test:unit lint build demo:build",
+    "test:unit": "vitest run",
     "lint": "eslint .",
     "fix": "eslint . --fix",
     "watch": "tsc --watch"
@@ -50,6 +51,7 @@
     "stream-browserify": "^3.0.0",
     "tape": "^5.7.5",
     "typescript": "^5.3.3",
+    "vitest": "^1.4.0",
     "webext-content-scripts": "^2.6.1",
     "webextension-polyfill": "^0.10.0"
   },

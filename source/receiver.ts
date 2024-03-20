@@ -10,8 +10,9 @@ import {
 } from "./types.js";
 import { isObject, MessengerError, __webextMessenger } from "./shared.js";
 import { log } from "./logging.js";
-import { getActionForMessage } from "./thisTarget.js";
+import { getActionForMessage } from "./targetLogic.js";
 import { didUserRegisterMethods, handlers } from "./handlers.js";
+import { getTabDataStatus, thisTarget } from "./thisTarget.js";
 
 export function isMessengerMessage(message: unknown): message is Message {
   return (
@@ -25,7 +26,7 @@ export function isMessengerMessage(message: unknown): message is Message {
 // MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
-  sender: Sender
+  sender: Sender,
 ): Promise<unknown> | void {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
@@ -33,8 +34,13 @@ function onMessageListener(
   }
 
   // Target check must be synchronous (`await` means we're handling the message)
-  const action = getActionForMessage(sender, message);
+  const action = getActionForMessage(sender, message.target, thisTarget);
   if (action === "ignore") {
+    log.debug(message.type, "🤫 ignored due to target mismatch", {
+      requestedTarget: message.target,
+      thisTarget,
+      tabDataStatus: getTabDataStatus(),
+    });
     return;
   }
 
@@ -48,7 +54,7 @@ async function handleMessage(
   sender: Sender,
 
   // Once messages reach this function they cannot be "ignored", they're already being handled
-  action: "respond" | "forward"
+  action: "respond" | "forward",
 ): Promise<unknown> {
   const { type, target, args, options = {} } = message;
 
@@ -74,12 +80,12 @@ async function handleMessage(
         // TODO: Test the handling of __getTabData in contexts that have no registered methods
         // https://github.com/pixiebrix/webext-messenger/pull/82
         throw new MessengerError(
-          `No handlers registered in ${getContextName()}`
+          `No handlers registered in ${getContextName()}`,
         );
       }
 
       throw new MessengerError(
-        `No handler registered for ${type} in ${getContextName()}`
+        `No handler registered for ${type} in ${getContextName()}`,
       );
     }
 
@@ -92,7 +98,7 @@ async function handleMessage(
       // Errors must be serialized because the stack traces are currently lost on Chrome
       // and https://github.com/mozilla/webextension-polyfill/issues/210
       error: serializeError(error),
-    })
+    }),
   );
 
   log.debug(type, seq, "↗️ responding", response);
@@ -114,6 +120,6 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
 
 /** Ensure/document that the current function was called via Messenger */
 export function assertMessengerCall(
-  _this: MessengerMeta
+  _this: MessengerMeta,
   // eslint-disable-next-line @typescript-eslint/no-empty-function -- TypeScript already does this, it's a documentation-only call
 ): asserts _this is MessengerMeta {}

@@ -1,6 +1,6 @@
 # Test extension
 
-To test this polyfill, run these 2 commands in parallel:
+To test this package, run these 2 commands in parallel:
 
 ```sh
 npm run demo:watch
