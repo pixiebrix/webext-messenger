@@ -1,4 +1,4 @@
-import { isContentScript } from "webext-detect-page";
+import { isBackground, isContentScript } from "webext-detect-page";
 import { type AnyTarget, type Sender } from "./types.js";
 import { type Entries } from "type-fest";
 
@@ -47,7 +47,7 @@ export function getActionForMessage(
 
   // We're in an extension page, but the target is not one.
   if (!to.page) {
-    return "forward";
+    return isBackground() ? "forward" : "ignore";
   }
 
   // Set "this" tab to the current tabId
