@@ -1,7 +1,7 @@
 import { assert, describe, test, vi } from "vitest";
 import { getActionForMessage } from "./targetLogic.js";
 import { type Tabs } from "webextension-polyfill";
-import { isContentScript } from "webext-detect-page";
+import { isContentScript, isBackground } from "webext-detect-page";
 
 vi.mock("webext-detect-page");
 
@@ -55,7 +55,7 @@ describe("getActionForMessage", async () => {
     ["contentScript", "somePage", "frame", "respond"], // Wrong, but won't happen
 
     ["contentScript", "thisTab", "background", "forward"],
-    ["contentScript", "thisTab", "somePage", "forward"],
+    ["contentScript", "thisTab", "somePage", "ignore"],
     ["contentScript", "thisTab", "tab", "respond"], // Won't happen, content scripts cannot target tabs
     ["contentScript", "thisTab", "frame", "respond"], // Won't happen, content scripts cannot target tabs
   ] satisfies Array<
@@ -70,6 +70,7 @@ describe("getActionForMessage", async () => {
     async (from, to, receiver, expected) => {
       const isCs = receiver === "tab" || receiver === "frame";
       vi.mocked(isContentScript).mockReturnValueOnce(isCs);
+      vi.mocked(isBackground).mockReturnValueOnce(receiver === "background");
       vi.stubGlobal("location", {
         origin: isCs ? "http://example.com" : "chrome-extension://extension-id",
       });
