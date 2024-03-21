@@ -50,7 +50,7 @@ export function getActionForMessage(
     // Only the background page can forward messages at the moment
     // https://github.com/pixiebrix/webext-messenger/issues/219#issuecomment-2011000477
     // If this condition is changed, it might also need to ensure that messages are not
-    // forwarded to itself, e.g. by using the tabs API in an iframed extension page.
+    // forwarded to itself, e.g. when using the tabs API in an iframed extension page.
     // https://github.com/pixiebrix/webext-messenger/issues/221#issuecomment-2010165690
     return isBackground() ? "forward" : "ignore";
   }
