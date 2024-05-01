@@ -53,7 +53,7 @@
     "typescript": "^5.4.3",
     "vitest": "^1.4.0",
     "webext-content-scripts": "^2.6.1",
-    "webextension-polyfill": "^0.10.0"
+    "webextension-polyfill": "^0.11.0"
   },
   "targets": {
     "main": false,
