@@ -34,7 +34,8 @@ export async function delay(milliseconds: number): Promise<void> {
 /**
  * Call a function only once, and return the same value for all subsequent calls.
  * @param function_ The function to call once.
- * @param callAgainCallBack A callback that determines if the function should be called again after this one.
+ * @param callAgainCallBack A callback that determines if the function should be called again after this one. If it returns
+ * `true`, the function will be called again the next time it is called.
  */
 export function once<Callback extends (...arguments_: unknown[]) => unknown>(
   function_: Callback,
@@ -46,9 +47,7 @@ export function once<Callback extends (...arguments_: unknown[]) => unknown>(
     const callAgain = callAgainCallBack?.();
     if (!called) {
       returnValue = function_.apply(this, arguments_);
-      if (!callAgain) {
-        called = true;
-      }
+      called = !callAgain
     }
 
     return returnValue;
