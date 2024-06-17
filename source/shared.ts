@@ -31,15 +31,27 @@ export async function delay(milliseconds: number): Promise<void> {
   });
 }
 
+/**
+ * Call a function only once, and return the same value for all subsequent calls.
+ * @param function_ The function to call once.
+ * @param callThroughCallback A callback that determines whether the function should be called again. If it
+ * returns true the function will be called again, the return value will be updated, but the `called` state
+ * is not marked as true (so the function can be called again). If it returns false the function will not be
+ * called (even if it hasn't been called yet).
+ */
 export function once<Callback extends (...arguments_: unknown[]) => unknown>(
-  function_: Callback
+  function_: Callback,
+  { callThroughCallback }: { callThroughCallback?: () => boolean } = {}
 ): Callback {
   let called = false;
   let returnValue: unknown;
   return function (this: unknown, ...arguments_) {
-    if (!called) {
+    const callThrough = callThroughCallback?.();
+    if (!called || callThrough) {
       returnValue = function_.apply(this, arguments_);
-      called = true;
+      if (!callThrough) {
+        called = true;
+      }
     }
 
     return returnValue;

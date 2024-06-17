@@ -61,10 +61,6 @@ export function getTabDataStatus(): typeof tabDataStatus {
 }
 
 const storeTabData = once(async () => {
-  if (tabDataStatus !== "needed") {
-    return;
-  }
-
   try {
     tabDataStatus = "pending";
     Object.assign(
@@ -79,6 +75,11 @@ const storeTabData = once(async () => {
       { cause: error },
     );
   }
+}, {
+  // If this tab is not background service worker, and it's in a prerendering state, call through to
+  // store the Tab data, but don't cache the result (so that when the tab is activated, the new frame
+  // is fetched on the next call to this function). See: https://github.com/pixiebrix/pixiebrix-extension/issues/8283
+  callThroughCallback: () => !isBackground() && "prerendering" in document && Boolean(document.prerendering)
 });
 
 export function __getTabData(this: MessengerMeta): AnyTarget {
