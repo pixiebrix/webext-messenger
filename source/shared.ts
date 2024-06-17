@@ -34,10 +34,12 @@ export async function delay(milliseconds: number): Promise<void> {
 /**
  * Call a function only once, and return the same value for all subsequent calls.
  * @param function_ The function to call once.
- * @param callThroughCallback A callback that determines whether the function should be called again. If it
- * returns true the function will be called again, the return value will be updated, but the `called` state
- * is not marked as true (so the function can be called again). If it returns false the function will not be
- * called (even if it hasn't been called yet).
+ * @param callThroughCallback A callback that determines whether the function should be called through without
+ * caching the response.
+ * If it returns true the function will be called again, the return value will be updated, but the `called` state
+ * is not marked as true (so the function can be called again).
+ * If it returns false the function will not be called (even if it hasn't been called yet), and the cached value is
+ * returned (will return undefined if the function hasn't been called yet).
  */
 export function once<Callback extends (...arguments_: unknown[]) => unknown>(
   function_: Callback,
@@ -47,7 +49,7 @@ export function once<Callback extends (...arguments_: unknown[]) => unknown>(
   let returnValue: unknown;
   return function (this: unknown, ...arguments_) {
     const callThrough = callThroughCallback?.();
-    if (!called || callThrough) {
+    if (!called && (callThroughCallback === undefined || callThrough)) {
       returnValue = function_.apply(this, arguments_);
       if (!callThrough) {
         called = true;
