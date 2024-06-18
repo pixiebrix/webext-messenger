@@ -11,3 +11,4 @@ logs
 distribution
 .parcel-cache
 dist
+.idea

@@ -13,6 +13,7 @@ import {
   type FrameTarget,
 } from "./types.js";
 import { MessengerError, once } from "./shared.js";
+import { pEvent } from "p-event";
 
 /**
  * @file This file exists because `runtime.sendMessage` acts as a broadcast to
@@ -63,6 +64,12 @@ export function getTabDataStatus(): typeof tabDataStatus {
 const storeTabData = once(async () => {
   if (tabDataStatus !== "needed") {
     return;
+  }
+
+  // If the page is prerendering, wait for the change to be able to get the tab data so the frameId is correct
+  // https://developer.mozilla.org/en-US/docs/Web/API/Document/prerenderingchange_event
+  if ("prerendering" in document && Boolean(document.prerendering)) {
+    await pEvent(document, 'prerenderingchange')
   }
 
   try {

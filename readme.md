@@ -17,7 +17,7 @@ import messenger from "webext-messenger";
 
 ## Context
 
-- [Initial considertions for this library](https://github.com/pixiebrix/webext-messenger/issues/1)
+- [Initial considerations for this library](https://github.com/pixiebrix/webext-messenger/issues/1)
 
 
 ## npm publishing
