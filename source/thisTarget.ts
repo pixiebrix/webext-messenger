@@ -13,6 +13,7 @@ import {
   type FrameTarget,
 } from "./types.js";
 import { MessengerError, once } from "./shared.js";
+import { pEvent } from "p-event";
 
 /**
  * @file This file exists because `runtime.sendMessage` acts as a broadcast to
@@ -61,8 +62,13 @@ export function getTabDataStatus(): typeof tabDataStatus {
 }
 
 const storeTabData = once(async () => {
-  if (isBackground()) {
+  if (tabDataStatus !== "needed") {
     return;
+  }
+
+  // If the page is prerendering, wait for the change to be able to get the tab data so the frameId is correct
+  if ("prerendering" in document && Boolean(document.prerendering)) {
+    await pEvent(document, 'prerenderingchange')
   }
 
   try {
@@ -79,11 +85,6 @@ const storeTabData = once(async () => {
       { cause: error },
     );
   }
-}, {
-  // If this tab is not background service worker, and it's in a prerendering state, allow subsequent calls to be made again
-  // (so that when the tab is activated, the new frame is fetched on the next call to this function).
-  // See: https://github.com/pixiebrix/pixiebrix-extension/issues/8283
-  callAgainCallBack: () => !isBackground() && "prerendering" in document && Boolean(document.prerendering)
 });
 
 export function __getTabData(this: MessengerMeta): AnyTarget {
