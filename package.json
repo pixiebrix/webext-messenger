@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@parcel/config-webextension": "^2.11.0",
-    "@sindresorhus/tsconfig": "^5.0.0",
+    "@sindresorhus/tsconfig": "^6.0.0",
     "@types/chrome": "^0.0.268",
     "@types/tape": "^5.6.4",
     "@types/webextension-polyfill": "^0.10.7",
@@ -50,10 +50,10 @@
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "tape": "^5.7.5",
-    "typescript": "^5.4.5",
+    "tape": "^5.8.1",
+    "typescript": "^5.5.2",
     "vitest": "^1.6.0",
-    "webext-content-scripts": "^2.6.1",
+    "webext-content-scripts": "^2.7.0",
     "webextension-polyfill": "^0.12.0"
   },
   "targets": {
