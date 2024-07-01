@@ -1,5 +1,5 @@
 import test from "tape";
-import { isBackground, isContentScript, isWebPage } from "webext-detect-page";
+import { isBackground, isContentScript, isWebPage } from "webext-detect";
 import { type PageTarget, type Sender, type Target } from "webext-messenger";
 import {
   errorTabDoesntExist,

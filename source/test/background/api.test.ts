@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/no-await-expression-member */
 import test from "tape";
-import { isBackground } from "webext-detect-page";
+import { isBackground } from "webext-detect";
 import { getThisFrame } from "webext-messenger/thisTarget.js";
 import { expectDuration, trackSettleTime } from "../helpers.js";
 import {

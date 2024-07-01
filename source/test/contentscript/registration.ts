@@ -1,4 +1,4 @@
-import { isContentScript } from "webext-detect-page";
+import { isContentScript } from "webext-detect";
 import { registerMethods } from "webext-messenger";
 
 import { getPageTitle } from "./getPageTitle.js";

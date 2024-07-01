@@ -2,7 +2,7 @@ import {
   getContextName,
   isBackground,
   isExtensionContext,
-} from "webext-detect-page";
+} from "webext-detect";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import {
