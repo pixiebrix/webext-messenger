@@ -42,7 +42,7 @@
     "@types/tape": "^5.6.4",
     "@types/webextension-polyfill": "^0.10.7",
     "buffer": "^6.0.3",
-    "eslint": "^8.57.0",
+    "eslint": "^9.6.0",
     "eslint-config-pixiebrix": "^0.39.0",
     "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
