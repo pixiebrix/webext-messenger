@@ -1,4 +1,4 @@
-import { isBackground, isContentScript } from "webext-detect-page";
+import { isBackground, isContentScript } from "webext-detect";
 import { type AnyTarget, type Sender } from "./types.js";
 import { type Entries } from "type-fest";
 

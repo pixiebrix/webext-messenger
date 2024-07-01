@@ -1,4 +1,4 @@
-import { isContentScript } from "webext-detect-page";
+import { isContentScript } from "webext-detect";
 
 export async function contentScriptOnly(): Promise<true> {
   if (!isContentScript()) {

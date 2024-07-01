@@ -1,4 +1,4 @@
-import { isBackground } from "webext-detect-page";
+import { isBackground } from "webext-detect";
 import { registerMethods } from "webext-messenger";
 
 import { sum } from "./sum.js";

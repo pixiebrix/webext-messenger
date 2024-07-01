@@ -1,5 +1,5 @@
 import pRetry from "p-retry";
-import { isBackground } from "webext-detect-page";
+import { isBackground } from "webext-detect";
 import { deserializeError } from "serialize-error";
 
 import {

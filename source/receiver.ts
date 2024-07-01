@@ -1,5 +1,5 @@
 import { serializeError } from "serialize-error";
-import { getContextName } from "webext-detect-page";
+import { getContextName } from "webext-detect";
 
 import { messenger } from "./sender.js";
 import {

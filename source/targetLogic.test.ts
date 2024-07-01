@@ -1,9 +1,9 @@
 import { assert, describe, test, vi } from "vitest";
 import { getActionForMessage } from "./targetLogic.js";
 import { type Tabs } from "webextension-polyfill";
-import { isContentScript, isBackground } from "webext-detect-page";
+import { isContentScript, isBackground } from "webext-detect";
 
-vi.mock("webext-detect-page");
+vi.mock("webext-detect");
 
 const tab = {
   id: 1,
