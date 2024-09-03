@@ -27,7 +27,7 @@ export function isMessengerMessage(message: unknown): message is Message {
 function onMessageListener(
   message: unknown,
   sender: Sender,
-): Promise<unknown> | void {
+): Promise<unknown> | undefined {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
     return;
