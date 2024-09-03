@@ -40,7 +40,7 @@
     "@sindresorhus/tsconfig": "^6.0.0",
     "@types/chrome": "^0.0.270",
     "@types/tape": "^5.6.4",
-    "@types/webextension-polyfill": "^0.10.7",
+    "@types/webextension-polyfill": "^0.12.1",
     "buffer": "^6.0.3",
     "eslint": "^8.57.0",
     "eslint-config-pixiebrix": "^0.39.0",
