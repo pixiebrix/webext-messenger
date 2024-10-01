@@ -50,7 +50,7 @@
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "tape": "^5.8.1",
+    "tape": "^5.9.0",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5",
     "webext-content-scripts": "^2.7.0",
