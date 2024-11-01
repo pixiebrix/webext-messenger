@@ -52,7 +52,7 @@
     "stream-browserify": "^3.0.0",
     "tape": "^5.9.0",
     "typescript": "^5.6.2",
-    "vitest": "^2.1.1",
+    "vitest": "^2.1.4",
     "webext-content-scripts": "^2.7.0",
     "webextension-polyfill": "^0.12.0"
   },
