@@ -46,7 +46,7 @@ function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
   target: Target | PageTarget,
-  options: Options
+  options: Options,
 ): MessengerMessage {
   return {
     __webextMessenger,
@@ -62,7 +62,7 @@ function manageConnection(
   type: string,
   { seq, isNotification, retry }: Options,
   target: AnyTarget,
-  sendMessage: (attempt: number) => Promise<unknown>
+  sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> | void {
   if (!isNotification) {
     return manageMessage(type, target, seq!, retry ?? true, sendMessage);
@@ -78,7 +78,7 @@ async function manageMessage(
   target: AnyTarget,
   seq: number,
   retry: boolean,
-  sendMessage: (attempt: number) => Promise<unknown>
+  sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> {
   // TODO: Split this up a bit because it's too long. Probably drop p-retry
   const response = await pRetry(
@@ -101,21 +101,21 @@ async function manageMessage(
       if (response === undefined) {
         if ("page" in target) {
           throw new MessengerError(
-            `The target ${JSON.stringify(target)} for ${type} was not found`
+            `The target ${JSON.stringify(target)} for ${type} was not found`,
           );
         }
 
         throw new MessengerError(
           `Messenger was not available in the target ${JSON.stringify(
-            target
-          )} for ${type}`
+            target,
+          )} for ${type}`,
         );
       }
 
       // Possible:
       // - Non-Messenger handler responded
       throw new MessengerError(
-        `Conflict: The message ${type} was handled by a third-party listener`
+        `Conflict: The message ${type} was handled by a third-party listener`,
       );
     },
     {
@@ -134,7 +134,7 @@ async function manageMessage(
               error,
               attemptCount: error.attemptNumber,
             },
-          })
+          }),
         );
 
         if (wasContextInvalidated()) {
@@ -178,18 +178,23 @@ async function manageMessage(
 
         log.debug(type, seq, "will retry. Attempt", error.attemptNumber);
       },
-    }
-  ).catch((error: Error) => {
-    if (error?.message === _errorNonExistingTarget) {
+    },
+  ).catch((error: unknown) => {
+    if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      error?.message === _errorNonExistingTarget
+    ) {
       throw new MessengerError(
-        `The target ${JSON.stringify(target)} for ${type} was not found`
+        `The target ${JSON.stringify(target)} for ${type} was not found`,
       );
     }
 
     events.dispatchEvent(
       new CustomEvent("attempts-exhausted", {
         detail: { type, seq, target, error },
-      })
+      }),
     );
 
     throw error;
@@ -215,7 +220,7 @@ let globalSeq = (Date.now() % 100) * 10_000;
 
 function messenger<
   Type extends keyof MessengerMethods,
-  Method extends MessengerMethods[Type]
+  Method extends MessengerMethods[Type],
 >(
   type: Type,
   options: { isNotification: true },
@@ -225,7 +230,7 @@ function messenger<
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  ReturnValue extends Promise<ReturnType<Method>>
+  ReturnValue extends Promise<ReturnType<Method>>,
 >(
   type: Type,
   options: Options,
@@ -235,7 +240,7 @@ function messenger<
 function messenger<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  ReturnValue extends Promise<ReturnType<Method>>
+  ReturnValue extends Promise<ReturnType<Method>>,
 >(
   type: Type,
   options: Options,
@@ -262,10 +267,10 @@ function messenger<
         type,
         seq,
         "↗️ sending message to runtime",
-        attemptLog(attemptCount)
+        attemptLog(attemptCount),
       );
       return browser.runtime.sendMessage(
-        makeMessage(type, args, target, options)
+        makeMessage(type, args, target, options),
       );
     };
 
@@ -283,12 +288,12 @@ function messenger<
           type,
           seq,
           "↗️ sending message to runtime",
-          attemptLog(attemptCount)
+          attemptLog(attemptCount),
         );
         return browser.runtime.sendMessage(
-          makeMessage(type, args, target, options)
+          makeMessage(type, args, target, options),
         );
-      }
+      },
     ) as ReturnValue;
   }
 
@@ -308,7 +313,7 @@ function messenger<
         tabId,
         "frame",
         frameId,
-        attemptLog(attemptCount)
+        attemptLog(attemptCount),
       );
       return browser.tabs.sendMessage(
         tabId,
@@ -317,30 +322,30 @@ function messenger<
           ? {}
           : {
               frameId,
-            }
+            },
       );
-    }
+    },
   ) as ReturnValue;
 }
 
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  PublicMethodType extends PublicMethod<Method>
+  PublicMethodType extends PublicMethod<Method>,
 >(type: Type, target: Promisable<Target | PageTarget>): PublicMethodType;
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>
+  PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>,
 >(type: Type): PublicMethodWithDynamicTarget;
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends PublicMethod<Method>,
-  PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>
+  PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>,
 >(
   type: Type,
-  target?: Promisable<Target | PageTarget>
+  target?: Promisable<Target | PageTarget>,
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   if (!target) {
     return messenger.bind(undefined, type, {}) as PublicMethodWithDynamicTarget;
@@ -353,7 +358,7 @@ function getMethod<
 function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
-  PublicMethodType extends SetReturnType<PublicMethod<Method>, void>
+  PublicMethodType extends SetReturnType<PublicMethod<Method>, void>,
 >(type: Type, target: Promisable<Target | PageTarget>): PublicMethodType;
 function getNotifier<
   Type extends keyof MessengerMethods,
@@ -361,7 +366,7 @@ function getNotifier<
   PublicMethodWithDynamicTarget extends SetReturnType<
     PublicMethodWithTarget<Method>,
     void
-  >
+  >,
 >(type: Type): PublicMethodWithDynamicTarget;
 function getNotifier<
   Type extends keyof MessengerMethods,
@@ -370,10 +375,10 @@ function getNotifier<
   PublicMethodWithDynamicTarget extends SetReturnType<
     PublicMethodWithTarget<Method>,
     void
-  >
+  >,
 >(
   type: Type,
-  target?: Promisable<Target | PageTarget>
+  target?: Promisable<Target | PageTarget>,
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   const options = { isNotification: true };
   if (!target) {
@@ -381,7 +386,7 @@ function getNotifier<
     return messenger.bind(
       undefined,
       type,
-      options
+      options,
     ) as PublicMethodWithDynamicTarget;
   }
 
