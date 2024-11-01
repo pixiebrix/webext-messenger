@@ -181,7 +181,7 @@ async function manageMessage(
     },
   ).catch((error: unknown) => {
     if (
-      error != null &&
+      error &&
       typeof error === "object" &&
       "message" in error &&
       error?.message === _errorNonExistingTarget
