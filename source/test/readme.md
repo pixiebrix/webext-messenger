@@ -9,7 +9,7 @@ npx web-ext run --target=chromium
 
 Several tabs will automatically open, this is the various contexts running tests; let it run.
 
-**The tests are to be visually evaluated, they don't fail CI.** You can open the console to see the results of each test. Some contexts are run automatically:
+**The tests are to be visually evaluated, they [don't fail CI](https://github.com/pixiebrix/webext-messenger/issues/28).** You can open the console to see the results of each test. Some contexts are run automatically:
 
 - background to content scripts
 - content script to background
