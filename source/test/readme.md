@@ -7,6 +7,22 @@ npm run demo:watch
 npx web-ext run --target=chromium
 ```
 
-Several tabs will automatically open, this is the various contexts running tests. You can open the console of the 2 main tabs, the background console and other contexts' consoles to see the results of each test.
+Several tabs will automatically open, this is the various contexts running tests; let it run.
 
-The `registration.ts` files are APIs for that specific context and can be called/tested from any other context. For example the background loads both `background/registration.ts` (to receive calls) and `contentscript/api.test.ts` (to start testing the content script API).
+**The tests are to be visually evaluated, they don't fail CI.** You can open the console to see the results of each test. Some contexts are run automatically:
+
+- background to content scripts
+- content script to background
+- content script to content script (via runtime)
+
+Others are run only when you open the specific context, like the options page.
+
+## File organization
+
+Since the messenger should be able to call a context's APIs from anywhere, you can load a `api.test.ts` from any context. For example:
+
+- load `contentScript/api.test.ts` in background
+- load `contentScript/api.test.ts` in a content script
+- load `background/api.test.ts` in a content script
+- load `background/api.test.ts` in the options page
+- load `background/api.test.ts` in the dev tools
