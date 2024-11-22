@@ -3,7 +3,7 @@
   "name": "webext-messenger",
   "version": "0.0.0",
   "manifest_version": 3,
-  "permissions": ["webNavigation", "scripting", "storage"],
+  "permissions": ["webNavigation", "scripting", "storage", "offscreen"],
   "host_permissions": ["https://fregante.github.io/*"],
   "background": {
     "type": "module",
@@ -20,6 +20,13 @@
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods"
       ],
       "js": ["webextensionPolyfill.ts", "background/api.test.ts"]
+    },
+    {
+      "all_frames": true,
+      "matches": [
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-offscreen-methods"
+      ],
+      "js": ["webextensionPolyfill.ts", "offscreen/api.test.ts"]
     },
     {
       "all_frames": true,

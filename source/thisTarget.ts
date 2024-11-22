@@ -2,6 +2,7 @@ import {
   getContextName,
   isBackground,
   isExtensionContext,
+  isOffscreenDocument,
 } from "webext-detect";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
@@ -41,6 +42,8 @@ import { pEvent } from "p-event";
 // If a message is received before this is ready, it will just have to be ignored.
 export const thisTarget: KnownTarget = isBackground()
   ? { page: "background" }
+  : (isOffscreenDocument()
+  ? { page: "offscreen" }
   : {
       get page(): string {
         // Extension pages have relative URLs to simplify comparison
@@ -51,11 +54,11 @@ export const thisTarget: KnownTarget = isBackground()
         // Don't use the hash
         return origin + location.pathname + location.search;
       },
-    };
+    });
 
 let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
   // The background page doesn't have a tab
-  isBackground() ? "not-needed" : "needed";
+  isBackground() || isOffscreenDocument() ? "not-needed" : "needed";
 
 export function getTabDataStatus(): typeof tabDataStatus {
   return tabDataStatus;
