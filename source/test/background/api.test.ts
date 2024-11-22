@@ -59,13 +59,13 @@ test("should receive error from a background handler", async (t) => {
     t.equal(error.message, "This my error");
     t.true(
       error.stack.includes("/background/registration.js"),
-      "The stacktrace must come from the background page"
+      "The stacktrace must come from the background page",
     );
     t.true(
       // Chrome format || Firefox format
       error.stack.includes("at Object.throws") ||
         error.stack.includes("throws@moz-"),
-      "The stacktrace must include the original name of the method"
+      "The stacktrace must include the original name of the method",
     );
   }
 });
@@ -82,7 +82,7 @@ test("should receive error from the background if it’s not registered", async 
 
     t.equal(
       error.message,
-      "No handler registered for notRegistered in background"
+      "No handler registered for notRegistered in background",
     );
   }
 });
@@ -111,7 +111,7 @@ if (isBackground()) {
     expectDuration(t, await localRequestDuration, 0, 1);
     t.true(
       (await localRequestDuration) < (await messengerRequestDuration),
-      "getThisFrame should be faster than a Messenger round-trip"
+      "getThisFrame should be faster than a Messenger round-trip",
     );
   });
 }
