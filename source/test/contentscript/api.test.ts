@@ -1,6 +1,6 @@
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect";
-import { type PageTarget, type Sender, type Target } from "webext-messenger";
+import { type PageTarget, type Target } from "webext-messenger";
 import {
   errorTabDoesntExist,
   errorTargetClosedEarly,
@@ -12,6 +12,8 @@ import {
   sleep,
   trackSettleTime,
   expectDuration,
+  senderisBackground,
+  senderIsCurrentPage,
 } from "../helpers.js";
 import * as backgroundContext from "../background/api.js";
 import * as localContext from "../background/testingApi.js";
@@ -29,31 +31,6 @@ import {
   getPageTitleNotification,
 } from "./api.js";
 import { MessengerError } from "../../shared.js";
-
-const extensionUrl = new URL(chrome.runtime.getURL(""));
-
-function senderIsCurrentPage(
-  t: test.Test,
-  sender: Sender | undefined,
-  message: string
-) {
-  t.equal(sender?.url, location.href, message);
-}
-
-function senderisBackground(
-  t: test.Test,
-  sender: Sender | undefined,
-  message: string
-) {
-  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing -- It's an OR on falsy values */
-  t.true(
-    sender?.origin === extensionUrl.origin || // Chrome
-      sender?.origin === "null" || // Chrome, old
-      sender?.url?.includes("/background.") ||
-      sender?.url?.endsWith("/_generated_background_page.html"), // Firefox
-    message
-  );
-}
 
 const { openTab, createTargets, ensureScripts, closeTab } = isBackground()
   ? localContext

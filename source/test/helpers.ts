@@ -1,4 +1,6 @@
 import type test from "tape";
+import { type Sender } from "webext-messenger";
+
 
 export async function expectRejection(
   t: test.Test,
@@ -64,4 +66,29 @@ export function expectDuration(
       }s)`
     );
   }
+}
+
+const extensionUrl = new URL(chrome.runtime.getURL(""));
+
+export function senderIsCurrentPage(
+  t: test.Test,
+  sender: Sender | undefined,
+  message: string
+) {
+  t.equal(sender?.url, location.href, message);
+}
+
+export function senderisBackground(
+  t: test.Test,
+  sender: Sender | undefined,
+  message: string
+) {
+  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing -- It's an OR on falsy values */
+  t.true(
+    sender?.origin === extensionUrl.origin || // Chrome
+      sender?.origin === "null" || // Chrome, old
+      sender?.url?.includes("/background.") ||
+      sender?.url?.endsWith("/_generated_background_page.html"), // Firefox
+    message
+  );
 }

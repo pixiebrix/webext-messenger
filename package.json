@@ -75,7 +75,7 @@
       "startUrl": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods",
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background",
-        "https://fregante.github.io/pixiebrix-testing-ground/Will-offscreen-methods"
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-offscreen-methods"
       ]
     }
   }

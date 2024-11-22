@@ -22,9 +22,8 @@
       "js": ["webextensionPolyfill.ts", "background/api.test.ts"]
     },
     {
-      "all_frames": true,
       "matches": [
-        "https://fregante.github.io/pixiebrix-testing-ground/Will-offscreen-methods"
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-offscreen-methods"
       ],
       "js": ["webextensionPolyfill.ts", "offscreen/api.test.ts"]
     },
