@@ -45,6 +45,7 @@ function senderisBackground(
   sender: Sender | undefined,
   message: string
 ) {
+  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing -- It's an OR on falsy values */
   t.true(
     sender?.origin === extensionUrl.origin || // Chrome
       sender?.origin === "null" || // Chrome, old
