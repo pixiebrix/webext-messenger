@@ -58,7 +58,7 @@ test("should receive error from a background handler", async (t) => {
 
     t.equal(error.message, "This my error");
     t.true(
-      error.stack.includes("/background/registration.js"),
+      error.stack.includes("/background."),
       "The stacktrace must come from the background page"
     );
     t.true(

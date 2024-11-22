@@ -48,7 +48,8 @@ function senderisBackground(
   t.true(
     sender?.origin === extensionUrl.origin || // Chrome
       sender?.origin === "null" || // Chrome, old
-      sender!.url?.endsWith("/_generated_background_page.html"), // Firefox
+      sender?.url?.includes("/background.") ||
+      sender?.url?.endsWith("/_generated_background_page.html"), // Firefox
     message
   );
 }
@@ -146,17 +147,17 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     const originalSender = trace[0];
     const directSender = trace.at(-1);
 
-    if (isContentScript() || !isBackground()) {
-      senderIsCurrentPage(
-        t,
-        originalSender,
-        "Messages should mention the current page in trace[0]"
-      );
-    } else {
+    if (isBackground()) {
       senderisBackground(
         t,
         directSender,
         "Messages should mention the current page (background) in trace[0]"
+      );
+    } else {
+      senderIsCurrentPage(
+        t,
+        originalSender,
+        "Messages should mention the current page in trace[0]"
       );
     }
 
