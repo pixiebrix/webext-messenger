@@ -30,7 +30,8 @@
     "p-retry": "^6.2.0",
     "serialize-error": "^11.0.3",
     "type-fest": "^4.26.1",
-    "webext-detect": "^5.1.0"
+    "webext-detect": "^5.3.1",
+    "webext-events": "^3.1.1"
   },
   "@parcel/resolver-default": {
     "packageExports": true

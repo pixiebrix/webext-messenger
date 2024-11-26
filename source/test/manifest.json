@@ -1,14 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/chrome-manifest",
   "name": "webext-messenger",
   "version": "0.0.0",
-  "manifest_version": 2,
-  "permissions": ["webNavigation", "https://fregante.github.io/*"],
+  "manifest_version": 3,
+  "permissions": ["webNavigation", "scripting", "storage"],
+  "host_permissions": ["https://fregante.github.io/*"],
   "background": {
-    "scripts": [
-      "webextensionPolyfill.ts",
-      "background/registration.ts",
-      "contentscript/api.test.ts"
-    ]
+    "type": "module",
+    "service_worker": "background.ts"
   },
   "options_ui": {
     "page": "options.html",
@@ -53,5 +52,10 @@
       "js": ["webextensionPolyfill.ts", "contentscript/missedRegistration.ts"]
     }
   ],
-  "web_accessible_resources": ["*.html", "**/*.ts"]
+  "web_accessible_resources": [
+    {
+      "resources": ["*.html", "**/*.ts"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

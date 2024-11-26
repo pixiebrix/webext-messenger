@@ -2,11 +2,9 @@ import { executeFunction } from "webext-content-scripts";
 import { once } from "webext-messenger/shared.js";
 
 export async function ensureScripts(tabId: number): Promise<void> {
-  await browser.tabs.executeScript(tabId, {
-    file: "webextensionPolyfill.js",
-  });
-  await browser.tabs.executeScript(tabId, {
-    file: "contentscript/registration.js",
+  await browser.scripting.executeScript({
+    target: { tabId },
+    files: ["webextensionPolyfill.js", "contentscript/registration.js"],
   });
 }
 
