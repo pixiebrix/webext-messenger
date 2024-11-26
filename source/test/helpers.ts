@@ -3,7 +3,7 @@ import type test from "tape";
 export async function expectRejection(
   t: test.Test,
   promise: Promise<unknown>,
-  expectedError: Error
+  expectedError: Error,
 ): Promise<void> {
   try {
     await promise;
@@ -11,7 +11,7 @@ export async function expectRejection(
   } catch (error: unknown) {
     if (!(error instanceof expectedError.constructor)) {
       t.fail(
-        "The error is not an instance of " + expectedError.constructor.name
+        "The error is not an instance of " + expectedError.constructor.name,
       );
     }
 
@@ -27,7 +27,7 @@ export async function sleep(milliseconds: number): Promise<number> {
 
 /** Helper to ensure we're tracking the specific promise’s duration without risking to track anything else */
 export async function trackSettleTime(
-  promise: Promise<unknown>
+  promise: Promise<unknown>,
 ): Promise<number> {
   const startTime = performance.now();
   try {
@@ -41,7 +41,7 @@ export function expectDuration(
   t: test.Test,
   actualDuration: number,
   expectedDuration: number,
-  maximumDuration?: number
+  maximumDuration?: number,
 ) {
   console.log({ actualDuration, expectedDuration, maximumDuration });
   if (maximumDuration) {
@@ -53,7 +53,7 @@ export function expectDuration(
           } seconds (took ${actualDuration / 1000}s)`
         : `It should take less than ${maximumDuration / 1000} seconds (took ${
             actualDuration / 1000
-          }s)`
+          }s)`,
     );
   } else {
     t.ok(
@@ -61,7 +61,7 @@ export function expectDuration(
         actualDuration < expectedDuration + 100,
       `It should take about ${expectedDuration / 1000}s (took ${
         actualDuration / 1000
-      }s)`
+      }s)`,
     );
   }
 }

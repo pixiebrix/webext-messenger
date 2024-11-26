@@ -69,7 +69,7 @@ const storeTabData = once(async () => {
   // If the page is prerendering, wait for the change to be able to get the tab data so the frameId is correct
   // https://developer.mozilla.org/en-US/docs/Web/API/Document/prerenderingchange_event
   if ("prerendering" in document && Boolean(document.prerendering)) {
-    await pEvent(document, 'prerenderingchange')
+    await pEvent(document, "prerenderingchange");
   }
 
   try {
@@ -101,8 +101,9 @@ export async function getThisFrame(): Promise<FrameTarget> {
   if (typeof tabId !== "number" || typeof frameId !== "number") {
     let moreInfo = "(error retrieving context information)";
     try {
-      moreInfo = `(context: ${getContextName()}, url: ${globalThis.location
-        ?.href})`;
+      moreInfo = `(context: ${getContextName()}, url: ${
+        globalThis.location?.href
+      })`;
     } catch {}
 
     throw new TypeError(`This target is not in a frame ${moreInfo}`);

@@ -18,7 +18,7 @@ type Targets = {
 
 export async function createTargets(): Promise<Targets> {
   const tabId = await openTab(
-    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child"
+    "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Parent?iframe=./Child",
   );
 
   // Append local page iframe
@@ -42,7 +42,7 @@ export async function createTargets(): Promise<Targets> {
         tabId,
         parentFrame: frames[0]!.frameId,
         iframe: frames.find(
-          (frame) => frame.frameId > 0 && frame.url.startsWith("http")
+          (frame) => frame.frameId > 0 && frame.url.startsWith("http"),
         )!.frameId,
       };
     }

@@ -32,7 +32,7 @@ export async function delay(milliseconds: number): Promise<void> {
 }
 
 export function once<Callback extends (...arguments_: unknown[]) => unknown>(
-  function_: Callback
+  function_: Callback,
 ): Callback {
   let called = false;
   let returnValue: unknown;
