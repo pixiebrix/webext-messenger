@@ -58,7 +58,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     expectedTitle + ": should receive information from the caller",
     async (t) => {
       t.equal(await sumIfMeta(target, 1, 2, 3, 4), 10);
-    }
+    },
   );
 
   if (!("page" in target)) {
@@ -66,7 +66,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
       expectedTitle + ": handler must be executed in the content script",
       async (t) => {
         t.equal(await contentScriptOnly(target), true);
-      }
+      },
     );
   }
 
@@ -91,16 +91,16 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
         t.true(
           error.stack.includes("/contentscript/registration.js") ||
             error.stack.includes("/iframe."), // Parcel 2.6+ rebundles the same file under a different name
-          "The stacktrace must come from the content script"
+          "The stacktrace must come from the content script",
         );
         t.true(
           // Chrome format || Firefox format
           error.stack.includes("at Object.throws") ||
             error.stack.includes("throws@moz-"),
-          "The stacktrace must include the original name of the method"
+          "The stacktrace must include the original name of the method",
         );
       }
-    }
+    },
   );
 
   test(
@@ -113,10 +113,10 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
         new Error(
           `No handler registered for notRegistered in ${
             "page" in target ? "extension" : "contentScript"
-          }`
-        )
+          }`,
+        ),
       );
-    }
+    },
   );
 
   test(expectedTitle + ": should receive trace", async (t) => {
@@ -128,14 +128,14 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     if (isBackground()) {
       senderisBackground(
         t,
-        directSender,
-        "Messages should mention the current page (background) in trace[0]"
+        originalSender,
+        "Messages should mention the current page (background) in trace[0]",
       );
     } else {
       senderIsCurrentPage(
         t,
         originalSender,
-        "Messages should mention the current page in trace[0]"
+        "Messages should mention the current page in trace[0]",
       );
     }
 
@@ -143,7 +143,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
       senderisBackground(
         t,
         directSender,
-        "Messages originated in content scripts or background pages must come directly from the background page"
+        "Messages originated in content scripts or background pages must come directly from the background page",
       );
     }
 
@@ -151,7 +151,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
       t.equal(
         trace.length,
         1,
-        "Messages originated in extension pages don’t need to be forwarded"
+        "Messages originated in extension pages don’t need to be forwarded",
       );
     }
   });
@@ -167,7 +167,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     async (t) => {
       notRegisteredNotification(target);
       t.pass();
-    }
+    },
   );
 }
 
@@ -193,7 +193,7 @@ async function testEveryTarget() {
 function additionalTests() {
   test("should throw the right error when `registerMethod` was never called", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page"
+      "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page",
     );
 
     await expectRejection(
@@ -202,16 +202,16 @@ function additionalTests() {
       new Error(
         `Messenger was not available in the target ${JSON.stringify({
           tabId,
-        })} for getPageTitle`
-      )
+        })} for getPageTitle`,
+      ),
     );
 
     await expectRejection(
       t,
       contentScriptContext.sleep({ tabId }, 100),
       new Error(
-        "Conflict: The message sleep was handled by a third-party listener"
-      )
+        "Conflict: The message sleep was handled by a third-party listener",
+      ),
     );
 
     await closeTab(tabId);
@@ -219,7 +219,7 @@ function additionalTests() {
 
   test("retries until target is ready", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts",
     );
 
     const request = getPageTitle({ tabId });
@@ -250,8 +250,8 @@ function additionalTests() {
         t,
         request,
         new Error(
-          `The target ${JSON.stringify(target)} for getPageTitle was not found`
-        )
+          `The target ${JSON.stringify(target)} for getPageTitle was not found`,
+        ),
       );
       expectDuration(t, await durationPromise, 4000, 5000);
     } else {
@@ -262,7 +262,7 @@ function additionalTests() {
 
   test("stops trying immediately if tab is closed before the handler responds", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Will-close-too-soon"
+      "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Will-close-too-soon",
     );
 
     const naturalResolutionTimeout = 5000;
@@ -270,7 +270,7 @@ function additionalTests() {
 
     const request = contentScriptContext.sleep(
       { tabId },
-      naturalResolutionTimeout
+      naturalResolutionTimeout,
     );
     const durationPromise = trackSettleTime(request);
 
@@ -284,7 +284,7 @@ function additionalTests() {
 
   test("retries until it times out", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts",
     );
 
     const request = getPageTitle({ tabId });
@@ -294,8 +294,10 @@ function additionalTests() {
       t,
       request,
       new MessengerError(
-        `The target ${JSON.stringify({ tabId })} for getPageTitle was not found`
-      )
+        `The target ${JSON.stringify({
+          tabId,
+        })} for getPageTitle was not found`,
+      ),
     );
 
     expectDuration(t, await durationPromise, 4000, 5000);
@@ -305,7 +307,7 @@ function additionalTests() {
 
   test("does not retry if specifically asked not to", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts",
     );
 
     const request = messenger("getPageTitle", { retry: false }, { tabId });
@@ -315,8 +317,10 @@ function additionalTests() {
       t,
       request,
       new MessengerError(
-        `The target ${JSON.stringify({ tabId })} for getPageTitle was not found`
-      )
+        `The target ${JSON.stringify({
+          tabId,
+        })} for getPageTitle was not found`,
+      ),
     );
 
     expectDuration(t, await durationPromise, 0);
@@ -326,7 +330,7 @@ function additionalTests() {
 
   test("retries until it times out even if webext-messenger was loaded (but nothing was registered)", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed"
+      "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed",
     );
 
     const request = getPageTitle({ tabId });
@@ -335,7 +339,7 @@ function additionalTests() {
     await expectRejection(
       t,
       request,
-      new Error("No handlers registered in contentScript")
+      new Error("No handlers registered in contentScript"),
     );
 
     expectDuration(t, await durationPromise, 4000, 5000);
@@ -352,8 +356,8 @@ function additionalTests() {
       t,
       request,
       new Error(
-        `The target ${JSON.stringify(target)} for getPageTitle was not found`
-      )
+        `The target ${JSON.stringify(target)} for getPageTitle was not found`,
+      ),
     );
 
     expectDuration(t, await durationPromise, 4000, 5000);
@@ -361,7 +365,7 @@ function additionalTests() {
 
   test("throws the right error after retrying if a named target with tabId isn't found", async (t) => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/No-frames-on-the-page"
+      "https://fregante.github.io/pixiebrix-testing-ground/No-frames-on-the-page",
     );
     const target = { tabId, page: "/memes.html" };
     const request = getPageTitle(target);
@@ -371,8 +375,8 @@ function additionalTests() {
       t,
       request,
       new Error(
-        `The target ${JSON.stringify(target)} for getPageTitle was not found`
-      )
+        `The target ${JSON.stringify(target)} for getPageTitle was not found`,
+      ),
     );
 
     expectDuration(t, await durationPromise, 4000, 5000);
@@ -393,7 +397,7 @@ function additionalTests() {
 
   test("notifications when `registerMethod` was never called", async () => {
     const tabId = await openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts"
+      "https://fregante.github.io/pixiebrix-testing-ground/No-static-content-scripts",
     );
     getPageTitleNotification({ tabId });
     await closeTab(tabId);
@@ -401,7 +405,7 @@ function additionalTests() {
 
   test("should support target promises in methods with static targets", async (t) => {
     const tabIdPromise = openTab(
-      "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Promised-target"
+      "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Promised-target",
     );
     const targetPromise = tabIdPromise.then((tabId) => ({ tabId }));
 
@@ -414,7 +418,7 @@ function additionalTests() {
   test("`frameId: allFrames` messages every frame in tab, receives only one response", async (t) => {
     // `chrome.*.sendMessage` can exclusively receive one response
     const tabId = await openTab(
-      "https://ephiframe.vercel.app/No-content-script-in-top-frame?iframe=https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Receives-with-allFrames-on-tab"
+      "https://ephiframe.vercel.app/No-content-script-in-top-frame?iframe=https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/Receives-with-allFrames-on-tab",
     );
 
     const title = await getPageTitle({ tabId, frameId: "allFrames" });
