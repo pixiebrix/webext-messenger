@@ -12,7 +12,7 @@ export const sumIfMeta = getMethod("sumIfMeta", backgroundTarget);
 export const notRegistered = getMethod("notRegistered", backgroundTarget);
 export const notRegisteredNotification = getNotifier(
   "notRegistered",
-  backgroundTarget
+  backgroundTarget,
 );
 export const getExtensionId = getMethod("getExtensionId", backgroundTarget);
 export const backgroundOnly = getMethod("backgroundOnly", backgroundTarget);
