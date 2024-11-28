@@ -15,7 +15,7 @@ declare global {
 
 if (!isOffscreenDocument()) {
   throw new Error(
-    "This file must only be run in the offscreen document, which is the receiving end"
+    "This file must only be run in the offscreen document, which is the receiving end",
   );
 }
 

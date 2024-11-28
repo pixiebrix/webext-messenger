@@ -42,19 +42,19 @@ import { pEvent } from "p-event";
 // If a message is received before this is ready, it will just have to be ignored.
 export const thisTarget: KnownTarget = isBackground()
   ? { page: "background" }
-  : (isOffscreenDocument()
-  ? { page: "offscreen" }
-  : {
-      get page(): string {
-        // Extension pages have relative URLs to simplify comparison
-        const origin = location.protocol.startsWith("http")
-          ? location.origin
-          : "";
+  : isOffscreenDocument()
+    ? { page: "offscreen" }
+    : {
+        get page(): string {
+          // Extension pages have relative URLs to simplify comparison
+          const origin = location.protocol.startsWith("http")
+            ? location.origin
+            : "";
 
-        // Don't use the hash
-        return origin + location.pathname + location.search;
-      },
-    });
+          // Don't use the hash
+          return origin + location.pathname + location.search;
+        },
+      };
 
 let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
   // The background page doesn't have a tab
