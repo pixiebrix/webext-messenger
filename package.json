@@ -73,8 +73,7 @@
     "sourceDir": "dist",
     "run": {
       "startUrl": [
-        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods",
-        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
+        "https://refined-github-html-preview.kidonng.workers.dev/pixiebrix/webext-messenger/raw/refs/heads/main/source/test/start.html"
       ]
     }
   }

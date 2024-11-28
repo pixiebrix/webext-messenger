@@ -7,15 +7,11 @@ npm run demo:watch
 npx web-ext run --target=chromium
 ```
 
-Several tabs will automatically open, this is the various contexts running tests; let it run.
+Several tabs will automatically open, this is the background contexts running tests; let it run.
 
-**The tests are to be visually evaluated, they [don't fail CI](https://github.com/pixiebrix/webext-messenger/issues/28).** You can open the console to see the results of each test. Some contexts are run automatically:
+A start page will also run, follow the instructions there.
 
-- background to content scripts
-- content script to background
-- content script to content script (via runtime)
-
-Others are run only when you open the specific context, like the options page.
+**The tests are to be visually evaluated, they [don't fail CI](https://github.com/pixiebrix/webext-messenger/issues/28).**
 
 ## File organization
 

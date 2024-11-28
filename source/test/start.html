@@ -1,0 +1,38 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base target="_blank" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webext-messenger testing start page</title>
+  </head>
+  <body>
+    <h1>webext-messenger testing start page</h1>
+    <p>
+      Open any of these pages to start testing each direction. More info in the
+      <a
+        href="https://github.com/pixiebrix/webext-messenger/blob/main/source/test/readme.md"
+        >readme</a
+      >
+    </p>
+    <ul>
+      <li>
+        <a
+          href="https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods"
+          >Content script to background</a
+        >
+      </li>
+      <li>
+        <a
+          href="https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
+          >Content script to content script, via background</a
+        >
+      </li>
+      <li><button disabled id="options">Options page to background</button></li>
+      <li>
+        <strong>Background to content script</strong> tests run on worker start.
+        You'll have to open the service worker's dev tools to see the results.
+      </li>
+    </ul>
+    <p>If the buttons are disabled, the content script did not load.</p>
+  </body>
+</html>

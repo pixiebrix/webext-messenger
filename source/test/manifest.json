@@ -15,6 +15,12 @@
   },
   "content_scripts": [
     {
+      "matches": [
+        "https://refined-github-html-preview.kidonng.workers.dev/pixiebrix/webext-messenger/*"
+      ],
+      "js": ["start.ts"]
+    },
+    {
       "all_frames": true,
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods"
