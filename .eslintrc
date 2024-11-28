@@ -50,6 +50,7 @@
         }
       }
     ],
+    "unicorn/no-nested-ternary": "off", // Prettier conflict
     "@typescript-eslint/consistent-type-definitions": "off" // Unconvinced by its utility; may be counterproductive
   },
   "overrides": [
