@@ -77,7 +77,7 @@ export function senderIsCurrentPage(
   t.equal(sender?.url, location.href, message);
 }
 
-export function senderisBackground(
+export function senderIsBackground(
   t: test.Test,
   sender: Sender | undefined,
   message: string,

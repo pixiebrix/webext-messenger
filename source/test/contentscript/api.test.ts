@@ -12,7 +12,7 @@ import {
   sleep,
   trackSettleTime,
   expectDuration,
-  senderisBackground,
+  senderIsBackground,
   senderIsCurrentPage,
 } from "../helpers.js";
 import * as backgroundContext from "../background/api.js";
@@ -126,7 +126,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     const directSender = trace.at(-1);
 
     if (isBackground()) {
-      senderisBackground(
+      senderIsBackground(
         t,
         originalSender,
         "Messages should mention the current page (background) in trace[0]",
@@ -140,7 +140,7 @@ function runOnTarget(target: Target | PageTarget, expectedTitle: string) {
     }
 
     if (!("page" in target && isContentScript())) {
-      senderisBackground(
+      senderIsBackground(
         t,
         directSender,
         "Messages originated in content scripts or background pages must come directly from the background page",
