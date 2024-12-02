@@ -2,6 +2,7 @@ import {
   getContextName,
   isBackground,
   isExtensionContext,
+  isOffscreenDocument,
 } from "webext-detect";
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
@@ -39,23 +40,25 @@ import { pEvent } from "p-event";
 // Soft warning: Race conditions are possible.
 // This CANNOT be awaited because waiting for it means "I will handle the message."
 // If a message is received before this is ready, it will just have to be ignored.
-export const thisTarget: KnownTarget = isBackground()
-  ? { page: "background" }
-  : {
-      get page(): string {
-        // Extension pages have relative URLs to simplify comparison
-        const origin = location.protocol.startsWith("http")
-          ? location.origin
-          : "";
+export const thisTarget: KnownTarget = (() => {
+  if (isBackground()) return { page: "background" };
+  if (isOffscreenDocument()) return { page: "offscreen" };
+  return {
+    get page(): string {
+      // Extension pages have relative URLs to simplify comparison
+      const origin = location.protocol.startsWith("http")
+        ? location.origin
+        : "";
 
-        // Don't use the hash
-        return origin + location.pathname + location.search;
-      },
-    };
+      // Don't use the hash
+      return origin + location.pathname + location.search;
+    },
+  };
+})();
 
 let tabDataStatus: "needed" | "pending" | "received" | "not-needed" | "error" =
-  // The background page doesn't have a tab
-  isBackground() ? "not-needed" : "needed";
+  // Exclude contexts that don't have a tab associated to them
+  isBackground() || isOffscreenDocument() ? "not-needed" : "needed";
 
 export function getTabDataStatus(): typeof tabDataStatus {
   return tabDataStatus;
