@@ -1,6 +1,6 @@
 import "./webextensionPolyfill.js";
-import "./background/registration.ts";
-import "./contentscript/api.test.ts";
+import "./background/registration.js";
+import "./contentscript/api.test.js";
 
 async function init() {
   try {
