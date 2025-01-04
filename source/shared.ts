@@ -1,5 +1,5 @@
 import { type JsonObject } from "type-fest";
-import { errorConstructors } from "serialize-error";
+import { addKnownErrorConstructor } from "serialize-error";
 
 type ErrorObject = {
   name?: string;
@@ -17,8 +17,7 @@ export class MessengerError extends Error {
   override name = "MessengerError";
 }
 
-// @ts-expect-error Wrong `errorConstructors` types
-errorConstructors.set("MessengerError", MessengerError);
+addKnownErrorConstructor(MessengerError);
 
 export function isErrorObject(error: unknown): error is ErrorObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- This is a type guard function and it uses ?.
