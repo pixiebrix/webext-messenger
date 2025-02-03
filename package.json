@@ -40,7 +40,7 @@
     "@parcel/config-webextension": "^2.11.0",
     "@sindresorhus/tsconfig": "^7.0.0",
     "@types/chrome": "^0.0.287",
-    "@types/tape": "^5.8.0",
+    "@types/tape": "^5.8.1",
     "@types/webextension-polyfill": "^0.12.1",
     "buffer": "^6.0.3",
     "eslint": "^8.57.0",
