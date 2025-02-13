@@ -19,43 +19,40 @@
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods"
       ],
-      "js": ["webextensionPolyfill.ts", "background/api.test.ts"]
+      "js": ["background/api.test.ts"]
     },
     {
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-offscreen-methods"
       ],
-      "js": ["webextensionPolyfill.ts", "offscreen/api.test.ts"]
+      "js": ["offscreen/api.test.ts"]
     },
     {
       "all_frames": true,
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-receive-CS-calls/*"
       ],
-      "js": ["webextensionPolyfill.ts", "contentscript/registration.ts"]
+      "js": ["contentscript/registration.ts"]
     },
     {
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
       ],
-      "js": ["webextensionPolyfill.ts", "contentscript/api.test.ts"]
+      "js": ["contentscript/api.test.ts"]
     },
     {
       "all_frames": true,
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Unrelated-CS-on-this-page"
       ],
-      "js": [
-        "webextensionPolyfill.ts",
-        "contentscript/fixtures/unrelatedMessageListener.ts"
-      ]
+      "js": ["contentscript/fixtures/unrelatedMessageListener.ts"]
     },
     {
       "all_frames": true,
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed"
       ],
-      "js": ["webextensionPolyfill.ts", "contentscript/missedRegistration.ts"]
+      "js": ["contentscript/missedRegistration.ts"]
     }
   ],
   "web_accessible_resources": [

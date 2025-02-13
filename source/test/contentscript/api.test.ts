@@ -1,3 +1,4 @@
+import browser from "webextension-polyfill";
 import test from "tape";
 import { isBackground, isContentScript, isWebPage } from "webext-detect";
 import { type PageTarget, type Target } from "webext-messenger";
