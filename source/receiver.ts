@@ -1,3 +1,4 @@
+import browser from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 import { getContextName } from "webext-detect";
 

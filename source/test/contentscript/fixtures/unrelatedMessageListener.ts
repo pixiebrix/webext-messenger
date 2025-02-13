@@ -1,3 +1,5 @@
+import browser from "webextension-polyfill";
+
 browser.runtime.onMessage.addListener(
   (message: unknown): Promise<string> | undefined => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

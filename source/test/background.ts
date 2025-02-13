@@ -1,4 +1,3 @@
-import "./webextensionPolyfill.js";
 import "./background/registration.js";
 import "./contentscript/api.test.js";
 
