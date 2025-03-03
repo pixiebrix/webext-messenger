@@ -52,6 +52,8 @@ function onMessageListener(
     }
   })();
 
+  // Make `sendMessage` wait for an async response. This stops other `onMessage` listeners from being called.
+  // TODO: Just return a promise if this is ever implemented https://issues.chromium.org/issues/40753031
   return true;
 }
 
