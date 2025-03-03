@@ -1,4 +1,3 @@
-import browser from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 import { getContextName } from "webext-detect";
 
@@ -24,11 +23,11 @@ export function isMessengerMessage(message: unknown): message is Message {
   );
 }
 
-// MUST NOT be `async` or Promise-returning-only
 function onMessageListener(
   message: unknown,
   sender: Sender,
-): Promise<unknown> | undefined {
+  sendResponse: (response: unknown) => void,
+): true | undefined {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
     return;
@@ -45,7 +44,17 @@ function onMessageListener(
     return;
   }
 
-  return handleMessage(message, sender, action);
+  (async () => {
+    try {
+      sendResponse(await handleMessage(message, sender, action));
+    } catch (error) {
+      sendResponse({ __webextMessenger: true, error: serializeError(error) });
+    }
+  })();
+
+  // Make `sendMessage` wait for an async response. This stops other `onMessage` listeners from being called.
+  // TODO: Just return a promise if this is ever implemented https://issues.chromium.org/issues/40753031
+  return true;
 }
 
 // This function can only be called when the message *will* be handled locally.
@@ -97,7 +106,6 @@ async function handleMessage(
     (value) => ({ value }),
     (error: unknown) => ({
       // Errors must be serialized because the stack traces are currently lost on Chrome
-      // and https://github.com/mozilla/webextension-polyfill/issues/210
       error: serializeError(error),
     }),
   );
@@ -116,7 +124,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
     handlers.set(type, method as Method);
   }
 
-  browser.runtime.onMessage.addListener(onMessageListener);
+  chrome.runtime.onMessage.addListener(onMessageListener);
 }
 
 /** Ensure/document that the current function was called via Messenger */

@@ -1,6 +1,5 @@
 import { assert, describe, test, vi } from "vitest";
 import { getActionForMessage } from "./targetLogic.js";
-import { type Tabs } from "webextension-polyfill";
 import { isContentScript, isBackground } from "webext-detect";
 
 vi.mock("webext-detect");
@@ -14,7 +13,12 @@ const tab = {
   pinned: false,
   highlighted: true,
   incognito: false,
-} satisfies Tabs.Tab;
+  discarded: false,
+  frozen: false,
+  selected: true,
+  autoDiscardable: false,
+  groupId: -1,
+} satisfies chrome.tabs.Tab;
 
 const senders = {
   background: { page: "background" },

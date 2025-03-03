@@ -1,5 +1,3 @@
-/* Warning: Do not use import browser-polyfill directly or indirectly */
-
 // .bind preserves the call location in the console
 const debug = console.debug.bind(console, "Messenger:");
 const warn = console.warn.bind(console, "Messenger:");

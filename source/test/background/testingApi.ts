@@ -1,8 +1,7 @@
-import browser from "webextension-polyfill";
 import { once } from "webext-messenger/shared.js";
 
 export async function ensureScripts(tabId: number): Promise<void> {
-  await browser.scripting.executeScript({
+  await chrome.scripting.executeScript({
     target: { tabId },
     files: ["contentscript/registration.js"],
   });
@@ -34,7 +33,7 @@ export async function createTargets(): Promise<Targets> {
   let frames;
   while (limit--) {
     // eslint-disable-next-line no-await-in-loop -- It's a retry loop
-    frames = (await browser.webNavigation.getAllFrames({
+    frames = (await chrome.webNavigation.getAllFrames({
       tabId,
     }))!;
 
@@ -60,7 +59,7 @@ export async function createTargets(): Promise<Targets> {
 }
 
 const getHiddenWindow = once(async (): Promise<number> => {
-  const { id } = await browser.windows.create({
+  const { id } = await chrome.windows.create({
     focused: false,
     state: "minimized",
   });
@@ -68,7 +67,7 @@ const getHiddenWindow = once(async (): Promise<number> => {
 });
 
 export async function openTab(url: string): Promise<number> {
-  const tab = await browser.tabs.create({
+  const tab = await chrome.tabs.create({
     windowId: await getHiddenWindow(),
     active: false,
     url,
@@ -77,9 +76,9 @@ export async function openTab(url: string): Promise<number> {
 }
 
 export async function closeHiddenWindow(): Promise<void> {
-  return browser.windows.remove(await getHiddenWindow());
+  return chrome.windows.remove(await getHiddenWindow());
 }
 
 export async function closeTab(tabId: number): Promise<void> {
-  await browser.tabs.remove(tabId);
+  await chrome.tabs.remove(tabId);
 }
