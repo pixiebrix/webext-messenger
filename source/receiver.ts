@@ -123,6 +123,9 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   }
 
   chrome.runtime.onMessage.addListener(onMessageListener);
+
+  // Only available in the background worker
+  chrome.runtime.onMessageExternal?.addListener(onMessageListener);
 }
 
 /** Ensure/document that the current function was called via Messenger */
