@@ -1,4 +1,3 @@
-import { executeFunction } from "webext-content-scripts";
 import { once } from "webext-messenger/shared.js";
 
 export async function ensureScripts(tabId: number): Promise<void> {
@@ -20,10 +19,14 @@ export async function createTargets(): Promise<Targets> {
   );
 
   // Append local page iframe
-  await executeFunction(tabId, () => {
-    const iframe = document.createElement("iframe");
-    iframe.src = chrome.runtime.getURL("iframe.html");
-    document.body.append(iframe);
+  await chrome.scripting.executeScript({
+    target: { tabId, frameIds: [0] },
+    // eslint-disable-next-line object-shorthand -- It breaks Chrome's stringifier 😮‍💨
+    func: () => {
+      const iframe = document.createElement("iframe");
+      iframe.src = chrome.runtime.getURL("iframe.html");
+      document.body.append(iframe);
+    },
   });
 
   let limit = 100;
