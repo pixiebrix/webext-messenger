@@ -26,19 +26,15 @@ export function isMessengerMessage(message: unknown): message is Message {
 type SendResponse = (response: unknown) => void;
 
 /** Thin Promise-to-sendResponse converter. Don't add logic here */
-function adaptResponse(
+async function adaptResponse(
   sendResponse: SendResponse,
   response: Promise<unknown>,
-): true {
-  response.then(sendResponse, (error) => {
-    // Errors should be already wrapped by this point. If `response` rejects it's a bug in the Messenger
-    sendResponse({
-      error: serializeError(
-        new MessengerError("Internal Error", { cause: error }),
-      ),
-    });
-  });
-  return true;
+): Promise<void> {
+  try {
+    sendResponse(await response);
+  } catch (error) {
+    sendResponse({ __webextMessenger: true, error: serializeError(error) });
+  }
 }
 
 function onMessageListener(
@@ -62,7 +58,8 @@ function onMessageListener(
     return;
   }
 
-  return adaptResponse(sendResponse, handleMessage(message, sender, action));
+  void adaptResponse(sendResponse, handleMessage(message, sender, action));
+  return true;
 }
 
 // This function can only be called when the message *will* be handled locally.

@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener(
         { message },
       );
 
-      void Promise.resolve("User is on Windows 95").then(sendResponse);
+      void Promise.resolve("Buonanotte").then(sendResponse);
 
       return true;
     }
