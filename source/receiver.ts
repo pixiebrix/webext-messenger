@@ -23,24 +23,10 @@ export function isMessengerMessage(message: unknown): message is Message {
   );
 }
 
-type SendResponse = (response: unknown) => void;
-
-/** Thin Promise-to-sendResponse converter. Don't add logic here */
-async function adaptResponse(
-  sendResponse: SendResponse,
-  response: Promise<unknown>,
-): Promise<void> {
-  try {
-    sendResponse(await response);
-  } catch (error) {
-    sendResponse({ __webextMessenger: true, error: serializeError(error) });
-  }
-}
-
 function onMessageListener(
   message: unknown,
   sender: Sender,
-  sendResponse: SendResponse,
+  sendResponse: (response: unknown) => void,
 ): true | undefined {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
@@ -58,7 +44,14 @@ function onMessageListener(
     return;
   }
 
-  void adaptResponse(sendResponse, handleMessage(message, sender, action));
+  (async () => {
+    try {
+      sendResponse(await handleMessage(message, sender, action));
+    } catch (error) {
+      sendResponse({ __webextMessenger: true, error: serializeError(error) });
+    }
+  })();
+
   return true;
 }
 
