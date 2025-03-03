@@ -1,4 +1,3 @@
-import browser from "webextension-polyfill";
 import pRetry from "p-retry";
 import { isBackground } from "webext-detect";
 import { deserializeError } from "serialize-error";
@@ -166,9 +165,9 @@ async function manageMessage(
           throw error;
         }
 
-        if (browser.tabs && typeof target.tabId === "number") {
+        if (chrome.tabs && typeof target.tabId === "number") {
           try {
-            const tabInfo = await browser.tabs.get(target.tabId);
+            const tabInfo = await chrome.tabs.get(target.tabId);
             if (tabInfo.discarded) {
               throw new Error(errorTabWasDiscarded);
             }
@@ -270,7 +269,7 @@ function messenger<
         "↗️ sending message to runtime",
         attemptLog(attemptCount),
       );
-      return browser.runtime.sendMessage(
+      return chrome.runtime.sendMessage(
         makeMessage(type, args, target, options),
       );
     };
@@ -279,7 +278,7 @@ function messenger<
   }
 
   // Contexts without direct Tab access must go through background
-  if (!browser.tabs) {
+  if (!chrome.tabs) {
     return manageConnection(
       type,
       options,
@@ -291,7 +290,7 @@ function messenger<
           "↗️ sending message to runtime",
           attemptLog(attemptCount),
         );
-        return browser.runtime.sendMessage(
+        return chrome.runtime.sendMessage(
           makeMessage(type, args, target, options),
         );
       },
@@ -316,7 +315,7 @@ function messenger<
         frameId,
         attemptLog(attemptCount),
       );
-      return browser.tabs.sendMessage(
+      return chrome.tabs.sendMessage(
         tabId,
         makeMessage(type, args, target, options),
         frameId === "allFrames"

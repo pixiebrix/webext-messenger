@@ -1,4 +1,3 @@
-import browser from "webextension-polyfill";
 import { serializeError } from "serialize-error";
 import { getContextName } from "webext-detect";
 
@@ -24,11 +23,29 @@ export function isMessengerMessage(message: unknown): message is Message {
   );
 }
 
-// MUST NOT be `async` or Promise-returning-only
+type SendResponse = (response: unknown) => void;
+
+/** Thin Promise-to-sendResponse converter. Don't add logic here */
+function adaptResponse(
+  sendResponse: SendResponse,
+  response: Promise<unknown>,
+): true {
+  response.then(sendResponse, (error) => {
+    // Errors should be already wrapped by this point. If `response` rejects it's a bug in the Messenger
+    sendResponse({
+      error: serializeError(
+        new MessengerError("Internal Error", { cause: error }),
+      ),
+    });
+  });
+  return true;
+}
+
 function onMessageListener(
   message: unknown,
   sender: Sender,
-): Promise<unknown> | undefined {
+  sendResponse: SendResponse,
+): true | undefined {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
     return;
@@ -45,7 +62,7 @@ function onMessageListener(
     return;
   }
 
-  return handleMessage(message, sender, action);
+  return adaptResponse(sendResponse, handleMessage(message, sender, action));
 }
 
 // This function can only be called when the message *will* be handled locally.
@@ -97,7 +114,6 @@ async function handleMessage(
     (value) => ({ value }),
     (error: unknown) => ({
       // Errors must be serialized because the stack traces are currently lost on Chrome
-      // and https://github.com/mozilla/webextension-polyfill/issues/210
       error: serializeError(error),
     }),
   );
@@ -116,7 +132,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
     handlers.set(type, method as Method);
   }
 
-  browser.runtime.onMessage.addListener(onMessageListener);
+  chrome.runtime.onMessage.addListener(onMessageListener);
 }
 
 /** Ensure/document that the current function was called via Messenger */

@@ -1,4 +1,3 @@
-import { type Runtime } from "webextension-polyfill";
 import { type Asyncify, type ValueOf } from "type-fest";
 import { type ErrorObject } from "serialize-error";
 
@@ -83,7 +82,7 @@ export type Message<LocalArguments extends Arguments = Arguments> = {
   options?: Options;
 };
 
-export type Sender = Runtime.MessageSender & { origin?: string }; // Chrome includes the origin
+export type Sender = chrome.runtime.MessageSender;
 
 export type MessengerMessage = Message & {
   /** Guarantees that a message is meant to be handled by this library */
