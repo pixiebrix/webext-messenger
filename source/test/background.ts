@@ -5,7 +5,6 @@ async function init() {
   try {
     await chrome.offscreen.createDocument({
       url: "offscreen.html",
-      // @ts-expect-error wrong?
       reasons: ["DOM_PARSER"],
       justification: "testing",
     });
