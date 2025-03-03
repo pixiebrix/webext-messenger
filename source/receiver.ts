@@ -14,6 +14,8 @@ import { getActionForMessage } from "./targetLogic.js";
 import { didUserRegisterMethods, handlers } from "./handlers.js";
 import { getTabDataStatus, thisTarget } from "./thisTarget.js";
 
+type SendResponse = (response: unknown) => void;
+
 export function isMessengerMessage(message: unknown): message is Message {
   return (
     isObject(message) &&
@@ -23,10 +25,17 @@ export function isMessengerMessage(message: unknown): message is Message {
   );
 }
 
+/**
+ * Decides what to do with a message and sends a response (value or error) back to the sender.
+ *
+ * @warn This function cannot return a Promise.
+ * @warn Limit the amount of logic here because errors won't make it to `sendResponse`
+ */
+//
 function onMessageListener(
   message: unknown,
   sender: Sender,
-  sendResponse: (response: unknown) => void,
+  sendResponse: SendResponse,
 ): true | undefined {
   if (!isMessengerMessage(message)) {
     // TODO: Add test for this eventuality: ignore unrelated messages
@@ -44,74 +53,64 @@ function onMessageListener(
     return;
   }
 
-  (async () => {
-    try {
-      sendResponse(await handleMessage(message, sender, action));
-    } catch (error) {
-      sendResponse({ __webextMessenger: true, error: serializeError(error) });
-    }
-  })();
-
-  // Make `sendMessage` wait for an async response. This stops other `onMessage` listeners from being called.
-  // TODO: Just return a promise if this is ever implemented https://issues.chromium.org/issues/40753031
-  return true;
-}
-
-// This function can only be called when the message *will* be handled locally.
-// Returning "undefined" or throwing an error will still handle it.
-async function handleMessage(
-  message: Message,
-  sender: Sender,
-
-  // Once messages reach this function they cannot be "ignored", they're already being handled
-  action: "respond" | "forward",
-): Promise<unknown> {
   const { type, target, args, options = {} } = message;
-
   const { trace = [], seq } = options;
-  trace.push(sender);
-  const meta: MessengerMeta = { trace };
-
-  let handleMessage: () => Promise<unknown>;
 
   if (action === "forward") {
     log.debug(type, seq, "🔀 forwarded", { sender, target });
-    handleMessage = async () => messenger(type, meta, target, ...args);
   } else {
     log.debug(type, seq, "↘️ received in", getContextName(), {
       sender,
       args,
       wasForwarded: trace.length > 1,
     });
-
-    const localHandler = handlers.get(type);
-    if (!localHandler) {
-      if (!didUserRegisterMethods()) {
-        // TODO: Test the handling of __getTabData in contexts that have no registered methods
-        // https://github.com/pixiebrix/webext-messenger/pull/82
-        throw new MessengerError(
-          `No handlers registered in ${getContextName()}`,
-        );
-      }
-
-      throw new MessengerError(
-        `No handler registered for ${type} in ${getContextName()}`,
-      );
-    }
-
-    handleMessage = async () => localHandler.apply(meta, args);
   }
 
-  const response = await handleMessage().then(
-    (value) => ({ value }),
-    (error: unknown) => ({
-      // Errors must be serialized because the stack traces are currently lost on Chrome
-      error: serializeError(error),
-    }),
-  );
+  // Prepare the response asynchronously because the listener must return `true` synchronously
+  (async () => {
+    try {
+      trace.push(sender);
 
-  log.debug(type, seq, "↗️ responding", response);
-  return { ...response, __webextMessenger };
+      const value = await prepareResponse(message, action, { trace });
+      log.debug(type, seq, "↗️ responding", { value });
+      sendResponse({ __webextMessenger, value });
+    } catch (error) {
+      log.debug(type, seq, "↗️ responding", { error });
+      sendResponse({ __webextMessenger, error: serializeError(error) });
+    }
+  })();
+
+  // This indicates that the message is being handled and a response will be sent asynchronously
+  // TODO: Just return a promise if this is ever implemented https://issues.chromium.org/issues/40753031
+  return true;
+}
+
+/** Generates the value or error to return to the sender; does not include further messaging logic */
+async function prepareResponse(
+  message: Message,
+  action: "respond" | "forward",
+  meta: MessengerMeta,
+): Promise<unknown> {
+  const { type, target, args } = message;
+
+  if (action === "forward") {
+    return messenger(type, meta, target, ...args);
+  }
+
+  const localHandler = handlers.get(type);
+  if (localHandler) {
+    return localHandler.apply(meta, args);
+  }
+
+  if (didUserRegisterMethods()) {
+    throw new MessengerError(
+      `No handler registered for ${type} in ${getContextName()}`,
+    );
+  }
+
+  // TODO: Test the handling of __getTabData in contexts that have no registered methods
+  // https://github.com/pixiebrix/webext-messenger/pull/82
+  throw new MessengerError(`No handlers registered in ${getContextName()}`);
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {
