@@ -21,7 +21,6 @@ import { events } from "./events.js";
 const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
 
-// https://github.com/mozilla/webextension-polyfill/issues/384
 const _errorTargetClosedEarly =
   "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received";
 
