@@ -38,31 +38,39 @@ export async function trackSettleTime(
   return performance.now() - startTime;
 }
 
+function asSeconds(milliseconds: number): number {
+  return Number((milliseconds / 1000).toFixed(2));
+}
+
 export function expectDuration(
   t: test.Test,
   actualDuration: number,
   expectedDuration: number,
   maximumDuration?: number,
 ) {
-  console.log({ actualDuration, expectedDuration, maximumDuration });
+  console.log({
+    actualDuration: Math.round(actualDuration),
+    expectedDuration,
+    maximumDuration,
+  });
   if (maximumDuration) {
     t.ok(
       actualDuration >= expectedDuration && actualDuration <= maximumDuration,
       expectedDuration > 0
-        ? `It should take between ${expectedDuration / 1000} and ${
-            maximumDuration / 1000
-          } seconds (took ${actualDuration / 1000}s)`
-        : `It should take less than ${maximumDuration / 1000} seconds (took ${
-            actualDuration / 1000
-          }s)`,
+        ? `It should take between ${asSeconds(expectedDuration)} and ${asSeconds(
+            maximumDuration,
+          )} seconds (took ${asSeconds(actualDuration)}s)`
+        : `It should take less than ${asSeconds(maximumDuration)} seconds (took ${asSeconds(
+            actualDuration,
+          )}s)`,
     );
   } else {
     t.ok(
       actualDuration > expectedDuration - 100 &&
         actualDuration < expectedDuration + 100,
-      `It should take about ${expectedDuration / 1000}s (took ${
-        actualDuration / 1000
-      }s)`,
+      `It should take about ${asSeconds(expectedDuration)}s (took ${asSeconds(
+        actualDuration,
+      )}s)`,
     );
   }
 }
