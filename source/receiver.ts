@@ -17,6 +17,8 @@ import { getTabDataStatus, thisTarget } from "./thisTarget.js";
 
 type SendResponse = (response: unknown) => void;
 
+const externalMethods = new Set<keyof MessengerMethods>();
+
 export function isMessengerMessage(message: unknown): message is Message {
   return (
     isObject(message) &&
@@ -135,6 +137,12 @@ async function prepareResponse(
 
   const localHandler = handlers.get(type);
   if (localHandler) {
+    if ("extensionId" in target && !externalMethods.has(type)) {
+      throw new MessengerError(
+        `${type} is not allowed to be called externally in ${getContextName()}`,
+      );
+    }
+
     return localHandler.apply(meta, args);
   }
 
@@ -164,6 +172,14 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   // Only handle direct-to-background messages for now
   if (isBackground()) {
     chrome.runtime.onMessageExternal.addListener(onMessageExternalListener);
+  }
+}
+
+export function allowExternalUse(
+  ...types: Array<keyof MessengerMethods>
+): void {
+  for (const type of types) {
+    externalMethods.add(type);
   }
 }
 
