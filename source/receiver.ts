@@ -1,9 +1,10 @@
 import { serializeError } from "serialize-error";
-import { getContextName } from "webext-detect";
+import { getContextName, isBackground } from "webext-detect";
 
 import { messenger } from "./sender.js";
 import {
   type Message,
+  type ExternalMessage,
   type MessengerMeta,
   type Method,
   type Sender,
@@ -22,6 +23,20 @@ export function isMessengerMessage(message: unknown): message is Message {
     typeof message["type"] === "string" &&
     message["__webextMessenger"] === true &&
     Array.isArray(message["args"])
+  );
+}
+
+export function isExternalMessengerMessage(
+  message: unknown,
+): message is ExternalMessage {
+  return (
+    isObject(message) &&
+    typeof message["type"] === "string" &&
+    message["__webextMessenger"] === true &&
+    Array.isArray(message["args"]) &&
+    isObject(message["target"]) &&
+    Object.keys(message["target"]).length === 1 && // Ensure it's *only* `extensionId`
+    typeof message["target"]["extensionId"] === "string"
   );
 }
 
@@ -85,6 +100,27 @@ function onMessageListener(
   return true;
 }
 
+// Do not remove.
+// Early validation to ensure that the message matches the specific allowed target
+// before letting it flow into the rest of messenger.
+function onMessageExternalListener(
+  message: unknown,
+  sender: Sender,
+  sendResponse: SendResponse,
+): true | void {
+  if (
+    isExternalMessengerMessage(message) &&
+    message.target.extensionId === chrome.runtime.id
+  ) {
+    return onMessageListener(message, sender, sendResponse);
+  }
+
+  log.debug("Ignored external message", {
+    message,
+    sender,
+  });
+}
+
 /** Generates the value or error to return to the sender; does not include further messaging logic */
 async function prepareResponse(
   message: Message,
@@ -125,8 +161,10 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
 
   chrome.runtime.onMessage.addListener(onMessageListener);
 
-  // Only available in the background worker
-  chrome.runtime.onMessageExternal?.addListener(onMessageListener);
+  // Only handle direct-to-background messages for now
+  if (isBackground()) {
+    chrome.runtime.onMessageExternal.addListener(onMessageExternalListener);
+  }
 }
 
 /** Ensure/document that the current function was called via Messenger */

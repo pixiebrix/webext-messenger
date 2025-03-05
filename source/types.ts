@@ -82,6 +82,10 @@ export type Message<LocalArguments extends Arguments = Arguments> = {
   options?: Options;
 };
 
+export type ExternalMessage = Message & {
+  target: ExtensionTarget;
+};
+
 export type Sender = chrome.runtime.MessageSender;
 
 export type MessengerMessage = Message & {

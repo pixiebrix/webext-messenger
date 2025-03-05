@@ -35,6 +35,12 @@ export function getActionForMessage(
 ): "respond" | "forward" | "ignore" {
   // Clone object because we're editing it
   const to: AnyTarget = { ...target };
+
+  if (to.extensionId) {
+    // Only handle external messages in the background page
+    return isBackground() ? "respond" : "ignore";
+  }
+
   if (to.page === "any") {
     return "respond";
   }
