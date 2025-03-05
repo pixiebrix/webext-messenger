@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="UTF-8" />
+<title>External web page</title>
+<h1>External web page</h1>
+<form action="#running-tests-in-the-console">
+  <label>Extension ID: <input type="text" required name="extensionId" /></label>
+  and press enter (only works once)
+</form>
+
+<script type="module">
+  document.querySelector("form").addEventListener(
+    "submit",
+    (event) => {
+      event.preventDefault();
+      event.target.hidden = true;
+      event.target.after("Running tests in the console...");
+      import("./external/api.test.ts");
+    },
+    { once: true },
+  );
+</script>
