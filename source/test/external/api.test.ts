@@ -39,7 +39,7 @@ test("should throw if the API does not allow external use", async (t) => {
     t.true(error instanceof MessengerError);
     t.equals(
       (error as any).message,
-      "sum is not allowed to be called externally in background",
+      "sum is registered in background for internal use only",
     );
   }
 });

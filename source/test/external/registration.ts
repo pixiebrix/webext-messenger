@@ -1,5 +1,8 @@
 import { isBackground } from "webext-detect";
-import { allowExternalUse, registerMethods } from "webext-messenger";
+import {
+  exposeMethodsToExternalMessaging,
+  registerMethods,
+} from "webext-messenger";
 
 import { getPlatformInfo } from "./getPlatformInfo.js";
 import { getSelfExternal } from "./getSelfExternal.js";
@@ -22,4 +25,4 @@ registerMethods({
   getPlatformInfo,
 });
 
-allowExternalUse("getSelfExternal", "getPlatformInfo");
+exposeMethodsToExternalMessaging("getSelfExternal", "getPlatformInfo");

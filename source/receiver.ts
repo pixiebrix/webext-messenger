@@ -32,13 +32,10 @@ export function isExternalMessengerMessage(
   message: unknown,
 ): message is ExternalMessage {
   return (
-    isObject(message) &&
-    typeof message["type"] === "string" &&
-    message["__webextMessenger"] === true &&
-    Array.isArray(message["args"]) &&
-    isObject(message["target"]) &&
-    Object.keys(message["target"]).length === 1 && // Ensure it's *only* `extensionId`
-    typeof message["target"]["extensionId"] === "string"
+    isMessengerMessage(message) &&
+    isObject(message.target) &&
+    Object.keys(message.target).length === 1 && // Ensure it's *only* `extensionId`
+    typeof message.target.extensionId === "string"
   );
 }
 
@@ -97,14 +94,17 @@ function onMessageListener(
     }
   })();
 
-  // This indicates that the message is being handled and a response will be sent asynchronously
-  // TODO: Just return a promise if this is ever implemented https://issues.chromium.org/issues/40753031
+  // This indicates that the message is being handled and a response will be sent asynchronously.
+  // It can be improved if this is ever implemented https://issues.chromium.org/issues/40753031
   return true;
 }
 
-// Do not remove.
-// Early validation to ensure that the message matches the specific allowed target
-// before letting it flow into the rest of messenger.
+/**
+ * Early validation to ensure that the message matches the specific allowed target
+ * before letting it flow into the rest of messenger. An malicious message might
+ * otherwise pass internal checks and be forwarded to the wrong context.
+ * @warn Do not remove. Keep as a security measure.
+ */
 function onMessageExternalListener(
   message: unknown,
   sender: Sender,
@@ -139,7 +139,7 @@ async function prepareResponse(
   if (localHandler) {
     if ("extensionId" in target && !externalMethods.has(type)) {
       throw new MessengerError(
-        `${type} is not allowed to be called externally in ${getContextName()}`,
+        `The ${type} is registered in ${getContextName()} for internal use only`,
       );
     }
 
@@ -175,7 +175,7 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   }
 }
 
-export function allowExternalUse(
+export function exposeMethodsToExternalMessaging(
   ...types: Array<keyof MessengerMethods>
 ): void {
   for (const type of types) {
