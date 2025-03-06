@@ -21,7 +21,7 @@ declare global {
 type WithTarget<Method> = Method extends (
   ...args: infer PreviousArguments
 ) => infer TReturnValue
-  ? (target: AnySpecificTarget, ...args: PreviousArguments) => TReturnValue
+  ? (target: AnyTarget, ...args: PreviousArguments) => TReturnValue
   : never;
 
 /* OmitThisParameter doesn't seem to do anything on pixiebrix-extension… */
@@ -76,7 +76,7 @@ export interface Options {
 export type Message<LocalArguments extends Arguments = Arguments> = {
   type: keyof MessengerMethods;
   args: LocalArguments;
-  target: AnySpecificTarget;
+  target: AnyTarget;
 
   /** If the message is being sent to an intermediary receiver, also set the options */
   options?: Options;
@@ -93,7 +93,8 @@ export type MessengerMessage = Message & {
   __webextMessenger: true;
 };
 
-export interface AnyTarget {
+/** A loose union to simplify the internal checks. */
+export interface LooseTarget {
   tabId?: number | "this";
   frameId?: number | "allFrames";
   page?: string;
@@ -130,4 +131,4 @@ export interface ExtensionTarget {
   extensionId: string;
 }
 
-export type AnySpecificTarget = Target | PageTarget | ExtensionTarget;
+export type AnyTarget = Target | PageTarget | ExtensionTarget;

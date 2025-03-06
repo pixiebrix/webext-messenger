@@ -8,9 +8,9 @@ import {
   type PublicMethod,
   type PublicMethodWithTarget,
   type Options,
-  type AnySpecificTarget,
-  type PageTarget,
   type AnyTarget,
+  type PageTarget,
+  type LooseTarget,
 } from "./types.js";
 import { isObject, MessengerError, __webextMessenger } from "./shared.js";
 import { log } from "./logging.js";
@@ -44,7 +44,7 @@ function wasContextInvalidated() {
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
-  target: AnySpecificTarget,
+  target: AnyTarget,
   options: Options,
 ): MessengerMessage {
   return {
@@ -60,7 +60,7 @@ function makeMessage(
 function manageConnection(
   type: string,
   { seq, isNotification, retry }: Options,
-  target: AnyTarget,
+  target: LooseTarget,
   sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> | void {
   if (!isNotification) {
@@ -74,7 +74,7 @@ function manageConnection(
 
 async function manageMessage(
   type: string,
-  target: AnyTarget,
+  target: LooseTarget,
   seq: number,
   retry: boolean,
   sendMessage: (attempt: number) => Promise<unknown>,
@@ -223,7 +223,7 @@ function messenger<
 >(
   type: Type,
   options: { isNotification: true },
-  target: AnySpecificTarget,
+  target: AnyTarget,
   ...args: Parameters<Method>
 ): void;
 function messenger<
@@ -233,7 +233,7 @@ function messenger<
 >(
   type: Type,
   options: Options,
-  target: AnySpecificTarget,
+  target: AnyTarget,
   ...args: Parameters<Method>
 ): ReturnValue;
 function messenger<
@@ -243,7 +243,7 @@ function messenger<
 >(
   type: Type,
   options: Options,
-  target: AnySpecificTarget,
+  target: AnyTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
   options.seq = globalSeq++;
@@ -348,7 +348,7 @@ function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends PublicMethod<Method>,
->(type: Type, target: Promisable<AnySpecificTarget>): PublicMethodType;
+>(type: Type, target: Promisable<AnyTarget>): PublicMethodType;
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -361,7 +361,7 @@ function getMethod<
   PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>,
 >(
   type: Type,
-  target?: Promisable<AnySpecificTarget>,
+  target?: Promisable<AnyTarget>,
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   if (!target) {
     return messenger.bind(undefined, type, {}) as PublicMethodWithDynamicTarget;
@@ -375,7 +375,7 @@ function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends SetReturnType<PublicMethod<Method>, void>,
->(type: Type, target: Promisable<AnySpecificTarget>): PublicMethodType;
+>(type: Type, target: Promisable<AnyTarget>): PublicMethodType;
 function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -394,7 +394,7 @@ function getNotifier<
   >,
 >(
   type: Type,
-  target?: Promisable<AnySpecificTarget>,
+  target?: Promisable<AnyTarget>,
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   const options = { isNotification: true };
   if (!target) {
