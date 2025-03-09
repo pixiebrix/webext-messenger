@@ -1,5 +1,5 @@
 import pRetry from "p-retry";
-import { isBackground } from "webext-detect";
+import { isBackground, isExtensionContext } from "webext-detect";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -12,7 +12,12 @@ import {
   type PageTarget,
   type LooseTarget,
 } from "./types.js";
-import { isObject, MessengerError, __webextMessenger } from "./shared.js";
+import {
+  isObject,
+  MessengerError,
+  ExtensionNotFoundError,
+  __webextMessenger,
+} from "./shared.js";
 import { log } from "./logging.js";
 import { type Promisable, type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
@@ -28,6 +33,9 @@ export const errorTargetClosedEarly =
   "The target was closed before receiving a response";
 export const errorTabDoesntExist = "The tab doesn't exist";
 export const errorTabWasDiscarded = "The tab was discarded";
+
+const errorExtensionNotFound =
+  "Extension $ID is not installed or externally connectable";
 
 function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webextMessenger"] === true;
@@ -136,7 +144,17 @@ async function manageMessage(
           }),
         );
 
-        if (wasContextInvalidated()) {
+        if (
+          "extensionId" in target &&
+          error.message === _errorNonExistingTarget
+        ) {
+          // The extension is not available and it will not be. Do not retry.
+          throw new ExtensionNotFoundError(
+            errorExtensionNotFound.replace("$ID", target.extensionId!),
+          );
+        }
+
+        if (isExtensionContext() && wasContextInvalidated()) {
           // The error matches the native context invalidated error
           // *.sendMessage() might fail with a message-specific error that is less useful,
           // like "Sender closed without responding"
@@ -250,6 +268,12 @@ function messenger<
   const { seq } = options;
 
   if ("extensionId" in target) {
+    if (!globalThis.chrome?.runtime?.sendMessage) {
+      throw new ExtensionNotFoundError(
+        errorExtensionNotFound.replace("$ID", target.extensionId),
+      );
+    }
+
     const sendMessage = async (attemptCount: number) => {
       log.debug(
         type,

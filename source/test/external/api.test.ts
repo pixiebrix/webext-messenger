@@ -39,7 +39,7 @@ test("should throw if the API does not allow external use", async (t) => {
     t.true(error instanceof MessengerError);
     t.equals(
       (error as any).message,
-      "sum is registered in background for internal use only",
+      "The sum handler is registered in background for internal use only",
     );
   }
 });
@@ -47,4 +47,17 @@ test("should throw if the API does not allow external use", async (t) => {
 test("notification should return undefined", async (t) => {
   // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- Testing for this specifically
   t.equals(notRegisteredNotification({ extensionId }), undefined);
+});
+
+test("throw when extension is not installed", async (t) => {
+  try {
+    await getPlatformInfo({ extensionId: "aflddffcidoamfabkogfeimijgneaaha" });
+    t.fail("throws() should have thrown but did not");
+  } catch (error: unknown) {
+    t.true(error instanceof MessengerError);
+    t.equals(
+      (error as any).message,
+      "Extension aflddffcidoamfabkogfeimijgneaaha is not installed or externally connectable",
+    );
+  }
 });

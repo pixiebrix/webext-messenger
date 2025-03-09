@@ -139,7 +139,7 @@ async function prepareResponse(
   if (localHandler) {
     if ("extensionId" in target && !externalMethods.has(type)) {
       throw new MessengerError(
-        `The ${type} is registered in ${getContextName()} for internal use only`,
+        `The ${type} handler is registered in ${getContextName()} for internal use only`,
       );
     }
 
