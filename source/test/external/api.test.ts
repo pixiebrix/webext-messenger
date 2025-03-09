@@ -7,7 +7,10 @@ import {
   sum,
   notRegisteredNotification,
 } from "./api.js";
-import { MessengerError } from "webext-messenger/shared.js";
+import {
+  MessengerError,
+  ExtensionNotFoundError,
+} from "webext-messenger/shared.js";
 
 if (isExtensionContext()) {
   throw new Error("This test must be run in an external page");
@@ -54,7 +57,7 @@ test("throw when extension is not installed", async (t) => {
     await getPlatformInfo({ extensionId: "aflddffcidoamfabkogfeimijgneaaha" });
     t.fail("throws() should have thrown but did not");
   } catch (error: unknown) {
-    t.true(error instanceof MessengerError);
+    t.true(error instanceof ExtensionNotFoundError);
     t.equals(
       (error as any).message,
       "Extension aflddffcidoamfabkogfeimijgneaaha is not installed or externally connectable",
