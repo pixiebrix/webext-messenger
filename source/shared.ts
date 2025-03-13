@@ -17,6 +17,10 @@ export class MessengerError extends Error {
   override name = "MessengerError";
 }
 
+export class ExtensionNotFoundError extends MessengerError {
+  override name = "ExtensionNotFoundError";
+}
+
 addKnownErrorConstructor(MessengerError);
 
 export function isErrorObject(error: unknown): error is ErrorObject {

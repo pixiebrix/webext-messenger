@@ -1,4 +1,5 @@
 import "./background/registration.js";
+import "./external/registration.js";
 import "./contentscript/api.test.js";
 
 async function init() {

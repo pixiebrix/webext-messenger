@@ -9,10 +9,10 @@
 ## Pitfalls
 
 - "Runtime" messages are sent to all `chrome-extension://` pages sequentially; the first one to return "not undefined" will "handle" it.
-- Returning a `Promise<undefined>` handles the message.
-- Determining whether to handle the message locally needs to be synchronously.
+- Calling `sendResponse` handles the message.
+- Determining whether to handle the message locally needs to be synchronous. You can return `true` synchronously to indicate that you will handle it asynchronously by calling `sendResponse` at a later time.
 
 ## Unavoidable race conditions
 
-- If you send a message to a context that hasn't yet loaded/registered, the messages will be ignored; They will be retried.
-- If you send a message to a named target that doesn't know its own name yet, the message will be ignored; They will be retried.
+- If you send a message to a context that hasn't yet loaded/registered, the messages will be ignored; `webext-messenger` will retry sending them.
+- If you send a message to a named target that doesn't know its own name yet, the message will be ignored; `webext-messenger` will retry sending them.

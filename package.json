@@ -1,6 +1,6 @@
 {
   "name": "webext-messenger",
-  "version": "0.32.0",
+  "version": "0.33.0-3",
   "description": "Browser Extension component messaging framework",
   "keywords": [],
   "repository": "pixiebrix/webext-messenger",
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "demo:watch": "parcel watch --no-cache --no-hmr",
+    "demo:watch": "parcel serve --no-cache --no-hmr",
     "demo:build": "parcel build --no-cache --no-scope-hoist",
     "prepack": "tsc --sourceMap false",
     "test": "run-p test:unit lint build demo:build",
@@ -55,11 +55,14 @@
   },
   "targets": {
     "main": false,
-    "default": {
+    "external": {
+      "source": "source/test/external.html"
+    },
+    "extension": {
+      "source": "source/test/manifest.json",
       "engines": {
         "browsers": "Chrome 110"
       },
-      "source": "source/test/manifest.json",
       "sourceMap": {
         "inline": true
       }
@@ -71,7 +74,8 @@
       "startUrl": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-background-methods",
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background",
-        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-offscreen-methods"
+        "https://fregante.github.io/pixiebrix-testing-ground/Will-call-offscreen-methods",
+        "http://localhost:1234/external.html"
       ]
     }
   }

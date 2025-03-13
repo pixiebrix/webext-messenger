@@ -1,8 +1,11 @@
 import { isBackground, isContentScript } from "webext-detect";
-import { type AnyTarget, type Sender } from "./types.js";
+import { type LooseTarget, type Sender } from "./types.js";
 import { type Entries } from "type-fest";
 
-export function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
+export function compareTargets(
+  to: LooseTarget,
+  thisTarget: LooseTarget,
+): boolean {
   for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
     if (thisTarget[key] === value) {
       continue;
@@ -30,11 +33,17 @@ export function compareTargets(to: AnyTarget, thisTarget: AnyTarget): boolean {
 
 export function getActionForMessage(
   from: Sender,
-  target: AnyTarget,
-  thisTarget: AnyTarget,
+  target: LooseTarget,
+  thisTarget: LooseTarget,
 ): "respond" | "forward" | "ignore" {
   // Clone object because we're editing it
-  const to: AnyTarget = { ...target };
+  const to: LooseTarget = { ...target };
+
+  if (to.extensionId) {
+    // Only handle external messages in the background page
+    return isBackground() ? "respond" : "ignore";
+  }
+
   if (to.page === "any") {
     return "respond";
   }

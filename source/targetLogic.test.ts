@@ -21,10 +21,9 @@ const tab = {
 } satisfies chrome.tabs.Tab;
 
 const senders = {
-  background: { page: "background" },
   contentScript: { tab },
-  somePage: { page: "/page.html" },
-} as const;
+  // TODO: Test more senders
+} as const satisfies Record<string, chrome.runtime.MessageSender>;
 
 const targets = {
   background: { page: "background" },

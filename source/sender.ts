@@ -1,5 +1,5 @@
 import pRetry from "p-retry";
-import { isBackground } from "webext-detect";
+import { isBackground, isExtensionContext } from "webext-detect";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -8,11 +8,16 @@ import {
   type PublicMethod,
   type PublicMethodWithTarget,
   type Options,
-  type Target,
-  type PageTarget,
   type AnyTarget,
+  type PageTarget,
+  type LooseTarget,
 } from "./types.js";
-import { isObject, MessengerError, __webextMessenger } from "./shared.js";
+import {
+  isObject,
+  MessengerError,
+  ExtensionNotFoundError,
+  __webextMessenger,
+} from "./shared.js";
 import { log } from "./logging.js";
 import { type Promisable, type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
@@ -29,6 +34,9 @@ export const errorTargetClosedEarly =
 export const errorTabDoesntExist = "The tab doesn't exist";
 export const errorTabWasDiscarded = "The tab was discarded";
 
+const errorExtensionNotFound =
+  "Extension $ID is not installed or externally connectable";
+
 function isMessengerResponse(response: unknown): response is MessengerResponse {
   return isObject(response) && response["__webextMessenger"] === true;
 }
@@ -44,7 +52,7 @@ function wasContextInvalidated() {
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
-  target: Target | PageTarget,
+  target: AnyTarget,
   options: Options,
 ): MessengerMessage {
   return {
@@ -60,7 +68,7 @@ function makeMessage(
 function manageConnection(
   type: string,
   { seq, isNotification, retry }: Options,
-  target: AnyTarget,
+  target: LooseTarget,
   sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> | void {
   if (!isNotification) {
@@ -74,7 +82,7 @@ function manageConnection(
 
 async function manageMessage(
   type: string,
-  target: AnyTarget,
+  target: LooseTarget,
   seq: number,
   retry: boolean,
   sendMessage: (attempt: number) => Promise<unknown>,
@@ -136,7 +144,17 @@ async function manageMessage(
           }),
         );
 
-        if (wasContextInvalidated()) {
+        if (
+          "extensionId" in target &&
+          error.message === _errorNonExistingTarget
+        ) {
+          // The extension is not available and it will not be. Do not retry.
+          throw new ExtensionNotFoundError(
+            errorExtensionNotFound.replace("$ID", target.extensionId!),
+          );
+        }
+
+        if (isExtensionContext() && wasContextInvalidated()) {
           // The error matches the native context invalidated error
           // *.sendMessage() might fail with a message-specific error that is less useful,
           // like "Sender closed without responding"
@@ -223,7 +241,7 @@ function messenger<
 >(
   type: Type,
   options: { isNotification: true },
-  target: Target | PageTarget,
+  target: AnyTarget,
   ...args: Parameters<Method>
 ): void;
 function messenger<
@@ -233,7 +251,7 @@ function messenger<
 >(
   type: Type,
   options: Options,
-  target: Target | PageTarget,
+  target: AnyTarget,
   ...args: Parameters<Method>
 ): ReturnValue;
 function messenger<
@@ -243,11 +261,34 @@ function messenger<
 >(
   type: Type,
   options: Options,
-  target: Target | PageTarget,
+  target: AnyTarget,
   ...args: Parameters<Method>
 ): ReturnValue | void {
   options.seq = globalSeq++;
   const { seq } = options;
+
+  if ("extensionId" in target) {
+    if (!globalThis.chrome?.runtime?.sendMessage) {
+      throw new ExtensionNotFoundError(
+        errorExtensionNotFound.replace("$ID", target.extensionId),
+      );
+    }
+
+    const sendMessage = async (attemptCount: number) => {
+      log.debug(
+        type,
+        seq,
+        "↗️ sending message to extension",
+        attemptLog(attemptCount),
+      );
+      return chrome.runtime.sendMessage(
+        target.extensionId,
+        makeMessage(type, args, target, options),
+      );
+    };
+
+    return manageConnection(type, options, target, sendMessage) as ReturnValue;
+  }
 
   // Message goes to extension page
   if ("page" in target) {
@@ -331,7 +372,7 @@ function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends PublicMethod<Method>,
->(type: Type, target: Promisable<Target | PageTarget>): PublicMethodType;
+>(type: Type, target: Promisable<AnyTarget>): PublicMethodType;
 function getMethod<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -344,7 +385,7 @@ function getMethod<
   PublicMethodWithDynamicTarget extends PublicMethodWithTarget<Method>,
 >(
   type: Type,
-  target?: Promisable<Target | PageTarget>,
+  target?: Promisable<AnyTarget>,
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   if (!target) {
     return messenger.bind(undefined, type, {}) as PublicMethodWithDynamicTarget;
@@ -358,7 +399,7 @@ function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
   PublicMethodType extends SetReturnType<PublicMethod<Method>, void>,
->(type: Type, target: Promisable<Target | PageTarget>): PublicMethodType;
+>(type: Type, target: Promisable<AnyTarget>): PublicMethodType;
 function getNotifier<
   Type extends keyof MessengerMethods,
   Method extends MessengerMethods[Type],
@@ -377,7 +418,7 @@ function getNotifier<
   >,
 >(
   type: Type,
-  target?: Promisable<Target | PageTarget>,
+  target?: Promisable<AnyTarget>,
 ): PublicMethodType | PublicMethodWithDynamicTarget {
   const options = { isNotification: true };
   if (!target) {

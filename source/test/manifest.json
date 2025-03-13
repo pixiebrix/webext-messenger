@@ -53,12 +53,19 @@
         "https://fregante.github.io/pixiebrix-testing-ground/webext-messenger-was-imported-but-not-executed"
       ],
       "js": ["contentscript/missedRegistration.ts"]
+    },
+    {
+      "matches": ["http://localhost:*/*"],
+      "js": ["externalHelper.ts"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["*.html", "**/*.ts"],
+      "resources": ["**/*.ts", "iframe.html", "offscreen.html"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "externally_connectable": {
+    "matches": ["<all_urls>"]
+  }
 }

@@ -7,7 +7,7 @@ import {
 import { messenger } from "./sender.js";
 import { registerMethods } from "./receiver.js";
 import {
-  type AnyTarget,
+  type LooseTarget,
   type KnownTarget,
   type TopLevelFrame,
   type MessengerMeta,
@@ -91,7 +91,7 @@ const storeTabData = once(async () => {
   }
 });
 
-export function __getTabData(this: MessengerMeta): AnyTarget {
+export function __getTabData(this: MessengerMeta): LooseTarget {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 

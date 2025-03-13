@@ -1,9 +1,10 @@
 import { serializeError } from "serialize-error";
-import { getContextName } from "webext-detect";
+import { getContextName, isBackground } from "webext-detect";
 
 import { messenger } from "./sender.js";
 import {
   type Message,
+  type ExternalMessage,
   type MessengerMeta,
   type Method,
   type Sender,
@@ -16,12 +17,25 @@ import { getTabDataStatus, thisTarget } from "./thisTarget.js";
 
 type SendResponse = (response: unknown) => void;
 
+const externalMethods = new Set<keyof MessengerMethods>();
+
 export function isMessengerMessage(message: unknown): message is Message {
   return (
     isObject(message) &&
     typeof message["type"] === "string" &&
     message["__webextMessenger"] === true &&
     Array.isArray(message["args"])
+  );
+}
+
+export function isExternalMessengerMessage(
+  message: unknown,
+): message is ExternalMessage {
+  return (
+    isMessengerMessage(message) &&
+    isObject(message.target) &&
+    Object.keys(message.target).length === 1 && // Ensure it's *only* `extensionId`
+    typeof message.target.extensionId === "string"
   );
 }
 
@@ -80,9 +94,33 @@ function onMessageListener(
     }
   })();
 
-  // This indicates that the message is being handled and a response will be sent asynchronously
-  // TODO: Just return a promise if this is ever implemented https://issues.chromium.org/issues/40753031
+  // This indicates that the message is being handled and a response will be sent asynchronously.
+  // It can be improved if this is ever implemented https://issues.chromium.org/issues/40753031
   return true;
+}
+
+/**
+ * Early validation to ensure that the message matches the specific allowed target
+ * before letting it flow into the rest of messenger. An malicious message might
+ * otherwise pass internal checks and be forwarded to the wrong context.
+ * @warn Do not remove. Keep as a security measure.
+ */
+function onMessageExternalListener(
+  message: unknown,
+  sender: Sender,
+  sendResponse: SendResponse,
+): true | void {
+  if (
+    isExternalMessengerMessage(message) &&
+    message.target.extensionId === chrome.runtime.id
+  ) {
+    return onMessageListener(message, sender, sendResponse);
+  }
+
+  log.debug("Ignored external message", {
+    message,
+    sender,
+  });
 }
 
 /** Generates the value or error to return to the sender; does not include further messaging logic */
@@ -99,6 +137,12 @@ async function prepareResponse(
 
   const localHandler = handlers.get(type);
   if (localHandler) {
+    if ("extensionId" in target && !externalMethods.has(type)) {
+      throw new MessengerError(
+        `The ${type} handler is registered in ${getContextName()} for internal use only`,
+      );
+    }
+
     return localHandler.apply(meta, args);
   }
 
@@ -124,6 +168,19 @@ export function registerMethods(methods: Partial<MessengerMethods>): void {
   }
 
   chrome.runtime.onMessage.addListener(onMessageListener);
+
+  // Only handle direct-to-background messages for now
+  if (isBackground()) {
+    chrome.runtime.onMessageExternal.addListener(onMessageExternalListener);
+  }
+}
+
+export function exposeMethodsToExternalMessaging(
+  ...types: Array<keyof MessengerMethods>
+): void {
+  for (const type of types) {
+    externalMethods.add(type);
+  }
 }
 
 /** Ensure/document that the current function was called via Messenger */
