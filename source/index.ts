@@ -6,6 +6,7 @@ export * from "./types.js";
 export * from "./events.js";
 export { getThisFrame, getTopLevelFrame } from "./thisTarget.js";
 export { toggleLogging } from "./logging.js";
+export { MessengerError } from "./shared.js";
 
 import { initPrivateApi } from "./thisTarget.js";
 
