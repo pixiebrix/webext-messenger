@@ -19,7 +19,7 @@ import {
   __webextMessenger,
 } from "./shared.js";
 import { log } from "./logging.js";
-import { type Promisable, type SetReturnType } from "type-fest";
+import { type JsonValue, type Promisable, type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 import { events } from "./events.js";
 
@@ -51,7 +51,7 @@ function wasContextInvalidated() {
 
 function makeMessage(
   type: keyof MessengerMethods,
-  args: unknown[],
+  args: JsonValue[],
   target: AnyTarget,
   options: Options,
 ): MessengerMessage {

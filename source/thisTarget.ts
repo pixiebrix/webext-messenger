@@ -91,7 +91,7 @@ const storeTabData = once(async () => {
   }
 });
 
-export function __getTabData(this: MessengerMeta): LooseTarget {
+export async function __getTabData(this: MessengerMeta): Promise<LooseTarget> {
   return { tabId: this.trace[0]?.tab?.id, frameId: this.trace[0]?.frameId };
 }
 
