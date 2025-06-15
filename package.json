@@ -8,6 +8,7 @@
   "author": "Federico Brigante for PixieBrix <federico@pixiebrix.com> (https://www.pixiebrix.com)",
   "type": "module",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./distribution/index.d.ts",
       "default": "./distribution/index.js"
