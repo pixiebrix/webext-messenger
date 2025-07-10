@@ -52,7 +52,7 @@
     "stream-browserify": "^3.0.0",
     "tape": "^5.9.0",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.4"
+    "vitest": "^3.2.4"
   },
   "targets": {
     "main": false,
