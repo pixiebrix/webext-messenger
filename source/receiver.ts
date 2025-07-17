@@ -157,7 +157,9 @@ async function prepareResponse(
   throw new MessengerError(`No handlers registered in ${getContextName()}`);
 }
 
-export function registerMethods(methods: Partial<MessengerMethods>): void {
+export function registerMethods(
+  methods: Partial<MessengerMethods> & Record<string, Method>,
+): void {
   for (const [type, method] of Object.entries(methods)) {
     if (handlers.has(type)) {
       throw new MessengerError(`Handler already set for ${type}`);
