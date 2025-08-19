@@ -1,4 +1,4 @@
-import { type Asyncify, type ValueOf } from "type-fest";
+import { type JsonValue, type Asyncify, type ValueOf } from "type-fest";
 import { type ErrorObject } from "serialize-error";
 
 /**
@@ -54,7 +54,7 @@ export type MessengerResponse = RawMessengerResponse & {
   __webextMessenger: true;
 };
 
-type Arguments = unknown[];
+type Arguments = JsonValue[];
 export type Method = (
   this: MessengerMeta,
   ...args: Arguments
