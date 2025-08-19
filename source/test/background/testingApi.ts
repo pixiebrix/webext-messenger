@@ -59,10 +59,10 @@ export async function createTargets(): Promise<Targets> {
 }
 
 const getHiddenWindow = once(async (): Promise<number> => {
-  const { id } = await chrome.windows.create({
+  const { id } = (await chrome.windows.create({
     focused: false,
     state: "minimized",
-  });
+  }))!;
   return id!;
 });
 
