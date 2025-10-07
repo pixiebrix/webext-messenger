@@ -22,3 +22,7 @@ updates:
     open-pull-requests-limit: 30
     assignees:
       - grahamlangford
+    groups:
+      parcel:
+        patterns:
+          - "*parcel*"
