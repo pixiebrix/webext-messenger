@@ -48,6 +48,38 @@ function wasContextInvalidated() {
   return !chrome.runtime?.id;
 }
 
+function getErrorMessage(error: unknown): string | undefined {
+  if (error && typeof error === "object" && "message" in error) {
+    return String(error.message);
+  }
+
+  return undefined;
+}
+
+function shouldRetryError(
+  error: unknown,
+  target: LooseTarget,
+): boolean {
+  const message = getErrorMessage(error);
+  
+  // Don't retry sending to the background page unless it really hasn't loaded yet
+  if (target.page !== "background" && error instanceof MessengerError) {
+    return true;
+  }
+  
+  // Page or its content script not yet loaded
+  if (message === _errorNonExistingTarget) {
+    return true;
+  }
+  
+  // `registerMethods` not yet loaded
+  if (message?.startsWith("No handlers registered in ")) {
+    return true;
+  }
+  
+  return false;
+}
+
 function makeMessage(
   type: keyof MessengerMethods,
   args: unknown[],
@@ -138,6 +170,8 @@ async function manageMessage(
         `Conflict: The message ${type} was handled by a third-party listener`,
       );
     } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+      
       events.dispatchEvent(
         new CustomEvent("failed-attempt", {
           detail: {
@@ -150,54 +184,26 @@ async function manageMessage(
         }),
       );
 
-      if (
-        "extensionId" in target &&
-        error &&
-        typeof error === "object" &&
-        "message" in error &&
-        error.message === _errorNonExistingTarget
-      ) {
-        // The extension is not available and it will not be. Do not retry.
+      // Check for non-retryable errors
+      if ("extensionId" in target && errorMessage === _errorNonExistingTarget) {
         throw new ExtensionNotFoundError(
           errorExtensionNotFound.replace("$ID", target.extensionId!),
         );
       }
 
       if (isExtensionContext() && wasContextInvalidated()) {
-        // The error matches the native context invalidated error
-        // *.sendMessage() might fail with a message-specific error that is less useful,
-        // like "Sender closed without responding"
         throw new Error("Extension context invalidated.");
       }
 
-      if (
-        error &&
-        typeof error === "object" &&
-        "message" in error &&
-        error.message === _errorTargetClosedEarly
-      ) {
+      if (errorMessage === _errorTargetClosedEarly) {
         throw new Error(errorTargetClosedEarly);
       }
 
-      const shouldRetry =
-        // If NONE of these conditions is true, stop retrying
-        // Don't retry sending to the background page unless it really hasn't loaded yet
-        (target.page !== "background" && error instanceof MessengerError) ||
-        // Page or its content script not yet loaded
-        (error &&
-          typeof error === "object" &&
-          "message" in error &&
-          error.message === _errorNonExistingTarget) ||
-        // `registerMethods` not yet loaded
-        (error &&
-          typeof error === "object" &&
-          "message" in error &&
-          String(error.message).startsWith("No handlers registered in "));
-
-      if (!shouldRetry) {
+      if (!shouldRetryError(error, target)) {
         throw error;
       }
 
+      // Check if tab is still valid
       if (chrome.tabs && typeof target.tabId === "number") {
         try {
           // eslint-disable-next-line no-await-in-loop -- Necessary to check tab status during retry
@@ -210,15 +216,10 @@ async function manageMessage(
         }
       }
 
-      // Check if we should continue retrying based on time and retry flag
+      // Check if we should stop retrying
       const elapsedTime = Date.now() - startTime;
       if (!retry || (elapsedTime >= maxRetryTime && attemptNumber > 1)) {
-        if (
-          error &&
-          typeof error === "object" &&
-          "message" in error &&
-          error.message === _errorNonExistingTarget
-        ) {
+        if (errorMessage === _errorNonExistingTarget) {
           throw new MessengerError(
             `The target ${JSON.stringify(target)} for ${type} was not found`,
           );
@@ -230,14 +231,12 @@ async function manageMessage(
           }),
         );
 
-        // eslint-disable-next-line @typescript-eslint/only-throw-error -- Error could be any type from external code
         throw error;
       }
 
       log.debug(type, seq, "will retry. Attempt", attemptNumber);
 
       // Wait before retrying with exponential backoff
-      // Capture timeout value to avoid closure issues
       const waitTime = currentTimeout;
       // eslint-disable-next-line no-await-in-loop -- Necessary for retry delay
       await new Promise<void>((resolve) => {
