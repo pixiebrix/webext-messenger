@@ -1,4 +1,3 @@
-import pRetry from "p-retry";
 import { isBackground, isExtensionContext } from "webext-detect";
 import { deserializeError } from "serialize-error";
 
@@ -87,13 +86,27 @@ async function manageMessage(
   retry: boolean,
   sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> {
-  // TODO: Split this up a bit because it's too long. Probably drop p-retry
-  const response = await pRetry(
-    async (attemptCount) => {
-      const response = await sendMessage(attemptCount);
+  const startTime = Date.now();
+  const maxRetryTime = 4000;
+  const minTimeout = 100;
+  const factor = 1.3;
+  let attemptNumber = 1;
+  let currentTimeout = minTimeout;
+
+  // eslint-disable-next-line no-constant-condition -- Intentional retry loop with break conditions
+  while (true) {
+    try {
+      // eslint-disable-next-line no-await-in-loop -- Necessary for retry logic
+      const response = await sendMessage(attemptNumber);
 
       if (isMessengerResponse(response)) {
-        return response;
+        if ("error" in response) {
+          log.debug(type, seq, "↘️ replied with error", response.error);
+          throw deserializeError(response.error);
+        }
+
+        log.debug(type, seq, "↘️ replied successfully", response.value);
+        return response.value;
       }
 
       // If no one answers, `response` will be `undefined`
@@ -124,106 +137,116 @@ async function manageMessage(
       throw new MessengerError(
         `Conflict: The message ${type} was handled by a third-party listener`,
       );
-    },
-    {
-      minTimeout: 100,
-      factor: 1.3,
-      // Do not set this to undefined or Infinity, it doesn't work the same way
-      ...(retry ? {} : { retries: 0 }),
-      maxRetryTime: 4000,
-      async onFailedAttempt(error) {
-        events.dispatchEvent(
-          new CustomEvent("failed-attempt", {
-            detail: {
-              type,
-              seq,
-              target,
-              error,
-              attemptCount: error.attemptNumber,
-            },
-          }),
-        );
+    } catch (error: unknown) {
+      events.dispatchEvent(
+        new CustomEvent("failed-attempt", {
+          detail: {
+            type,
+            seq,
+            target,
+            error,
+            attemptCount: attemptNumber,
+          },
+        }),
+      );
 
+      if (
+        "extensionId" in target &&
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        error.message === _errorNonExistingTarget
+      ) {
+        // The extension is not available and it will not be. Do not retry.
+        throw new ExtensionNotFoundError(
+          errorExtensionNotFound.replace("$ID", target.extensionId!),
+        );
+      }
+
+      if (isExtensionContext() && wasContextInvalidated()) {
+        // The error matches the native context invalidated error
+        // *.sendMessage() might fail with a message-specific error that is less useful,
+        // like "Sender closed without responding"
+        throw new Error("Extension context invalidated.");
+      }
+
+      if (
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        error.message === _errorTargetClosedEarly
+      ) {
+        throw new Error(errorTargetClosedEarly);
+      }
+
+      const shouldRetry =
+        // If NONE of these conditions is true, stop retrying
+        // Don't retry sending to the background page unless it really hasn't loaded yet
+        (target.page !== "background" && error instanceof MessengerError) ||
+        // Page or its content script not yet loaded
+        (error &&
+          typeof error === "object" &&
+          "message" in error &&
+          error.message === _errorNonExistingTarget) ||
+        // `registerMethods` not yet loaded
+        (error &&
+          typeof error === "object" &&
+          "message" in error &&
+          String(error.message).startsWith("No handlers registered in "));
+
+      if (!shouldRetry) {
+        throw error;
+      }
+
+      if (chrome.tabs && typeof target.tabId === "number") {
+        try {
+          // eslint-disable-next-line no-await-in-loop -- Necessary to check tab status during retry
+          const tabInfo = await chrome.tabs.get(target.tabId);
+          if (tabInfo.discarded) {
+            throw new Error(errorTabWasDiscarded);
+          }
+        } catch {
+          throw new Error(errorTabDoesntExist);
+        }
+      }
+
+      // Check if we should continue retrying based on time and retry flag
+      const elapsedTime = Date.now() - startTime;
+      if (!retry || (elapsedTime >= maxRetryTime && attemptNumber > 1)) {
         if (
-          "extensionId" in target &&
+          error &&
+          typeof error === "object" &&
+          "message" in error &&
           error.message === _errorNonExistingTarget
         ) {
-          // The extension is not available and it will not be. Do not retry.
-          throw new ExtensionNotFoundError(
-            errorExtensionNotFound.replace("$ID", target.extensionId!),
+          throw new MessengerError(
+            `The target ${JSON.stringify(target)} for ${type} was not found`,
           );
         }
 
-        if (isExtensionContext() && wasContextInvalidated()) {
-          // The error matches the native context invalidated error
-          // *.sendMessage() might fail with a message-specific error that is less useful,
-          // like "Sender closed without responding"
-          throw new Error("Extension context invalidated.");
-        }
+        events.dispatchEvent(
+          new CustomEvent("attempts-exhausted", {
+            detail: { type, seq, target, error },
+          }),
+        );
 
-        if (error.message === _errorTargetClosedEarly) {
-          throw new Error(errorTargetClosedEarly);
-        }
+        // eslint-disable-next-line @typescript-eslint/only-throw-error -- Error could be any type from external code
+        throw error;
+      }
 
-        if (
-          !(
-            // If NONE of these conditions is true, stop retrying
-            // Don't retry sending to the background page unless it really hasn't loaded yet
-            (
-              (target.page !== "background" &&
-                error instanceof MessengerError) ||
-              // Page or its content script not yet loaded
-              error.message === _errorNonExistingTarget ||
-              // `registerMethods` not yet loaded
-              String(error.message).startsWith("No handlers registered in ")
-            )
-          )
-        ) {
-          throw error;
-        }
+      log.debug(type, seq, "will retry. Attempt", attemptNumber);
 
-        if (chrome.tabs && typeof target.tabId === "number") {
-          try {
-            const tabInfo = await chrome.tabs.get(target.tabId);
-            if (tabInfo.discarded) {
-              throw new Error(errorTabWasDiscarded);
-            }
-          } catch {
-            throw new Error(errorTabDoesntExist);
-          }
-        }
-
-        log.debug(type, seq, "will retry. Attempt", error.attemptNumber);
-      },
-    },
-  ).catch((error: unknown) => {
-    if (
-      error &&
-      typeof error === "object" &&
-      "message" in error &&
-      error?.message === _errorNonExistingTarget
-    ) {
-      throw new MessengerError(
-        `The target ${JSON.stringify(target)} for ${type} was not found`,
-      );
+      // Wait before retrying with exponential backoff
+      // Capture timeout value to avoid closure issues
+      const waitTime = currentTimeout;
+      // eslint-disable-next-line no-await-in-loop -- Necessary for retry delay
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, waitTime);
+      });
+      currentTimeout = Math.floor(currentTimeout * factor);
+      attemptNumber++;
     }
-
-    events.dispatchEvent(
-      new CustomEvent("attempts-exhausted", {
-        detail: { type, seq, target, error },
-      }),
-    );
-
-    throw error;
-  });
-
-  if ("error" in response) {
-    log.debug(type, seq, "↘️ replied with error", response.error);
-    throw deserializeError(response.error);
   }
-
-  log.debug(type, seq, "↘️ replied successfully", response.value);
-  return response.value;
 }
 
 // Not a UID nor a truly global sequence. Signal / console noise compromise.
