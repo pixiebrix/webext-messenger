@@ -321,9 +321,8 @@ function messenger<
 
   // Contexts without direct Tab access must go through background
   if (!chrome.tabs) {
-    // Check if the target is the current tab/frame and use local methods if available
-    const { frameId = 0 } = target;
-    if (frameId !== "allFrames" && compareTargets(target, thisTarget)) {
+    // Use local methods unless the target is a different tab/frame
+    if (compareTargets(target, thisTarget)) {
       const handler = handlers.get(type);
       if (handler) {
         log.warn(type, seq, "is being handled locally");
