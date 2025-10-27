@@ -50,9 +50,13 @@ describe("messenger with tab targets and local methods", () => {
 
   test("should use local method when targeting same tab and frame", async () => {
     // Setup: Set thisTarget to have tabId: 1, frameId: 0
-    const mockThisTarget = { tabId: 1, frameId: 0, page: "test" };
+    const mockThisTarget: Partial<typeof thisTargetModule.thisTarget> = {
+      tabId: 1,
+      frameId: 0,
+      page: "test",
+    };
     vi.spyOn(thisTargetModule, "thisTarget", "get").mockReturnValue(
-      mockThisTarget as any,
+      mockThisTarget as typeof thisTargetModule.thisTarget,
     );
 
     // Register a local handler
@@ -76,9 +80,13 @@ describe("messenger with tab targets and local methods", () => {
 
   test("should send message when targeting different tab", async () => {
     // Setup: Set thisTarget to have tabId: 1, frameId: 0
-    const mockThisTarget = { tabId: 1, frameId: 0, page: "test" };
+    const mockThisTarget: Partial<typeof thisTargetModule.thisTarget> = {
+      tabId: 1,
+      frameId: 0,
+      page: "test",
+    };
     vi.spyOn(thisTargetModule, "thisTarget", "get").mockReturnValue(
-      mockThisTarget as any,
+      mockThisTarget as typeof thisTargetModule.thisTarget,
     );
 
     // Register a local handler (should not be used)
@@ -107,9 +115,13 @@ describe("messenger with tab targets and local methods", () => {
 
   test("should send message when targeting different frame in same tab", async () => {
     // Setup: Set thisTarget to have tabId: 1, frameId: 0
-    const mockThisTarget = { tabId: 1, frameId: 0, page: "test" };
+    const mockThisTarget: Partial<typeof thisTargetModule.thisTarget> = {
+      tabId: 1,
+      frameId: 0,
+      page: "test",
+    };
     vi.spyOn(thisTargetModule, "thisTarget", "get").mockReturnValue(
-      mockThisTarget as any,
+      mockThisTarget as typeof thisTargetModule.thisTarget,
     );
 
     // Register a local handler (should not be used)
@@ -138,9 +150,13 @@ describe("messenger with tab targets and local methods", () => {
 
   test("should send message when targeting allFrames", async () => {
     // Setup: Set thisTarget to have tabId: 1, frameId: 0
-    const mockThisTarget = { tabId: 1, frameId: 0, page: "test" };
+    const mockThisTarget: Partial<typeof thisTargetModule.thisTarget> = {
+      tabId: 1,
+      frameId: 0,
+      page: "test",
+    };
     vi.spyOn(thisTargetModule, "thisTarget", "get").mockReturnValue(
-      mockThisTarget as any,
+      mockThisTarget as typeof thisTargetModule.thisTarget,
     );
 
     // Register a local handler (should not be used for allFrames)
@@ -173,9 +189,13 @@ describe("messenger with tab targets and local methods", () => {
 
   test("should throw error when no local handler registered for same tab/frame", async () => {
     // Setup: Set thisTarget to have tabId: 1, frameId: 0
-    const mockThisTarget = { tabId: 1, frameId: 0, page: "test" };
+    const mockThisTarget: Partial<typeof thisTargetModule.thisTarget> = {
+      tabId: 1,
+      frameId: 0,
+      page: "test",
+    };
     vi.spyOn(thisTargetModule, "thisTarget", "get").mockReturnValue(
-      mockThisTarget as any,
+      mockThisTarget as typeof thisTargetModule.thisTarget,
     );
 
     // No handler registered
