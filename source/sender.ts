@@ -321,6 +321,18 @@ function messenger<
 
   // Contexts without direct Tab access must go through background
   if (!chrome.tabs) {
+    // Check if the target is the current tab/frame and use local methods if available
+    const { frameId = 0 } = target;
+    if (frameId !== "allFrames" && compareTargets(target, thisTarget)) {
+      const handler = handlers.get(type);
+      if (handler) {
+        log.warn(type, seq, "is being handled locally");
+        return handler.apply({ trace: [] }, args) as ReturnValue;
+      }
+
+      throw new MessengerError("No handler registered locally for " + type);
+    }
+
     return manageConnection(
       type,
       options,
@@ -341,17 +353,6 @@ function messenger<
 
   // `frameId` must be specified. If missing, the message is sent to every frame
   const { tabId, frameId = 0 } = target;
-
-  // Check if the target is the current tab/frame and use local methods if available
-  if (frameId !== "allFrames" && compareTargets(target, thisTarget)) {
-    const handler = handlers.get(type);
-    if (handler) {
-      log.warn(type, seq, "is being handled locally");
-      return handler.apply({ trace: [] }, args) as ReturnValue;
-    }
-
-    throw new MessengerError("No handler registered locally for " + type);
-  }
 
   // Message tab directly
   return manageConnection(

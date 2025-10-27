@@ -31,15 +31,13 @@ vi.mock("./events.js", () => ({
   },
 }));
 
-// Mock chrome APIs
+// Mock chrome APIs - simulate content script environment (no chrome.tabs)
 globalThis.chrome = {
   runtime: {
     id: "test-extension-id",
     sendMessage: vi.fn(),
   },
-  tabs: {
-    sendMessage: vi.fn(),
-  },
+  // Note: chrome.tabs is undefined in content scripts
 } as any;
 
 describe("messenger with tab targets and local methods", () => {
@@ -74,8 +72,8 @@ describe("messenger with tab targets and local methods", () => {
     expect(mockHandler).toHaveBeenCalledWith();
     expect(result).toBe("local result");
 
-    // Verify: No message was sent via chrome.tabs.sendMessage
-    expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+    // Verify: No message was sent via chrome.runtime.sendMessage
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
   });
 
   test("should send message when targeting different tab", async () => {
@@ -93,8 +91,8 @@ describe("messenger with tab targets and local methods", () => {
     const mockHandler = vi.fn(async () => "local result");
     handlers.set("testMethod", mockHandler);
 
-    // Mock chrome.tabs.sendMessage to return a messenger response
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+    // Mock chrome.runtime.sendMessage to return a messenger response
+    vi.mocked(chrome.runtime.sendMessage).mockResolvedValue({
       __webextMessenger: true,
       value: "remote result",
     } as any);
@@ -105,8 +103,8 @@ describe("messenger with tab targets and local methods", () => {
     // Test: Send message to different tab
     const result = await messenger("testMethod", {}, { tabId: 2, frameId: 0 });
 
-    // Verify: Message was sent via chrome.tabs.sendMessage
-    expect(chrome.tabs.sendMessage).toHaveBeenCalledOnce();
+    // Verify: Message was sent via chrome.runtime.sendMessage
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledOnce();
     expect(result).toBe("remote result");
 
     // Verify: Local handler was not called
@@ -128,8 +126,8 @@ describe("messenger with tab targets and local methods", () => {
     const mockHandler = vi.fn(async () => "local result");
     handlers.set("testMethod", mockHandler);
 
-    // Mock chrome.tabs.sendMessage to return a messenger response
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+    // Mock chrome.runtime.sendMessage to return a messenger response
+    vi.mocked(chrome.runtime.sendMessage).mockResolvedValue({
       __webextMessenger: true,
       value: "remote result",
     } as any);
@@ -140,8 +138,8 @@ describe("messenger with tab targets and local methods", () => {
     // Test: Send message to different frame in same tab
     const result = await messenger("testMethod", {}, { tabId: 1, frameId: 1 });
 
-    // Verify: Message was sent via chrome.tabs.sendMessage
-    expect(chrome.tabs.sendMessage).toHaveBeenCalledOnce();
+    // Verify: Message was sent via chrome.runtime.sendMessage
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledOnce();
     expect(result).toBe("remote result");
 
     // Verify: Local handler was not called
@@ -163,8 +161,8 @@ describe("messenger with tab targets and local methods", () => {
     const mockHandler = vi.fn(async () => "local result");
     handlers.set("testMethod", mockHandler);
 
-    // Mock chrome.tabs.sendMessage to return a messenger response
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+    // Mock chrome.runtime.sendMessage to return a messenger response
+    vi.mocked(chrome.runtime.sendMessage).mockResolvedValue({
       __webextMessenger: true,
       value: "remote result",
     } as any);
@@ -179,8 +177,8 @@ describe("messenger with tab targets and local methods", () => {
       { tabId: 1, frameId: "allFrames" },
     );
 
-    // Verify: Message was sent via chrome.tabs.sendMessage
-    expect(chrome.tabs.sendMessage).toHaveBeenCalledOnce();
+    // Verify: Message was sent via chrome.runtime.sendMessage
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledOnce();
     expect(result).toBe("remote result");
 
     // Verify: Local handler was not called
@@ -215,7 +213,7 @@ describe("messenger with tab targets and local methods", () => {
       );
     }
 
-    // Verify: No message was sent via chrome.tabs.sendMessage
-    expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+    // Verify: No message was sent via chrome.runtime.sendMessage
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
   });
 });
