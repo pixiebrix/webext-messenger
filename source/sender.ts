@@ -1,5 +1,5 @@
 import pRetry from "p-retry";
-import { isBackground, isExtensionContext } from "webext-detect";
+import { isExtensionContext } from "webext-detect";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -292,18 +292,19 @@ function messenger<
     return manageConnection(type, options, target, sendMessage) as ReturnValue;
   }
 
-  // Message goes to extension page
-  if ("page" in target) {
-    if (target.page === "background" && isBackground()) {
-      const handler = handlers.get(type);
-      if (handler) {
-        log.warn(type, seq, "is being handled locally");
-        return handler.apply({ trace: [] }, args) as ReturnValue;
-      }
-
-      throw new MessengerError("No handler registered locally for " + type);
+  // Use local methods if the target matches the current context
+  if (compareTargets(target, thisTarget)) {
+    const handler = handlers.get(type);
+    if (handler) {
+      log.warn(type, seq, "is being handled locally");
+      return handler.apply({ trace: [] }, args) as ReturnValue;
     }
 
+    throw new MessengerError("No handler registered locally for " + type);
+  }
+
+  // Message goes to extension page
+  if ("page" in target) {
     const sendMessage = async (attemptCount: number) => {
       log.debug(
         type,
@@ -321,17 +322,6 @@ function messenger<
 
   // Contexts without direct Tab access must go through background
   if (!chrome.tabs) {
-    // Use local methods unless the target is a different tab/frame
-    if (compareTargets(target, thisTarget)) {
-      const handler = handlers.get(type);
-      if (handler) {
-        log.warn(type, seq, "is being handled locally");
-        return handler.apply({ trace: [] }, args) as ReturnValue;
-      }
-
-      throw new MessengerError("No handler registered locally for " + type);
-    }
-
     return manageConnection(
       type,
       options,
