@@ -22,6 +22,8 @@ import { log } from "./logging.js";
 import { type Promisable, type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 import { events } from "./events.js";
+import { compareTargets } from "./targetLogic.js";
+import { thisTarget } from "./thisTarget.js";
 
 const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -339,6 +341,17 @@ function messenger<
 
   // `frameId` must be specified. If missing, the message is sent to every frame
   const { tabId, frameId = 0 } = target;
+
+  // Check if the target is the current tab/frame and use local methods if available
+  if (frameId !== "allFrames" && compareTargets(target, thisTarget)) {
+    const handler = handlers.get(type);
+    if (handler) {
+      log.warn(type, seq, "is being handled locally");
+      return handler.apply({ trace: [] }, args) as ReturnValue;
+    }
+
+    throw new MessengerError("No handler registered locally for " + type);
+  }
 
   // Message tab directly
   return manageConnection(
