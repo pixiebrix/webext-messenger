@@ -19,6 +19,7 @@ import * as backgroundContext from "../background/api.js";
 import * as localContext from "../background/testingApi.js";
 import * as contentScriptContext from "./api.js";
 import {
+  getSelf,
   getPageTitle,
   setPageTitle,
   closeSelf,
@@ -435,6 +436,10 @@ function additionalTests() {
 
     // Should be an instantaneous local function call
     expectDuration(t, await durationPromise, 0, 1);
+  });
+
+  test("should not receive information about self in local calls", async (t) => {
+    t.equals(await getSelf(thisTarget), undefined);
   });
 }
 
