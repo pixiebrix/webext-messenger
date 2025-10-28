@@ -110,6 +110,7 @@ function manageConnection(
   });
 }
 
+// eslint-disable-next-line complexity
 async function manageMessage(
   type: string,
   target: LooseTarget,
@@ -217,7 +218,7 @@ async function manageMessage(
 
       // Check if we should stop retrying
       const elapsedTime = Date.now() - startTime;
-      if (!retry || (elapsedTime >= maxRetryTime && attemptNumber > 1)) {
+      if (!retry || elapsedTime >= maxRetryTime) {
         if (errorMessage === _errorNonExistingTarget) {
           throw new MessengerError(
             `The target ${JSON.stringify(target)} for ${type} was not found`,
@@ -233,7 +234,7 @@ async function manageMessage(
         throw error;
       }
 
-      log.debug(type, seq, "will retry. Attempt", attemptNumber);
+      log.debug(type, seq, "will retry", attemptLog(attemptNumber));
 
       // Wait before retrying with exponential backoff
       const waitTime = currentTimeout;

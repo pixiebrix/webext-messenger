@@ -12,6 +12,9 @@ import {
   throws,
   getSelf,
 } from "./api.js";
+import { toggleLogging } from "webext-messenger/logging.js";
+
+toggleLogging(true);
 
 test("send message and get response", async (t) => {
   t.equal(await getExtensionId(), chrome.runtime.id);
