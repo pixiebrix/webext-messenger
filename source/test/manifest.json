@@ -38,7 +38,7 @@
       "matches": [
         "https://fregante.github.io/pixiebrix-testing-ground/Will-call-other-CS-via-background"
       ],
-      "js": ["contentscript/api.test.ts"]
+      "js": ["contentscript/registration.ts", "contentscript/api.test.ts"]
     },
     {
       "all_frames": true,
