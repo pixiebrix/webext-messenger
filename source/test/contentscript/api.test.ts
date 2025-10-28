@@ -33,9 +33,6 @@ import {
 } from "./api.js";
 import { MessengerError } from "../../shared.js";
 import { thisTarget } from "webext-messenger/thisTarget.js";
-import { toggleLogging } from "webext-messenger/logging.js";
-
-toggleLogging(true);
 
 const { openTab, createTargets, ensureScripts, closeTab } = isBackground()
   ? localContext
