@@ -8,6 +8,7 @@ import {
   type MessengerMeta,
   type Method,
   type Sender,
+  type Options,
 } from "./types.js";
 import { isObject, MessengerError, __webextMessenger } from "./shared.js";
 import { log } from "./logging.js";
@@ -68,7 +69,7 @@ function onMessageListener(
   }
 
   const { type, target, args, options = {} } = message;
-  const { trace = [], seq } = options;
+  const { trace = [], seq, retry } = options;
 
   if (action === "forward") {
     log.debug(type, seq, "🔀 forwarded", { sender, target });
@@ -85,7 +86,7 @@ function onMessageListener(
     try {
       trace.push(sender);
 
-      const value = await prepareResponse(message, action, { trace });
+      const value = await prepareResponse(message, action, { trace, retry });
       log.debug(type, seq, "↗️ responding", { value });
       sendResponse({ __webextMessenger, value });
     } catch (error) {
@@ -127,12 +128,12 @@ function onMessageExternalListener(
 async function prepareResponse(
   message: Message,
   action: "respond" | "forward",
-  meta: MessengerMeta,
+  options: Options,
 ): Promise<unknown> {
   const { type, target, args } = message;
 
   if (action === "forward") {
-    return messenger(type, meta, target, ...args);
+    return messenger(type, options, target, ...args);
   }
 
   const localHandler = handlers.get(type);
@@ -143,7 +144,8 @@ async function prepareResponse(
       );
     }
 
-    return localHandler.apply(meta, args);
+    const { trace = [] } = options;
+    return localHandler.apply({ trace }, args);
   }
 
   if (didUserRegisterMethods()) {
