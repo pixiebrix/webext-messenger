@@ -19,6 +19,7 @@ import * as backgroundContext from "../background/api.js";
 import * as localContext from "../background/testingApi.js";
 import * as contentScriptContext from "./api.js";
 import {
+  getSelf,
   getPageTitle,
   setPageTitle,
   closeSelf,
@@ -31,6 +32,7 @@ import {
   getPageTitleNotification,
 } from "./api.js";
 import { MessengerError } from "../../shared.js";
+import { thisTarget } from "webext-messenger/thisTarget.js";
 
 const { openTab, createTargets, ensureScripts, closeTab } = isBackground()
   ? localContext
@@ -423,6 +425,21 @@ function additionalTests() {
 
     const title = await getPageTitle({ tabId, frameId: "allFrames" });
     t.equal(title, "Receives with allFrames on tab");
+  });
+
+  test("uses local methods instead of messaging when targeting self", async (t) => {
+    const request = getPageTitle(thisTarget);
+    const durationPromise = trackSettleTime(request);
+
+    const title = await request;
+    t.equal(title, document.title);
+
+    // Should be an instantaneous local function call
+    expectDuration(t, await durationPromise, 0, 1);
+  });
+
+  test("should not receive information about self in local calls", async (t) => {
+    t.equals(await getSelf(thisTarget), undefined);
   });
 }
 
