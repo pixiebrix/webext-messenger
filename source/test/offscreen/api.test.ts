@@ -1,6 +1,9 @@
 import test from "tape";
 import { getLocation, addFrame, getTrace } from "./api.js";
 import { senderIsCurrentPage } from "../helpers.js";
+import { toggleLogging } from "webext-messenger/logging.js";
+
+toggleLogging(true);
 
 test("should get a value from the offscreen document", async (t) => {
   t.equal(await getLocation(), chrome.runtime.getURL("offscreen.html"));

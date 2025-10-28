@@ -11,6 +11,9 @@ import {
   MessengerError,
   ExtensionNotFoundError,
 } from "webext-messenger/shared.js";
+import { toggleLogging } from "webext-messenger/logging.js";
+
+toggleLogging(true);
 
 if (isExtensionContext()) {
   throw new Error("This test must be run in an external page");
