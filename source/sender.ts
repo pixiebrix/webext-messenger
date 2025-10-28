@@ -118,10 +118,14 @@ async function manageMessage(
   sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> {
   const startTime = Date.now();
-  const maxRetryCount = 15; // Safety cap to avoid infinite loops, generally stops at 11 with current setting
   const maxRetryTime = 4000;
   const minTimeout = 100;
   const factor = 1.3;
+
+  // Safety cap to avoid infinite loops, generally stops at 11 with current setting
+  // MUST BE UPDATED if maxRetryTime, minTimeout or factor are changed
+  const maxRetryCount = 15;
+
   let attemptCount = 0;
   let currentTimeout = minTimeout;
 
@@ -247,6 +251,11 @@ async function manageMessage(
       currentTimeout = Math.floor(currentTimeout * factor);
     }
   }
+
+  // If you reach this, refer to note above `maxRetryCount` definition
+  throw new MessengerError(
+    "Exceeded maximum retry attempts. This suggests a low `maxRetryCount`",
+  );
 }
 
 // Not a UID nor a truly global sequence. Signal / console noise compromise.
