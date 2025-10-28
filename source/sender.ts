@@ -110,7 +110,6 @@ function manageConnection(
   });
 }
 
-// eslint-disable-next-line complexity
 async function manageMessage(
   type: string,
   target: LooseTarget,
@@ -119,17 +118,18 @@ async function manageMessage(
   sendMessage: (attempt: number) => Promise<unknown>,
 ): Promise<unknown> {
   const startTime = Date.now();
+  const maxRetryCount = 15; // Safety cap to avoid infinite loops, generally stops at 11 with current setting
   const maxRetryTime = 4000;
   const minTimeout = 100;
   const factor = 1.3;
-  let attemptNumber = 1;
+  let attemptCount = 0;
   let currentTimeout = minTimeout;
 
-  // eslint-disable-next-line no-constant-condition -- Intentional retry loop with break conditions
-  while (true) {
+  while (attemptCount < maxRetryCount) {
+    attemptCount++;
     try {
       // eslint-disable-next-line no-await-in-loop -- Necessary for retry logic
-      const response = await sendMessage(attemptNumber);
+      const response = await sendMessage(attemptCount);
 
       if (isMessengerResponse(response)) {
         if ("error" in response) {
@@ -179,7 +179,7 @@ async function manageMessage(
             seq,
             target,
             error,
-            attemptCount: attemptNumber,
+            attemptCount,
           },
         }),
       );
@@ -205,14 +205,16 @@ async function manageMessage(
 
       // Check if tab is still valid
       if (chrome.tabs && typeof target.tabId === "number") {
+        let tabInfo;
         try {
           // eslint-disable-next-line no-await-in-loop -- Necessary to check tab status during retry
-          const tabInfo = await chrome.tabs.get(target.tabId);
-          if (tabInfo.discarded) {
-            throw new Error(errorTabWasDiscarded);
-          }
+          tabInfo = await chrome.tabs.get(target.tabId);
         } catch {
           throw new Error(errorTabDoesntExist);
+        }
+
+        if (tabInfo.discarded) {
+          throw new Error(errorTabWasDiscarded);
         }
       }
 
@@ -234,7 +236,7 @@ async function manageMessage(
         throw error;
       }
 
-      log.debug(type, seq, "will retry", attemptLog(attemptNumber));
+      log.debug(type, seq, "will retry", attemptLog(attemptCount));
 
       // Wait before retrying with exponential backoff
       const waitTime = currentTimeout;
@@ -243,7 +245,6 @@ async function manageMessage(
         setTimeout(resolve, waitTime);
       });
       currentTimeout = Math.floor(currentTimeout * factor);
-      attemptNumber++;
     }
   }
 }
