@@ -51,7 +51,7 @@
     "stream-browserify": "^3.0.0",
     "tape": "^5.9.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.6"
   },
   "targets": {
     "main": false,
