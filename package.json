@@ -38,7 +38,7 @@
   "devDependencies": {
     "@parcel/config-webextension": "^2.16.0",
     "@sindresorhus/tsconfig": "^8.1.0",
-    "@types/chrome": "^0.1.22",
+    "@types/chrome": "^0.1.27",
     "@types/tape": "^5.8.1",
     "buffer": "^6.0.3",
     "eslint": "^8.57.0",
