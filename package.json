@@ -36,7 +36,7 @@
     "packageExports": true
   },
   "devDependencies": {
-    "@parcel/config-webextension": "^2.16.0",
+    "@parcel/config-webextension": "^2.16.1",
     "@sindresorhus/tsconfig": "^8.1.0",
     "@types/chrome": "^0.1.31",
     "@types/tape": "^5.8.1",
