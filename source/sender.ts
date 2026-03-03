@@ -191,12 +191,12 @@ async function manageMessage(
       // Check for non-retryable errors
       if ("extensionId" in target && errorMessage === _errorNonExistingTarget) {
         throw new ExtensionNotFoundError(
-          errorExtensionNotFound.replace("$ID", target.extensionId!),
+          `${errorExtensionNotFound.replace("$ID", target.extensionId!)}. Make sure the extension is installed and the extension ID is correct.`
         );
       }
 
       if (isExtensionContext() && wasContextInvalidated()) {
-        throw new Error("Extension context invalidated.");
+        throw new Error("Extension context invalidated. The extension background page may have been reloaded or crashed. Try reloading the extension in chrome://extensions.");
       }
 
       if (errorMessage === _errorTargetClosedEarly) {

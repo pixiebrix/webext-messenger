@@ -89,7 +89,7 @@ function onMessageListener(
       const value = await prepareResponse(message, action, { trace, retry });
       log.debug(type, seq, "↗️ responding", { value });
       sendResponse({ __webextMessenger, value });
-    } catch (error) {
+    } catch (error: unknown) {
       log.debug(type, seq, "↗️ responding", { error });
       sendResponse({ __webextMessenger, error: serializeError(error) });
     }
@@ -150,13 +150,13 @@ async function prepareResponse(
 
   if (didUserRegisterMethods()) {
     throw new MessengerError(
-      `No handler registered for ${type} in ${getContextName()}`,
+      `No handler registered for ${type} in ${getContextName()}. Make sure to call registerMethods() with your handler functions before sending messages.`
     );
   }
 
   // TODO: Test the handling of __getTabData in contexts that have no registered methods
   // https://github.com/pixiebrix/webext-messenger/pull/82
-  throw new MessengerError(`No handlers registered in ${getContextName()}`);
+  throw new MessengerError(`No handlers registered in ${getContextName()}. Call registerMethods() to register message handlers.`);
 }
 
 export function registerMethods(methods: Partial<MessengerMethods>): void {

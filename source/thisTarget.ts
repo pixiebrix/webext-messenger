@@ -107,9 +107,19 @@ export async function getThisFrame(): Promise<FrameTarget> {
       moreInfo = `(context: ${getContextName()}, url: ${
         globalThis.location?.href
       })`;
-    } catch {}
+    } catch (error: unknown) {
+      let contextInfo = "(error retrieving context information)";
+      try {
+        contextInfo = `(context: ${getContextName()}, url: ${
+          globalThis.location?.href
+        })`;
+      } catch (innerError: unknown) {
+        // Location access may fail in certain contexts (e.g., service workers)
+        // Provide a minimal fallback message instead of silently swallowing
+        console.warn("webext-messenger: Could not retrieve context information", innerError);
+      }
 
-    throw new TypeError(`This target is not in a frame ${moreInfo}`);
+      throw new TypeError(`This target is not in a frame ${contextInfo}. Ensure this is called from a valid extension frame context.`);
   }
 
   // Rebuild object to return exactly these two properties and nothing more
