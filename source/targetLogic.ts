@@ -6,7 +6,15 @@ export function compareTargets(
   to: LooseTarget,
   thisTarget: LooseTarget,
 ): boolean {
-  for (const [key, value] of Object.entries(to) as Entries<typeof to>) {
+  // If a message targets { tabId: 13 or "this" }, the frameId is implicitly 0
+  const normalizedTo =
+    to.tabId !== undefined && to.frameId === undefined
+      ? { ...to, frameId: 0 }
+      : to;
+
+  for (const [key, value] of Object.entries(normalizedTo) as Entries<
+    typeof normalizedTo
+  >) {
     if (thisTarget[key] === value) {
       continue;
     }
@@ -15,8 +23,13 @@ export function compareTargets(
       return false;
     }
 
+    if (location.origin === "about:srcdoc") {
+      return false;
+    }
+
     const toUrl = new URL(to.page!, location.origin);
     const thisUrl = new URL(thisTarget.page!, location.origin);
+
     if (toUrl.pathname !== thisUrl.pathname) {
       return false;
     }

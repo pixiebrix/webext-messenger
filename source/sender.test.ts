@@ -40,6 +40,8 @@ globalThis.chrome = {
   // Note: chrome.tabs is undefined in content scripts
 } as any;
 
+vi.stubGlobal("location", { origin: "https://example.com" });
+
 describe("messenger with tab targets and local methods", () => {
   beforeEach(() => {
     vi.clearAllMocks();

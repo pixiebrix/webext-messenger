@@ -83,7 +83,7 @@ describe("getActionForMessage", async () => {
         targets[to],
         thisTarget[receiver],
       );
-      assert(
+      assert.isTrue(
         result === expected,
         `"${receiver}" got message for "${to}" and decided to ${result.toUpperCase()} instead of ${expected.toUpperCase()}`,
       );
@@ -107,7 +107,6 @@ describe.each([
   describe("match", () => {
     test.each([
       ["exact page", { page: "/page.html" }, { page: "/page.html" }],
-      ["exact tabId", { tabId: 1 }, { tabId: 1 }],
       ["exact frameId", { tabId: 1, frameId: 0 }, { tabId: 1, frameId: 0 }],
       [
         "page search params",
@@ -122,7 +121,7 @@ describe.each([
         { tabId: 1, frameId: 0 },
       ],
     ])("%s", (_name, target, thisTarget) => {
-      assert(compareTargets(target, thisTarget));
+      assert.isTrue(compareTargets(target, thisTarget));
     });
   });
 
@@ -149,7 +148,7 @@ describe.each([
       ["tabId does not match subframe", { tabId: 1 }, { tabId: 1, frameId: 5 }],
       ["different tabId in subframe", { tabId: 1 }, { tabId: 2, frameId: 5 }],
     ])("%s", (_name, target, thisTarget) => {
-      assert(!compareTargets(target, thisTarget));
+      assert.isFalse(compareTargets(target, thisTarget));
     });
   });
 });
