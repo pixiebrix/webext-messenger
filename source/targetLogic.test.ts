@@ -1,9 +1,8 @@
-import { assert, describe, test, vi } from "vitest";
+import { assert, describe, test, vi, beforeEach, afterEach } from "vitest";
 import { getActionForMessage, compareTargets } from "./targetLogic.js";
 import { isContentScript, isBackground } from "webext-detect";
 
 vi.mock("webext-detect");
-vi.stubGlobal("location", { origin: "chrome-extension://extension-id" });
 
 const tab = {
   id: 1,
@@ -91,8 +90,20 @@ describe("getActionForMessage", async () => {
     },
   );
 });
+describe.each([
+  ["regular origin", "https://example.com"],
+  ["about:srcdoc origin", "about:srcdoc"],
+])("%s", (_name, origin) => {
+  beforeEach(() => {
+    vi.stubGlobal("location", {
+      origin,
+    });
+  });
 
-describe("compareTargets", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   describe("match", () => {
     test.each([
       ["exact page", { page: "/page.html" }, { page: "/page.html" }],
@@ -135,6 +146,8 @@ describe("compareTargets", () => {
         { tabId: 1, frameId: 0 },
         { tabId: 1, frameId: 1 },
       ],
+      ["tabId does not match subframe", { tabId: 1 }, { tabId: 1, frameId: 5 }],
+      ["different tabId in subframe", { tabId: 1 }, { tabId: 2, frameId: 5 }],
     ])("%s", (_name, target, thisTarget) => {
       assert(!compareTargets(target, thisTarget));
     });
