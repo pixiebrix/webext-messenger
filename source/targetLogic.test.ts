@@ -1,8 +1,9 @@
 import { assert, describe, test, vi } from "vitest";
-import { getActionForMessage } from "./targetLogic.js";
+import { getActionForMessage, compareTargets } from "./targetLogic.js";
 import { isContentScript, isBackground } from "webext-detect";
 
 vi.mock("webext-detect");
+vi.stubGlobal("location", { origin: "chrome-extension://extension-id" });
 
 const tab = {
   id: 1,
@@ -89,4 +90,53 @@ describe("getActionForMessage", async () => {
       );
     },
   );
+});
+
+describe("compareTargets", () => {
+  describe("match", () => {
+    test.each([
+      ["exact page", { page: "/page.html" }, { page: "/page.html" }],
+      ["exact tabId", { tabId: 1 }, { tabId: 1 }],
+      ["exact frameId", { tabId: 1, frameId: 0 }, { tabId: 1, frameId: 0 }],
+      [
+        "page search params",
+        { page: "/page.html?foo=bar" },
+        { page: "/page.html?foo=bar&extra=1" },
+      ],
+      ["extra keys in thisTarget", { tabId: 1 }, { tabId: 1, frameId: 0 }],
+      ["empty target", {}, { tabId: 1, frameId: 0 }],
+      [
+        "multiple matching keys",
+        { tabId: 1, frameId: 0 },
+        { tabId: 1, frameId: 0 },
+      ],
+    ])("%s", (_name, target, thisTarget) => {
+      assert(compareTargets(target, thisTarget));
+    });
+  });
+
+  describe("no match", () => {
+    test.each([
+      ["different pages", { page: "/page.html" }, { page: "/other.html" }],
+      ["different tabId", { tabId: 1 }, { tabId: 2 }],
+      ["different frameId", { tabId: 1, frameId: 0 }, { tabId: 1, frameId: 1 }],
+      [
+        "missing required search param",
+        { page: "/page.html?foo=bar" },
+        { page: "/page.html?foo=baz" },
+      ],
+      [
+        "mismatched pathname",
+        { page: "/page.html?foo=bar" },
+        { page: "/other.html?foo=bar" },
+      ],
+      [
+        "one mismatching key",
+        { tabId: 1, frameId: 0 },
+        { tabId: 1, frameId: 1 },
+      ],
+    ])("%s", (_name, target, thisTarget) => {
+      assert(!compareTargets(target, thisTarget));
+    });
+  });
 });
