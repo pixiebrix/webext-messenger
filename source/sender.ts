@@ -1,4 +1,4 @@
-import { isExtensionContext } from "webext-detect";
+import { isBackground, isExtensionContext } from "webext-detect";
 import { deserializeError } from "serialize-error";
 
 import {
@@ -21,8 +21,6 @@ import { log } from "./logging.js";
 import { type Promisable, type SetReturnType } from "type-fest";
 import { handlers } from "./handlers.js";
 import { events } from "./events.js";
-import { compareTargets } from "./targetLogic.js";
-import { thisTarget } from "./thisTarget.js";
 
 const _errorNonExistingTarget =
   "Could not establish connection. Receiving end does not exist.";
@@ -322,19 +320,18 @@ function messenger<
     return manageConnection(type, options, target, sendMessage) as ReturnValue;
   }
 
-  // Use local methods if the target matches the current context
-  if (compareTargets(target, thisTarget)) {
-    const handler = handlers.get(type);
-    if (handler) {
-      log.warn(type, seq, "is being handled locally");
-      return handler.apply({ trace: [] }, args) as ReturnValue;
-    }
-
-    throw new MessengerError("No handler registered locally for " + type);
-  }
-
   // Message goes to extension page
   if ("page" in target) {
+    if (target.page === "background" && isBackground()) {
+      const handler = handlers.get(type);
+      if (handler) {
+        log.warn(type, seq, "is being handled locally");
+        return handler.apply({ trace: [] }, args) as ReturnValue;
+      }
+
+      throw new MessengerError("No handler registered locally for " + type);
+    }
+
     const sendMessage = async (attemptCount: number) => {
       log.debug(
         type,
