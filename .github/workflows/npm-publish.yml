@@ -15,6 +15,10 @@ on:
         description: "Version accepted by `npm version *`"
         required: true
 
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
 jobs:
   NPM:
     runs-on: ubuntu-latest
@@ -24,6 +28,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false # never use caching in release builds
       - run: npm ci || npm install
       - uses: fregante/setup-git-user@v2
       - name: Create version
@@ -32,8 +37,6 @@ jobs:
           VERSION="$(npm version "${{ github.event.inputs.Version }}")"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --follow-tags
       - run: gh release create "$VERSION" --generate-notes
         env:
