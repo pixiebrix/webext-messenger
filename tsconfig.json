@@ -3,12 +3,14 @@
   "include": ["source/**/*"],
   "compilerOptions": {
     "esModuleInterop": true,
-    "baseUrl": ".",
+    "rootDir": "./source",
     "outDir": "distribution",
     "skipLibCheck": false,
+    // TypeScript 6 no longer auto-includes every node_modules/@types package
+    "types": ["chrome"],
     "paths": {
-      "webext-messenger/*": ["source/*"],
-      "webext-messenger": ["source/index.ts"]
+      "webext-messenger/*": ["./source/*"],
+      "webext-messenger": ["./source/index.ts"]
     }
   }
 }
