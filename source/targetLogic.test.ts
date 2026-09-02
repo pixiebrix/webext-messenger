@@ -18,6 +18,7 @@ const tab = {
   selected: true,
   autoDiscardable: false,
   groupId: -1,
+  lastAccessed: 0,
 } satisfies chrome.tabs.Tab;
 
 const senders = {
