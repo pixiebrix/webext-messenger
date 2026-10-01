@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "one-event": "^4.4.0",
-    "serialize-error": "^13.0.1",
+    "serialize-error": "^13.0.2",
     "type-fest": "^5.10.0",
     "webext-detect": "^6.0.0"
   },
