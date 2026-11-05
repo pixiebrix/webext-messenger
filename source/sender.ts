@@ -189,7 +189,7 @@ async function manageMessage(
       // Check for non-retryable errors
       if ("extensionId" in target && errorMessage === _errorNonExistingTarget) {
         throw new ExtensionNotFoundError(
-          errorExtensionNotFound.replace("$ID", target.extensionId!),
+          errorExtensionNotFound.replace("$ID", target.extensionId),
         );
       }
 

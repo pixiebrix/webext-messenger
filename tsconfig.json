@@ -6,6 +6,10 @@
     "rootDir": "./source",
     "outDir": "distribution",
     "skipLibCheck": false,
+    // @sindresorhus/tsconfig 9 targets ES2024, which @typescript-eslint/parser 7 cannot parse
+    "lib": ["DOM", "ES2023"],
+    // TypeScript 6 defaults `strict` on, but @typescript-eslint 7 rules only see an explicit value
+    "strict": true,
     // TypeScript 6 no longer auto-includes every node_modules/@types package
     "types": ["chrome"],
     "paths": {
