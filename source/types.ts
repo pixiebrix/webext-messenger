@@ -67,7 +67,7 @@ export interface Options {
    */
   isNotification?: boolean;
   trace?: Sender[];
-  retry?: boolean;
+  retry?: boolean | undefined;
 
   /** Automatically generated internally */
   seq?: number;
@@ -95,8 +95,8 @@ export type MessengerMessage = Message & {
 
 /** A loose union to simplify the internal checks. */
 export interface LooseTarget {
-  tabId?: number | "this";
-  frameId?: number | "allFrames";
+  tabId?: number | "this" | undefined;
+  frameId?: number | "allFrames" | undefined;
   page?: string;
   extensionId?: string;
 }
